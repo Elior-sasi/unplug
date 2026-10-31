@@ -311,6 +311,10 @@ nav.bar button[aria-current="page"]{color:var(--gold-txt)}
 .sheet{background:rgba(22,26,36,calc(.7 + var(--g)*.25))}
 header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,15,22,0))}
 :focus-visible{outline-color:var(--gold-txt)}
+.homeBtn{display:inline-flex;align-items:center;gap:4px;min-height:44px;margin-top:14px;padding:0 4px;font-size:1.05rem;font-weight:700;color:var(--gold-txt,#ffc48a)}
+.homeBtn svg{width:18px;height:18px;transform:rotate(-90deg)}
+.chip.add{width:44px;padding:0;display:inline-grid;place-items:center;color:var(--mut)}.chip.add svg{width:20px;height:20px}
+.sheet>*{flex-shrink:0}
 </style>
 </head>
 <body>
@@ -319,7 +323,7 @@ header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,
   <header class="top">
     <div class="brandRow"><span class="brand" aria-label="Unplug"><svg viewBox="100 40 312 422" aria-hidden="true"><defs><linearGradient id="ug" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffc24d"/></linearGradient></defs><path d="M150 214 V320 a106 106 0 0 0 212 0 V210" fill="none" stroke="url(#ug)" stroke-width="58" stroke-linecap="round"/><g class="lid"><g transform="rotate(-10 112 160)"><rect x="180" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="302" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="112" y="112" width="288" height="48" rx="16" fill="#ffc24d"/></g></g></svg><span aria-hidden="true">nplug</span></span>
       <div class="actions"><button class="icbtn" id="addBtn" aria-label="הוספת מכשיר"></button><button class="icbtn" id="refBtn" aria-label="רענון"></button></div></div>
-    <p class="hello" id="hello"></p><h1 id="title" aria-live="polite">הבית</h1><div class="pills" id="sub" aria-live="polite"></div>
+    <button class="homeBtn" id="homeBtn" aria-haspopup="dialog"></button><h1 id="title" aria-live="polite">הבית</h1><div class="pills" id="sub" aria-live="polite"></div>
   </header>
   <main id="view"></main>
 </div>
@@ -342,7 +346,14 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CFG={api:LS('kor_api')||API_DEFAULT,key:LS('unplug_key')||LS('kor_key')||''};
 let DEVS=LSj('unplug_devs',[]), SCHED=[], TAB='devices', ROOM='all', busy=false;
-const META=LSj('unplug_meta',{names:{},rooms:{},roomList:[]});   // local names & rooms
+const META=LSj('unplug_meta',{names:{},rooms:{},roomList:[]});   // local names, rooms & homes
+META.homes=META.homes&&META.homes.length?META.homes:[{id:'h1',name:'דירה'}];META.devHome=META.devHome||{};META.roomHome=META.roomHome||{};
+if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
+const homeOf=d=>META.homes.some(h=>h.id===META.devHome[d.id])?META.devHome[d.id]:META.homes[0].id;
+const inHome=d=>homeOf(d)===META.home;
+const roomHomeOf=r=>META.homes.some(h=>h.id===META.roomHome[r])?META.roomHome[r]:META.homes[0].id;
+const roomsOf=h=>META.roomList.filter(r=>roomHomeOf(r)===h);
+const curHome=()=>META.homes.find(h=>h.id===META.home)||META.homes[0];
 let SCENES=LSj('unplug_scenes',[]),LOG=LSj('unplug_log',[]),Q='',FILTER='';
 META.fav=META.fav||{};
 const addLog=(name,text)=>{LOG.unshift({t:Date.now(),name,text});LOG=LOG.slice(0,150);LSset('unplug_log',JSON.stringify(LOG))};
@@ -495,11 +506,12 @@ async function refreshOne(id){try{const j=await api('/device',{id});if(!j.device
 
 /* ---------- render ---------- */
 function render(){
-  const on=DEVS.filter(d=>d.online&&isOn(d)).length, off=DEVS.filter(d=>!d.online).length;
-  {const h=new Date().getHours();$('hello').textContent=h<5?'לילה טוב':h<12?'בוקר טוב':h<17?'צהריים טובים':h<21?'ערב טוב':'לילה טוב'}
-  const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
-  $('title').textContent=!CFG.key||!DEVS.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
-  $('sub').innerHTML=!CFG.key?'<span class="pill">לא מחובר</span>':DEVS.length?`<span class="pill">${DEVS.length} מכשירים</span>${hasW?`<span class="pill${W>5?' hot':''}">${svg('bolt')}${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}</span>`:''}${off?`<span class="pill bad">${off} מנותקים</span>`:''}`:'';
+  window.DEVS_ALL=DEVS;
+  const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d)).length, off=HD.filter(d=>!d.online).length;
+  $('homeBtn').innerHTML=`<span>${esc(curHome().name)}</span>${svg('chev',2.4)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
+  const W=HD.reduce((t,d)=>t+watts(d),0),hasW=HD.some(d=>d.status.cur_power!=null);
+  $('title').textContent=!CFG.key||!HD.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
+  $('sub').innerHTML=!CFG.key?'<span class="pill">לא מחובר</span>':DEVS.length?`<span class="pill">${HD.length} מכשירים</span>${hasW?`<span class="pill${W>5?' hot':''}">${svg('bolt')}${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}</span>`:''}${off?`<span class="pill bad">${off} מנותקים</span>`:''}`:'';
   const tabs=[...document.querySelectorAll('nav.bar button')];tabs.forEach(b=>b.dataset.tab===TAB?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelector('nav.bar').style.setProperty('--tab',tabs.findIndex(b=>b.dataset.tab===TAB));
   const v=$('view');
   if(!CFG.key&&TAB!=='settings'){v.innerHTML=`<div class="empty"><b>עוד לא מחובר</b>מתחברים פעם אחת לחשבון Smart Life, ומכאן הכול כאן.</div><p></p><button class="btn pri wide" id="cn">התחברות</button>`;$('cn').onclick=openConnect;return}
@@ -508,7 +520,8 @@ function render(){
 function roomOf(d){return META.rooms[d.id]||''}
 function watts(d){const f=readOf(d,'cur_power');return d.online&&d.status.cur_power!=null?(+d.status.cur_power)/10**(+(f&&f.values&&f.values.scale)||0):0}
 function viewDevices(v){
-  const rooms=META.roomList.filter(r=>DEVS.some(d=>roomOf(d)===r));
+  const DEVS=window.DEVS_ALL.filter(inHome);
+  const rooms=roomsOf(META.home);
   if(ROOM!=='all'&&ROOM!=='fav'&&ROOM!=='off'&&!rooms.includes(ROOM))ROOM='all';
   const hasFav=DEVS.some(d=>META.fav[d.id]),offN=DEVS.filter(d=>!d.online).length,onDevs=DEVS.filter(d=>d.online&&isOn(d));
   const q=Q.trim().toLowerCase();
@@ -519,10 +532,13 @@ function viewDevices(v){
   const chips=[['all','הכול'],...(hasFav?[['fav','מועדפים']]:[]),...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
   v.innerHTML=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
       (DEVS.length?`<div class="quick"><button class="btn" id="allOff" ${onDevs.length?'':'disabled'}>${svg('power')}לכבות הכול${onDevs.length?` (${onDevs.length})`:''}</button>${SCENES.slice(0,1).map(sc=>`<button class="btn pri" id="sc0">${svg('play')}${esc(sc.name)}</button>`).join('')}</div>`:'')+
-   (chips.length>1?`<div class="chips" role="group" aria-label="סינון">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}</div>`:'')+
-   (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':'אין מכשירים'}</b>${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
+   `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים">${svg('edit',2)}</button></div>`+
+   (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
+  $('roomAdd').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=META.home;saveMeta();manageRooms(n)};
+  $('roomEdit').onclick=()=>manageRooms();
   v.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>{ROOM=b.dataset.room;render()});
+  $('emAs')&&($('emAs').onclick=()=>manageRooms());
   $('allOff')&&($('allOff').onclick=async()=>{if(!confirm(`לכבות ${onDevs.length} מכשירים?`))return;for(const d of onDevs)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')});
   $('sc0')&&($('sc0').onclick=e=>runScene(SCENES[0],e.currentTarget));
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
@@ -744,11 +760,11 @@ function openSchedEdit(s,d){
 
 /* ---------- rooms ---------- */
 function pickRoom(d,cb){
-  sheet('בחירת חדר',`<div class="list">${['',...META.roomList].map(r=>`<button class="row row-btn" data-r="${esc(r)}" aria-pressed="${roomOf(d)===r}"><span class="grow t">${r?esc(r):'ללא חדר'}</span>${roomOf(d)===r?'<span aria-hidden="true">✓</span>':''}</button>`).join('')}</div>
+  sheet('בחירת חדר',`<div class="list">${['',...roomsOf(homeOf(d))].map(r=>`<button class="row row-btn" data-r="${esc(r)}" aria-pressed="${roomOf(d)===r}"><span class="grow t">${r?esc(r):'ללא חדר'}</span>${roomOf(d)===r?'<span aria-hidden="true">✓</span>':''}</button>`).join('')}</div>
     <button class="btn wide" id="nr">${svg('plus')}חדר חדש</button>`,(el,close)=>{
     const set=r=>{r?META.rooms[d.id]=r:delete META.rooms[d.id];saveMeta();close();cb&&cb()};
     el.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>set(b.dataset.r));
-    el.querySelector('#nr').onclick=()=>{const n=(prompt('שם החדר','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);set(n)};
+    el.querySelector('#nr').onclick=()=>{const n=(prompt('שם החדר','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=homeOf(d);set(n)};
   });
 }
 
@@ -829,7 +845,7 @@ function viewSettings(v){
     <button class="row row-btn" id="ad"><span class="grow"><span class="t">הוספת מכשיר חדש</span><br><span class="s">צימוד דרך Smart Life</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="lg"><span class="grow"><span class="t">היסטוריית פעולות</span><br><span class="s">${LOG.length?'אחרונה: '+esc(LOG[0].name):'ריקה'}</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="bk"><span class="grow"><span class="t">גיבוי ושחזור</span><br><span class="s">שמות, חדרים, מועדפים וסצנות</span></span>${svg('chev')}</button>
-    <button class="row row-btn" id="rr"><span class="grow"><span class="t">ניהול חדרים</span><br><span class="s">${META.roomList.length} חדרים</span></span>${svg('chev')}</button>
+    <button class="row row-btn" id="rr"><span class="grow"><span class="t">ניהול חדרים</span><br><span class="s">${roomsOf(META.home).length} חדרים ב${esc(curHome().name)}</span></span>${svg('chev')}</button>
   </div>
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
   {const g=$('glS'),gv=$('glV'),sh=()=>{const t=+g.value<25?'שקוף מאוד':+g.value<70?'רגיל':'כהה';gv.textContent=t;g.setAttribute('aria-valuetext',t)};sh();g.oninput=()=>{LSset('unplug_glass',g.value);applyPrefs();sh()}}
@@ -891,11 +907,39 @@ function pickIcon(d,cb){
     el.querySelector('#icA')&&(el.querySelector('#icA').onclick=()=>set(null));
   });
 }
-function manageRooms(){
-  sheet('חדרים',`<div class="list" id="rl"></div><button class="btn wide" id="ra">${svg('plus')}חדר חדש</button>`,(el)=>{
-    const draw=()=>{el.querySelector('#rl').innerHTML=META.roomList.length?META.roomList.map((r,i)=>`<div class="row"><span class="grow t">${esc(r)}</span><span class="s">${DEVS.filter(d=>roomOf(d)===r).length} מכשירים</span><button class="icbtn" data-del="${i}" aria-label="מחיקת חדר ${esc(r)}">${svg('trash')}</button></div>`).join(''):`<div class="row"><span class="s">אין חדרים. משייכים מכשיר לחדר מתוך מסך המכשיר.</span></div>`;
-      el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const r=META.roomList[+b.dataset.del];META.roomList.splice(+b.dataset.del,1);for(const k in META.rooms)if(META.rooms[k]===r)delete META.rooms[k];saveMeta();draw();render()})};
-    draw();el.querySelector('#ra').onclick=()=>{const n=(prompt('שם החדר')||'').trim();if(n&&!META.roomList.includes(n)){META.roomList.push(n);saveMeta();draw()}};
+function manageRooms(focusRoom){
+  const H=META.home,rooms=()=>roomsOf(H),devs=DEVS.filter(d=>homeOf(d)===H||!META.devHome[d.id]&&H===META.homes[0].id);
+  const multi=META.homes.length>1;
+  sheet('חדרים ב'+esc(curHome().name),`<div class="list" id="rl"></div><button class="btn wide" id="ra">${svg('plus')}חדר חדש</button>
+    <div class="sec-h"><h2>שיוך מכשירים</h2></div><div class="list" id="dl"></div>`,(el)=>{
+    const draw=()=>{
+      el.querySelector('#rl').innerHTML=rooms().length?rooms().map(r=>`<div class="row"><button class="row-btn grow" data-ren="${esc(r)}" aria-label="שינוי שם לחדר ${esc(r)}" style="display:block"><span class="t">${esc(r)}</span><br><span class="s">${DEVS.filter(d=>roomOf(d)===r).length} מכשירים</span></button><button class="icbtn" data-del="${esc(r)}" aria-label="מחיקת חדר ${esc(r)}">${svg('trash')}</button></div>`).join(''):`<div class="row"><span class="s">עוד אין חדרים בבית הזה</span></div>`;
+      el.querySelector('#dl').innerHTML=DEVS.filter(d=>homeOf(d)===H).map(d=>`<div class="ctl"><div class="ctl-h"><span class="mini">${devArt(d)}</span><span class="t grow" style="flex:1">${esc(dname(d))}</span></div>
+        <div class="field"><label for="ra_${esc(d.id)}" class="sr">חדר של ${esc(dname(d))}</label><select id="ra_${esc(d.id)}" data-dr="${esc(d.id)}"><option value="">ללא חדר</option>${rooms().map(r=>`<option${roomOf(d)===r?' selected':''}>${esc(r)}</option>`).join('')}</select></div>
+        ${multi?`<div class="field"><label for="hm_${esc(d.id)}">בית</label><select id="hm_${esc(d.id)}" data-dh="${esc(d.id)}">${META.homes.map(h=>`<option value="${h.id}"${homeOf(d)===h.id?' selected':''}>${esc(h.name)}</option>`).join('')}</select></div>`:''}</div>`).join('')||`<div class="row"><span class="s">אין מכשירים בבית הזה</span></div>`;
+      el.querySelectorAll('[data-dr]').forEach(x=>x.onchange=()=>{x.value?META.rooms[x.dataset.dr]=x.value:delete META.rooms[x.dataset.dr];saveMeta();render();toast('נשמר')});
+      el.querySelectorAll('[data-dh]').forEach(x=>x.onchange=()=>{META.devHome[x.dataset.dh]=x.value;delete META.rooms[x.dataset.dh];saveMeta();draw();render();toast('המכשיר עבר בית')});
+      el.querySelectorAll('[data-ren]').forEach(b=>b.onclick=()=>{const o=b.dataset.ren,n=(prompt('שם חדש לחדר',o)||'').trim();if(!n||n===o)return;if(META.roomList.includes(n))return toast('יש כבר חדר בשם הזה');
+        META.roomList[META.roomList.indexOf(o)]=n;META.roomHome[n]=roomHomeOf(o);delete META.roomHome[o];for(const k in META.rooms)if(META.rooms[k]===o)META.rooms[k]=n;if(ROOM===o)ROOM=n;saveMeta();draw();render()});
+      el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const r=b.dataset.del;if(!confirm(`למחוק את החדר "${r}"? המכשירים יישארו בלי חדר.`))return;META.roomList.splice(META.roomList.indexOf(r),1);delete META.roomHome[r];for(const k in META.rooms)if(META.rooms[k]===r)delete META.rooms[k];saveMeta();draw();render()});
+    };
+    draw();
+    el.querySelector('#ra').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(n&&!META.roomList.includes(n)){META.roomList.push(n);META.roomHome[n]=H;saveMeta();draw();render()}};
+    if(focusRoom){const sel=el.querySelector('[data-dr]');sel&&sel.focus()}
+  });
+}
+function openHomes(){
+  sheet('הבתים שלי',`<div class="list" id="hl"></div><button class="btn wide" id="ha">${svg('plus')}בית חדש</button>
+    <p style="font-size:.92rem">לכל בית יש חדרים ומכשירים משלו. מעבירים מכשיר בית מתוך "חדרים" ← שיוך מכשירים.</p>`,(el,close)=>{
+    const draw=()=>{el.querySelector('#hl').innerHTML=META.homes.map(h=>`<div class="row"><button class="row-btn grow" data-hs="${h.id}" aria-pressed="${h.id===META.home}" style="display:block"><span class="t">${esc(h.name)}${h.id===META.home?' ✓':''}</span><br><span class="s">${DEVS.filter(d=>homeOf(d)===h.id).length} מכשירים · ${roomsOf(h.id).length} חדרים</span></button>
+      <button class="icbtn" data-hr="${h.id}" aria-label="שינוי שם לבית ${esc(h.name)}">${svg('edit')}</button>${META.homes.length>1?`<button class="icbtn" data-hd="${h.id}" aria-label="מחיקת הבית ${esc(h.name)}">${svg('trash')}</button>`:''}</div>`).join('');
+      el.querySelectorAll('[data-hs]').forEach(b=>b.onclick=()=>{META.home=b.dataset.hs;ROOM='all';saveMeta();close();render()});
+      el.querySelectorAll('[data-hr]').forEach(b=>b.onclick=()=>{const h=META.homes.find(x=>x.id===b.dataset.hr),n=(prompt('שם הבית',h.name)||'').trim();if(n){h.name=n;saveMeta();draw();render()}});
+      el.querySelectorAll('[data-hd]').forEach(b=>b.onclick=()=>{const h=META.homes.find(x=>x.id===b.dataset.hd);if(!confirm(`למחוק את "${h.name}"? המכשירים והחדרים שלו יעברו ל"${META.homes.find(x=>x.id!==h.id).name}".`))return;
+        META.homes=META.homes.filter(x=>x.id!==h.id);const to=META.homes[0].id;for(const k in META.devHome)if(META.devHome[k]===h.id)META.devHome[k]=to;for(const k in META.roomHome)if(META.roomHome[k]===h.id)META.roomHome[k]=to;if(META.home===h.id)META.home=to;saveMeta();draw();render()});
+    };
+    draw();
+    el.querySelector('#ha').onclick=()=>{const n=(prompt('שם הבית החדש','בית ההורים')||'').trim();if(!n)return;const id='h'+Date.now().toString(36);META.homes.push({id,name:n});saveMeta();draw()};
   });
 }
 function openAdd(){
@@ -948,6 +992,7 @@ function showQR(uc,j){
 function applyPrefs(){document.documentElement.style.setProperty('--ts',(LS('unplug_ts')||'100')+'%');document.documentElement.style.setProperty('--g',(+(LS('unplug_glass')??55))/100)}
 document.querySelectorAll('nav.bar button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();if(TAB==='sched')loadSched().then(render);window.scrollTo(0,0)});
 $('refBtn').onclick=()=>{loadDevices();loadSched()};
+$('homeBtn').onclick=openHomes;
 $('addBtn').onclick=openAdd;
 applyPrefs();render();addEventListener('scroll',()=>document.body.classList.toggle('scrolled',scrollY>40),{passive:true});setTimeout(()=>{const sp=$('splash');sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
 if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConnect();
