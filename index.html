@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <link rel="icon" type="image/png" href="icon.png?v=2">
 <link rel="manifest" href="manifest.json?v=1">
-<meta name="theme-color" content="#0a0f14">
+<meta name="theme-color" content="#0a0f1f">
 <title>Unplug</title>
 <style>
 /* Unplug - same family as Unbox: black base, one accent (amber), Rubik, glass pill nav, cards with soft top light. */
@@ -189,45 +189,105 @@ textarea.field-ta{width:100%;min-height:120px;border-radius:14px;border:1px soli
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media (prefers-contrast: more){:root{--line:#7d8a9c;--mut:#e3e8ef}}
 
-/* ---- v2: every device has its own colour; a tile lights up in it when on ---- */
-:root{--bg:#0b1120;--card:#141c2e;--line:#232f47;--mut:#9aa6bd}
-body{background:radial-gradient(140% 60% at 100% -10%,#1d2b4a 0,transparent 55%),radial-gradient(90% 50% at -20% 20%,#2a1a3a55 0,transparent 60%),var(--bg) fixed}
-.app{background:none}
-.hello{margin-top:26px;font-size:1.05rem}
-header.top h1{font-size:2.6rem;letter-spacing:-.8px;line-height:1.08}
-.chips{gap:22px;padding:4px 2px 16px;margin-top:4px}
-.chip{min-height:48px;padding:0;background:none;border:0;border-radius:0;font-size:1.4rem;font-weight:700;color:#5d6a85;letter-spacing:-.3px;position:relative}
-.chip[aria-pressed="true"]{background:none;color:var(--ink)}
-.chip[aria-pressed="true"]::after{content:"";position:absolute;inset:auto 0 4px;height:4px;border-radius:2px;background:var(--acc)}
-.quick .btn{background:#ffffff0a;border-color:#ffffff14;color:var(--ink);min-height:50px;border-radius:18px}
-.quick .btn.pri{background:var(--acc);color:var(--acc-ink)}
+/* ---- v3: iOS 27 Liquid Glass. Wallpaper behind, glass everything above it, a darker rim and bright specular edge on each glass piece. --g is the tint (0 clear - 1 tinted), set from Settings ---- */
+:root{--g:.55;--f:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Hebrew",system-ui,sans-serif;
+ --ink:#fff;--mut:rgba(235,235,245,.62);--sep:rgba(255,255,255,.12);--sys-green:#30d158;--sys-blue:#0a84ff;--acc:#ffb23e}
+body{font-family:var(--f);letter-spacing:-.01em;background:#05070d}
+body::before{content:"";position:fixed;inset:-10%;z-index:-1;background:
+ radial-gradient(55% 40% at 85% 8%,#2f6bff 0,transparent 70%),
+ radial-gradient(50% 45% at 5% 30%,#b0357e 0,transparent 70%),
+ radial-gradient(60% 45% at 70% 70%,#ff8a3d 0,transparent 70%),
+ radial-gradient(60% 50% at 15% 95%,#14b8a6 0,transparent 70%),#0a0f1f;filter:blur(30px) saturate(1.2)}
+.app{background:none;padding-top:calc(8px + env(safe-area-inset-top))}
+/* glass recipe */
+.glass,.card,.icbtn,nav.bar,.list,.chip,.quick .btn,.pill,.sheet,.search,.seg,.ro,.empty,.btn{--gt:calc(.06 + var(--g)*.22)}
+.card,.icbtn,nav.bar,.list,.chip,.quick .btn,.pill,.search,.ro,.empty,.btn:not(.pri){background:rgba(28,30,40,var(--gt));
+ -webkit-backdrop-filter:blur(26px) saturate(185%);backdrop-filter:blur(26px) saturate(185%);
+ border:1px solid rgba(255,255,255,.14);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(255,255,255,.06),0 0 0 .5px rgba(0,0,0,.45),0 10px 30px -12px rgba(0,0,0,.5)}
+/* header */
+header.top{position:sticky;top:0;z-index:15;margin:0 -16px 12px;padding:10px 16px 12px}
+header.top::before{content:"";position:absolute;inset:0 0 -24px;z-index:-1;opacity:0;transition:opacity .25s;
+ -webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);
+ background:linear-gradient(180deg,rgba(10,12,22,.55),rgba(10,12,22,0));-webkit-mask:linear-gradient(180deg,#000 60%,transparent);mask:linear-gradient(180deg,#000 60%,transparent)}
+body.scrolled header.top::before{opacity:1}
+.hello{margin:18px 0 0;font-size:1rem;font-weight:600;color:var(--mut)}
+header.top h1{font-size:2.15rem;font-weight:700;letter-spacing:-.03em;margin:2px 0 0;transition:font-size .25s}
+body.scrolled header.top h1{font-size:1.3rem}
+body.scrolled .hello,body.scrolled .pills{display:none}
+.brand{font-family:Rubik,var(--f)}
+.icbtn{border-radius:50%;color:#fff}
+.pill{min-height:34px;border-radius:999px;color:#fff;font-weight:600}
+.pill.hot{color:#ffd28a}.pill.bad{color:#ff9f9f}
+/* room picker: glass capsules */
+.chips{gap:8px;padding:2px 0 14px}
+.chip{min-height:40px;padding:0 18px;border-radius:999px;font-size:1rem;font-weight:600;color:#fff;letter-spacing:0}
+.chip[aria-pressed="true"]{background:rgba(255,255,255,.92);color:#000;border-color:transparent}
+.chip[aria-pressed="true"]::after{display:none}
+.quick .btn{border-radius:999px;color:#fff;min-height:50px}
+.quick .btn.pri{background:rgba(255,255,255,.92);color:#000;border:0}
+/* tiles: Apple Home style - glass when off, bright frosted when on, icon in the device colour */
 .grid{grid-template-columns:repeat(2,1fr);gap:12px}
-@media (min-width:520px){.grid{grid-template-columns:repeat(3,1fr)}}
-.card{min-height:188px;border-radius:30px;padding:16px 16px 14px;background:#141c2e;border:1px solid #ffffff10;box-shadow:none;gap:2px}
+.card{min-height:170px;border-radius:30px;padding:16px;display:flex;flex-direction:column;gap:0;overflow:visible}
 .card::before{display:none}
-.card .nm{order:-1;margin:0;padding:0;font-size:1.15rem;font-weight:700;letter-spacing:-.2px;max-width:100%}
-.card .st{order:0;font-size:.92rem}
-.card .ic,.card .ic.photo,.card .ic:has(.art){position:absolute;bottom:10px;left:8px;width:96px;height:96px;background:none;border:0;padding:0;z-index:0;filter:none;box-shadow:none}
-.card .ic svg:not(.art){width:56px;height:56px}
-.card .ic img{filter:drop-shadow(0 8px 14px #0008)}
-.card .pw{top:auto;bottom:12px;left:auto;right:10px}
-.card .fav{bottom:auto;top:18px;left:16px}
-.card.is-on{background:linear-gradient(165deg,var(--c1) 0%,var(--c2) 100%);border-color:transparent;box-shadow:0 14px 34px -10px var(--c2)}
-.card.is-on .nm{color:#0b1120}
-.card.is-on .st{color:#0b1120cc;font-weight:500}
-.card.is-on .fav{color:#0b1120}
-.card.is-on .ic,.card.is-on .ic.photo,.card.is-on .ic:has(.art){background:none;box-shadow:none;filter:drop-shadow(0 10px 18px #0006)}
-.card.is-on .pw::before{background:#0b112040}
-.card.is-on .pw[aria-checked="true"]::before{background:#0b1120cc}
-.card:not(.is-on) .ic img{filter:grayscale(.5) brightness(.8) drop-shadow(0 8px 14px #0008)}
-.card.wide{grid-column:1/-1;min-height:150px}
-.card.wide .ic{width:150px;height:100px;left:16px;bottom:18px}
-.card.off-line{opacity:.55}
-.icbtn{background:#ffffff0d;border-color:#ffffff17}
-nav.bar{background:linear-gradient(160deg,#3a4560b0,#141c2ee0);border-color:#c7d2e84d}
-nav.bar:before{background:linear-gradient(145deg,#ffffff2e,#ffffff0a 55%,#ffffff1c);border-color:#ffffff55}
-nav.bar button{color:#c9d2e3}
-@media (prefers-contrast: more){.card.is-on .st{color:#0b1120}}
+.card .ic,.card .ic.photo,.card .ic:has(.art){position:static;order:-2;width:64px;height:64px;margin-bottom:auto;background:none;border:0;padding:0;filter:none;box-shadow:none}
+.card .ic img{filter:drop-shadow(0 6px 12px rgba(0,0,0,.45))}
+.card .nm{order:0;margin:12px 0 0;padding:0;font-size:1.05rem;font-weight:600;letter-spacing:-.01em;color:#fff}
+.card .st{order:1;font-size:.9rem;color:var(--mut)}
+.card .pw{top:12px;bottom:auto;left:10px;right:auto}
+.card .pw::before{background:rgba(120,120,128,.36)}
+.card .pw[aria-checked="true"]::before{background:var(--sys-green)}
+.card .fav{top:auto;bottom:18px;left:18px;color:#ffd60a}
+.card.is-on{background:rgba(255,255,255,calc(.78 + var(--g)*.16));border-color:rgba(255,255,255,.6);
+ box-shadow:inset 0 1px 0 #fff,0 0 0 .5px rgba(0,0,0,.25),0 16px 36px -12px var(--c2)}
+.card.is-on .nm{color:#000}
+.card.is-on .st{color:color-mix(in srgb,var(--c2) 80%,#000);font-weight:600}
+.card.is-on .fav{color:#c79300}
+.card.is-on .pw[aria-checked="true"]::before{background:var(--sys-green)}
+.card.is-on .ic,.card.is-on .ic.photo,.card.is-on .ic:has(.art){filter:none}
+.card:not(.is-on) .ic img{filter:grayscale(.35) brightness(.85) drop-shadow(0 6px 12px rgba(0,0,0,.45))}
+.card.wide{grid-column:1/-1;min-height:176px}
+.card.wide .ic,.card.wide .ic.photo{width:150px;height:90px}
+.card.off-line{opacity:.6}
+/* tab bar */
+nav.bar{height:64px;padding:4px;border-radius:999px;background:rgba(28,30,40,calc(.12 + var(--g)*.4))}
+nav.bar:before{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+nav.bar button{color:rgba(255,255,255,.85);font-size:.72rem;gap:2px}
+nav.bar button[aria-current="page"]{color:var(--sys-blue)}
+nav.bar button[aria-current="page"] svg{stroke-width:2.4}
+/* lists, sections */
+.sec-h h2{font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:-.02em}
+.list{border-radius:26px;overflow:hidden}
+.row{border-bottom:.5px solid var(--sep)}
+.row .s,.sheet>p{color:var(--mut)}
+.btn{border-radius:999px;color:#fff;font-weight:600}
+.btn.pri{background:var(--sys-blue);color:#fff;border:0}
+.btn.bad{color:#ff6961}
+.sw[aria-checked="true"]{background:var(--sys-green)}
+.seg{border-radius:22px;padding:3px;background:rgba(118,118,128,.24);border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.seg button{border-radius:999px;color:#fff;min-height:42px}
+.seg button[aria-pressed="true"]{background:rgba(255,255,255,.9);color:#000;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.days button[aria-pressed="true"]{background:var(--sys-blue);border-color:var(--sys-blue);color:#fff}
+.step button{background:rgba(118,118,128,.3);border:0}
+.ro{border-radius:22px}
+.field input,.field select,textarea.field-ta{background:rgba(118,118,128,.2);border:0;border-radius:14px}
+.search{border-radius:999px;min-height:46px}
+/* sheets: floating glass card */
+.scrim{background:rgba(0,0,0,.25);align-items:flex-end}
+.sheet{margin:0 8px 8px;width:calc(100% - 16px);max-width:620px;max-height:calc(100dvh - env(safe-area-inset-top) - 24px);border-radius:38px;padding:14px 16px calc(22px + env(safe-area-inset-bottom));
+ background:rgba(30,32,44,calc(.45 + var(--g)*.35));-webkit-backdrop-filter:blur(40px) saturate(190%);backdrop-filter:blur(40px) saturate(190%);
+ border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 .5px rgba(0,0,0,.5),0 30px 80px rgba(0,0,0,.55);animation:glassUp .38s cubic-bezier(.2,.9,.25,1.05)}
+@keyframes glassUp{from{transform:translateY(60px) scale(.97);opacity:0}}
+.sheet-h h2{font-size:1.35rem;font-weight:700;text-align:center}
+.big-pw{border-radius:42px}
+.toast{background:rgba(30,32,44,.75);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.2);border-radius:999px;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 12px 30px rgba(0,0,0,.4)}
+.breeze-bar{background:rgba(20,22,32,.7);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
+/* accessibility: Reduce Transparency / Increase Contrast, like the system */
+@media (prefers-reduced-transparency: reduce){body::before{filter:none;opacity:.35}
+ .card,.icbtn,nav.bar,.list,.chip,.quick .btn,.pill,.search,.ro,.empty,.btn:not(.pri),.sheet,.toast{background:#1c1c24!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+ .card.is-on{background:#f2f2f7!important}}
+@media (prefers-contrast: more){.card,.icbtn,nav.bar,.list,.chip,.pill,.sheet{border-color:rgba(255,255,255,.55)!important}.row .s,.card .st{color:#fff}.card.is-on .st{color:#000}}
+.glassSlider{width:100%;accent-color:var(--sys-blue);height:44px;direction:ltr}
 </style>
 </head>
 <body>
@@ -732,7 +792,8 @@ function viewSettings(v){
     ${CFG.key?`<button class="row row-btn" id="rc"><span class="grow"><span class="t">קוד שחזור</span><br><span class="s">להתחברות מחדש בלי QR</span></span>${svg('chev')}</button>`:''}
   </div>
   <div class="sec-h"><h2>תצוגה</h2></div><div class="list">
-    <div class="ctl"><div class="ctl-h"><span class="t" id="stL">סגנון סמלילים</span></div><div class="seg" role="group" aria-labelledby="stL">${[['photo','Smart Life'],['clay','תלת-ממד'],['glass','אריח'],['neon','ניאון']].map(([k,t])=>`<button data-st2="${k}" aria-pressed="${STYLE()===k}">${t}</button>`).join('')}</div></div>
+    <div class="ctl"><div class="ctl-h"><span class="t" id="stL">סגנון סמלילים</span></div><div class="seg" role="group" aria-labelledby="stL">${[['photo','מקורי'],['clay','תלת-ממד'],['glass','אריח'],['neon','ניאון']].map(([k,t])=>`<button data-st2="${k}" aria-pressed="${STYLE()===k}">${t}</button>`).join('')}</div></div>
+    <div class="ctl"><div class="ctl-h"><label class="t" for="glS">זכוכית</label><span class="v" id="glV" aria-hidden="true"></span></div><input type="range" class="glassSlider" id="glS" min="0" max="100" step="5" value="${Math.round((+(LS('unplug_glass')??55)))}"><div class="ctl-h" style="min-height:0"><span class="s">שקוף</span><span class="s">כהה</span></div></div>
     <div class="ctl"><div class="ctl-h"><span class="t" id="tsL">גודל טקסט</span></div><div class="seg" role="group" aria-labelledby="tsL">${[['100','רגיל'],['115','גדול'],['130','גדול מאוד'],['150','ענק']].map(([k,t])=>`<button data-ts="${k}" aria-pressed="${ts===k}">${t}</button>`).join('')}</div></div>
   </div>
   <div class="sec-h"><h2>התראות</h2></div><div class="list">
@@ -748,6 +809,7 @@ function viewSettings(v){
     <button class="row row-btn" id="rr"><span class="grow"><span class="t">ניהול חדרים</span><br><span class="s">${META.roomList.length} חדרים</span></span>${svg('chev')}</button>
   </div>
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
+  {const g=$('glS'),gv=$('glV'),sh=()=>{const t=+g.value<25?'שקוף מאוד':+g.value<70?'רגיל':'כהה';gv.textContent=t;g.setAttribute('aria-valuetext',t)};sh();g.oninput=()=>{LSset('unplug_glass',g.value);applyPrefs();sh()}}
   v.querySelectorAll('[data-st2]').forEach(b=>b.onclick=()=>{LSset('unplug_style',b.dataset.st2);render()});
   v.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{LSset('unplug_ts',b.dataset.ts);applyPrefs();render()});
   $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('bk').onclick=openBackup;$('siri').onclick=openSiri;
@@ -860,11 +922,11 @@ function showQR(uc,j){
 }
 
 /* ---------- boot ---------- */
-function applyPrefs(){document.documentElement.style.setProperty('--ts',(LS('unplug_ts')||'100')+'%')}
+function applyPrefs(){document.documentElement.style.setProperty('--ts',(LS('unplug_ts')||'100')+'%');document.documentElement.style.setProperty('--g',(+(LS('unplug_glass')??55))/100)}
 document.querySelectorAll('nav.bar button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();if(TAB==='sched')loadSched().then(render);window.scrollTo(0,0)});
 $('refBtn').onclick=()=>{loadDevices();loadSched()};
 $('addBtn').onclick=openAdd;
-applyPrefs();render();setTimeout(()=>{const sp=$('splash');sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
+applyPrefs();render();addEventListener('scroll',()=>document.body.classList.toggle('scrolled',scrollY>40),{passive:true});setTimeout(()=>{const sp=$('splash');sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
 if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConnect();
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active'))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
