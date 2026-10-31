@@ -323,6 +323,14 @@ header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,
 .mini img.real{border-radius:10px}
 .icgrid button img.real{width:60px;height:60px;border-radius:14px}
 .card.wide .ic:has(img.real){width:96px;height:96px}
+.homeBtn{min-height:40px;padding:0 14px;border-radius:999px;background:#ff9a3d18;border:1px solid #ff9a3d40}
+.homeBtn svg:first-child{width:18px;height:18px;transform:none}
+.roomSec{margin-top:20px}.roomSec:first-of-type{margin-top:4px}
+.roomH{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 4px 10px}
+.roomT{display:flex;align-items:baseline;gap:10px;min-height:44px;font-size:1.35rem;font-weight:700;letter-spacing:-.02em;color:#fff;text-align:start}
+.roomT:disabled{opacity:1;color:var(--mut)}
+.roomN{font-size:.9rem;font-weight:500;color:var(--mut)}
+.roomOff{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#151a24;border:1px solid #ffffff14;color:var(--gold-txt)}.roomOff svg{width:20px;height:20px}
 </style>
 </head>
 <body>
@@ -392,6 +400,7 @@ const P={
  play:'<path d="M8 5v14l11-7z"/>',
  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
  chev:'<path d="m15 6-6 6 6 6"/>',
+ house:'<path d="M4 11 12 4l8 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>',
  star:'<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
  bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
@@ -519,7 +528,7 @@ async function refreshOne(id){try{const j=await api('/device',{id});if(!j.device
 function render(){
   window.DEVS_ALL=DEVS;
   const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d)).length, off=HD.filter(d=>!d.online).length;
-  $('homeBtn').innerHTML=`<span>${esc(curHome().name)}</span>${svg('chev',2.4)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
+  $('homeBtn').innerHTML=`${svg('house',2)}<span>${esc(curHome().name)}</span>${svg('chev',2.4)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
   const W=HD.reduce((t,d)=>t+watts(d),0),hasW=HD.some(d=>d.status.cur_power!=null);
   $('title').textContent=!CFG.key||!HD.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
   $('sub').innerHTML=!CFG.key?'<span class="pill">לא מחובר</span>':DEVS.length?`<span class="pill">${HD.length} מכשירים</span>${hasW?`<span class="pill${W>5?' hot':''}">${svg('bolt')}${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}</span>`:''}${off?`<span class="pill bad">${off} מנותקים</span>`:''}`:'';
@@ -544,17 +553,28 @@ function viewDevices(v){
   v.innerHTML=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
       (DEVS.length?`<div class="quick"><button class="btn" id="allOff" ${onDevs.length?'':'disabled'}>${svg('power')}לכבות הכול${onDevs.length?` (${onDevs.length})`:''}</button>${SCENES.slice(0,1).map(sc=>`<button class="btn pri" id="sc0">${svg('play')}${esc(sc.name)}</button>`).join('')}</div>`:'')+
    `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים">${svg('edit',2)}</button></div>`+
-   (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
+   (list.length?(ROOM==='all'&&!q&&rooms.length?groupedRooms(list,rooms):`<div class="grid" role="list">${list.map(card).join('')}</div>`):`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
   $('roomAdd').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=META.home;saveMeta();manageRooms(n)};
   $('roomEdit').onclick=()=>manageRooms();
   v.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>{ROOM=b.dataset.room;render()});
   $('emAs')&&($('emAs').onclick=()=>manageRooms());
+  v.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ROOM=b.dataset.go;render();scrollTo(0,0)});
+  v.querySelectorAll('[data-roff]').forEach(b=>b.onclick=async()=>{const r=b.dataset.roff,ds=DEVS.filter(d=>(r?roomOf(d)===r:!roomOf(d))&&d.online&&isOn(d));for(const d of ds)await send(d,[{code:powerCode(d),value:false}]);toast((r||'המכשירים בלי חדר')+' - כבוי')});
   $('allOff')&&($('allOff').onclick=async()=>{if(!confirm(`לכבות ${onDevs.length} מכשירים?`))return;for(const d of onDevs)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')});
   $('sc0')&&($('sc0').onclick=e=>runScene(SCENES[0],e.currentTarget));
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
     c.querySelector('.open').onclick=()=>openDevice(d);
     const pw=c.querySelector('.pw');if(pw)pw.onclick=()=>{if(!d.online)return toast('המכשיר מנותק');send(d,[{code:powerCode(d),value:!isOn(d)}])}});
+}
+/* "הכול" view: one section per room, like Apple Home */
+function groupedRooms(list,rooms){
+  const secs=rooms.map(r=>[r,list.filter(d=>roomOf(d)===r)]).filter(x=>x[1].length);
+  const rest=list.filter(d=>!rooms.includes(roomOf(d)));if(rest.length)secs.push(['',rest]);
+  return secs.map(([r,ds],i)=>{const on=ds.filter(d=>d.online&&isOn(d));
+    return `<section class="roomSec" aria-labelledby="rs${i}"><div class="roomH"><button class="roomT" id="rs${i}" data-go="${esc(r)}" ${r?'':'disabled'}>${r?esc(r):'בלי חדר'}<span class="roomN">${on.length?on.length+' פועלים':'הכול כבוי'}</span></button>
+      ${on.length?`<button class="roomOff" data-roff="${esc(r)}" aria-label="לכבות את כל ${r?'החדר '+esc(r):'המכשירים בלי חדר'}">${svg('power',2.2)}</button>`:''}</div>
+      <div class="grid" role="list">${ds.map(card).join('')}</div></section>`}).join('');
 }
 function card(d){
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
