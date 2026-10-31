@@ -8,5 +8,18 @@
   "display": "standalone",
   "background_color": "#0a0f14",
   "theme_color": "#0a0f14",
-  "icons": [{ "src": "icon.png?v=1", "sizes": "512x512", "type": "image/png", "purpose": "any" }]
+  "icons": [
+    {
+      "src": "apple-touch-icon.png?v=3",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png?v=3",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
