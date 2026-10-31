@@ -138,6 +138,19 @@ ol{margin:0;padding-inline-start:22px;display:flex;flex-direction:column;gap:8px
 .breeze-bar .bk svg{width:20px;height:20px;transform:scaleX(-1)}
 .breeze-bar .nm{flex:1;font-weight:700;font-size:1.1rem;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .breeze iframe{flex:1;width:100%;border:0;background:#000}
+.search{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 14px;border-radius:16px;background:var(--card);border:1px solid var(--line);margin-bottom:12px}
+.search svg{width:20px;height:20px;color:var(--mut);flex:none}.search input{flex:1;min-width:0;background:none;border:0;outline:0;font-size:1.05rem;min-height:48px}
+.quick{display:flex;gap:10px;margin-bottom:14px}.quick .btn{flex:1;min-height:54px}
+.energy{display:flex;align-items:center;gap:10px;background:linear-gradient(160deg,#ffb23e14,transparent),var(--card);border:1px solid var(--acc-line);border-radius:18px;padding:12px 16px;margin-bottom:14px}
+.energy svg{width:26px;height:26px;color:var(--acc)}.energy b{font-size:1.35rem;font-variant-numeric:tabular-nums}
+.card .fav{position:absolute;bottom:12px;left:12px;width:18px;height:18px;color:var(--acc)}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.swatches button{width:52px;height:52px;border-radius:50%;border:3px solid var(--line)}
+.swatches button[aria-pressed="true"]{border-color:#fff}
+input.hue{direction:ltr;-webkit-appearance:none;appearance:none;height:28px;border-radius:14px;background:linear-gradient(90deg,red,#ff0,lime,cyan,blue,#f0f,red);width:100%}
+input.hue::-webkit-slider-thumb{-webkit-appearance:none;width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid #000}
+.code{direction:ltr;text-align:left;font:500 .85rem ui-monospace,Menlo,monospace;background:#0d141b;border:1px solid var(--line);border-radius:12px;padding:10px;word-break:break-all;user-select:all}
+textarea.field-ta{width:100%;min-height:120px;border-radius:14px;border:1px solid #48556b;background:#11161e;padding:12px;font:500 .9rem ui-monospace,Menlo,monospace;direction:ltr;color:var(--ink)}
 @keyframes r{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media (prefers-contrast: more){:root{--line:#7d8a9c;--mut:#e3e8ef}}
@@ -172,7 +185,9 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const CFG={api:LS('kor_api')||API_DEFAULT,key:LS('unplug_key')||LS('kor_key')||''};
 let DEVS=LSj('unplug_devs',[]), SCHED=[], TAB='devices', ROOM='all', busy=false;
 const META=LSj('unplug_meta',{names:{},rooms:{},roomList:[]});   // local names & rooms
-let SCENES=LSj('unplug_scenes',[]);
+let SCENES=LSj('unplug_scenes',[]),LOG=LSj('unplug_log',[]),Q='',FILTER='';
+META.fav=META.fav||{};
+const addLog=(name,text)=>{LOG.unshift({t:Date.now(),name,text});LOG=LOG.slice(0,150);LSset('unplug_log',JSON.stringify(LOG))};
 const saveMeta=()=>LSset('unplug_meta',JSON.stringify(META));
 const saveScenes=()=>LSset('unplug_scenes',JSON.stringify(SCENES));
 
@@ -199,7 +214,14 @@ const P={
  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
  play:'<path d="M8 5v14l11-7z"/>',
  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
- chev:'<path d="m15 6-6 6 6 6"/>'
+ chev:'<path d="m15 6-6 6 6 6"/>',
+ star:'<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+ bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+ mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+ bolt:'<path d="M13 3 5 13.5h6l-1 7.5 8-10.5h-6z"/>',
+ search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
+ list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+ save:'<path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/>'
 };
 const svg=(n,w=2)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]||P.dev}</svg>`;
 document.querySelectorAll('[data-ic]').forEach(e=>e.outerHTML=svg(e.dataset.ic));
@@ -258,7 +280,7 @@ async function loadDevices(){
 async function loadSched(){if(!CFG.key)return;try{const j=await api('/schedules');SCHED=j.schedules||[]}catch(e){}}
 async function send(d,cmds){
   const old={...d.status};cmds.forEach(c=>d.status[c.code]=c.value);refreshOpen(d);render();
-  try{await api('/command',{id:d.id,commands:cmds});LSset('unplug_devs',JSON.stringify(DEVS));setTimeout(()=>refreshOne(d.id),1800)}
+  try{await api('/command',{id:d.id,commands:cmds});addLog(dname(d),cmdsText({device:d.id,cmds}));LSset('unplug_devs',JSON.stringify(DEVS));setTimeout(()=>refreshOne(d.id),1800)}
   catch(e){d.status=old;refreshOpen(d);render();toast('לא בוצע: '+e.message)}
 }
 async function refreshOne(id){try{const j=await api('/device',{id});if(!j.device)return;const i=DEVS.findIndex(x=>x.id===id);if(i>=0){DEVS[i]=j.device;refreshOpen(j.device);render()}}catch(e){}}
@@ -273,13 +295,26 @@ function render(){
   ({devices:viewDevices,scenes:viewScenes,sched:viewSched,settings:viewSettings})[TAB](v);
 }
 function roomOf(d){return META.rooms[d.id]||''}
+function watts(d){const f=readOf(d,'cur_power');return d.online&&d.status.cur_power!=null?(+d.status.cur_power)/10**(+(f&&f.values&&f.values.scale)||0):0}
 function viewDevices(v){
   const rooms=META.roomList.filter(r=>DEVS.some(d=>roomOf(d)===r));
-  if(ROOM!=='all'&&!rooms.includes(ROOM))ROOM='all';
-  const list=DEVS.filter(d=>ROOM==='all'||roomOf(d)===ROOM);
-  v.innerHTML=(rooms.length?`<div class="chips" role="group" aria-label="סינון לפי חדר"><button class="chip" data-room="all" aria-pressed="${ROOM==='all'}">הכול</button>${rooms.map(r=>`<button class="chip" data-room="${esc(r)}" aria-pressed="${ROOM===r}">${esc(r)}</button>`).join('')}</div>`:'')+
-   (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':'אין מכשירים'}</b>${busy?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
+  if(ROOM!=='all'&&ROOM!=='fav'&&ROOM!=='off'&&!rooms.includes(ROOM))ROOM='all';
+  const hasFav=DEVS.some(d=>META.fav[d.id]),offN=DEVS.filter(d=>!d.online).length,onDevs=DEVS.filter(d=>d.online&&isOn(d));
+  const q=Q.trim().toLowerCase();
+  let list=DEVS.filter(d=>ROOM==='all'||(ROOM==='fav'?META.fav[d.id]:ROOM==='off'?!d.online:roomOf(d)===ROOM));
+  if(q)list=list.filter(d=>(dname(d)+' '+catOf(d)[0]+' '+roomOf(d)).toLowerCase().includes(q));
+  list=list.slice().sort((x,y)=>(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0)||(META.order?.[x.id]??999)-(META.order?.[y.id]??999));
+  const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
+  const chips=[['all','הכול'],...(hasFav?[['fav','מועדפים']]:[]),...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
+  v.innerHTML=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
+   (hasW?`<div class="energy" role="status">${svg('bolt')}<span class="grow" style="flex:1">צריכה עכשיו בבית</span><b>${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}</b></div>`:'')+
+   (DEVS.length?`<div class="quick"><button class="btn" id="allOff" ${onDevs.length?'':'disabled'}>${svg('power')}לכבות הכול${onDevs.length?` (${onDevs.length})`:''}</button>${SCENES.slice(0,1).map(sc=>`<button class="btn pri" id="sc0">${svg('play')}${esc(sc.name)}</button>`).join('')}</div>`:'')+
+   (chips.length>1?`<div class="chips" role="group" aria-label="סינון">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}</div>`:'')+
+   (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':'אין מכשירים'}</b>${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
+  const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
   v.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>{ROOM=b.dataset.room;render()});
+  $('allOff')&&($('allOff').onclick=async()=>{if(!confirm(`לכבות ${onDevs.length} מכשירים?`))return;for(const d of onDevs)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')});
+  $('sc0')&&($('sc0').onclick=e=>runScene(SCENES[0],e.currentTarget));
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
     c.querySelector('.open').onclick=()=>openDevice(d);
     const pw=c.querySelector('.pw');if(pw)pw.onclick=()=>{if(!d.online)return toast('המכשיר מנותק');send(d,[{code:powerCode(d),value:!isOn(d)}])}});
@@ -287,10 +322,10 @@ function viewDevices(v){
 function card(d){
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
   return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}" role="listitem" data-id="${esc(d.id)}">
-   <button class="open" aria-label="${nm}, ${esc(cat)}, ${esc(stateText(d))}. פתיחת הגדרות"></button>
+   <button class="open" aria-label="${nm}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
    <div class="ic">${svg(ic)}</div>
    ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${on?'כיבוי':'הדלקה'} ${nm}" ${d.online?'':'aria-disabled="true"'}>${svg('power',2.4)}</button>`:''}
-   <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${esc(stateText(d))}</div></div>`;
+   <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${esc(stateText(d))}</div>${META.fav[d.id]?`<span class="fav" aria-hidden="true">${svg('star',2)}</span>`:''}</div>`;
 }
 
 /* ---------- sheets ---------- */
@@ -337,28 +372,49 @@ function openDevice(d,generic){
         ${!d.online?`<div class="empty" role="alert"><b>המכשיר מנותק</b>בדוק שהוא מחובר לחשמל ול-WiFi.</div>`:''}
         ${pc?`<button class="big-pw" id="bigPw" role="switch" aria-checked="${on}" aria-label="${on?'כיבוי':'הדלקה'}">${svg('power',2.2)}</button><div class="state-line" aria-hidden="true">${on?'פועל':'כבוי'}</div>`:''}
         ${ros.length?`<div class="readouts">${ros.map(f=>`<div class="ro"><div class="k">${esc(nameOf(f))}</div><div class="n">${esc(roVal(d,f))}</div></div>`).join('')}</div>`:''}
+        ${colF(d)?colHtml(d):''}
         ${ctrls.length?`<div class="list" id="ctrls">${ctrls.map(f=>ctrlHtml(d,f)).join('')}</div>`:''}
         ${pc?`<div class="sec-h"><h2>טיימר</h2></div><div class="list" id="tmr"></div>`:''}
         <div class="sec-h"><h2>תזמונים</h2><button class="btn" id="addS">${svg('plus')}הוספה</button></div>
         <div class="list">${mySched.length?mySched.map(s=>schedRow(s,false)).join(''):`<div class="row"><span class="s">אין תזמונים למכשיר הזה</span></div>`}</div>
         <div class="sec-h"><h2>פרטים</h2></div>
         <div class="list">
+          <button class="row row-btn" id="fav" role="switch" aria-checked="${!!META.fav[d.id]}"><span class="grow"><span class="t">מועדף</span><br><span class="s">${META.fav[d.id]?'מופיע ראשון בבית':'לא'}</span></span>${svg('star')}</button>
           <button class="row row-btn" id="ren"><span class="grow"><span class="t">שם</span><br><span class="s">${esc(dname(d))}</span></span>${svg('edit')}</button>
           <button class="row row-btn" id="room"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(d)||'ללא')}</span></span>${svg('edit')}</button>
           <div class="row"><span class="grow"><span class="t">סוג</span><br><span class="s">${esc(cat)} (${esc(d.category)})</span></span></div>
           <div class="row"><span class="grow"><span class="t">מצב רשת</span><br><span class="s">${d.online?'מחובר':'מנותק'}</span></span></div>
         </div>`;
       if(pc){body.querySelector('#bigPw').onclick=()=>{if(!d.online)return toast('המכשיר מנותק');send(d,[{code:pc,value:!isOn(d)}])};drawTimer(d,body.querySelector('#tmr'),pc)}
-      ctrls.forEach(f=>bindCtrl(body,d,f));
+      ctrls.forEach(f=>bindCtrl(body,d,f));if(colF(d))bindCol(body,d);
       body.querySelector('#addS').onclick=()=>openSchedEdit(null,d);
       bindSchedRows(body);
       body.querySelector('#ren').onclick=()=>{const n=prompt('שם חדש למכשיר',dname(d));if(n==null)return;n.trim()&&n.trim()!==d.name?META.names[d.id]=n.trim():delete META.names[d.id];saveMeta();el.querySelector('#shT').textContent=dname(d);draw(d);render()};
+      body.querySelector('#fav').onclick=()=>{META.fav[d.id]?delete META.fav[d.id]:META.fav[d.id]=true;saveMeta();draw(d);render()};
       body.querySelector('#room').onclick=()=>pickRoom(d,()=>{draw(d);render()});
     }
     draw(d);
   });
 }
 function roVal(d,f){const v=d.status[f.code];if(f.type==='Integer')return fmtNum(v,f);if(f.type==='Boolean')return v?'כן':'לא';return vname(v)}
+/* ---------- colour lights ---------- */
+const colF=d=>(d.functions||[]).find(f=>f.code==='colour_data_v2'||f.code==='colour_data');
+function colVal(d){const f=colF(d);let v=d.status[f.code];try{v=typeof v==='string'?JSON.parse(v):v}catch(e){v=null}return v||{h:30,s:1000,v:1000}}
+const COLS=[['אדום',0],['כתום',30],['צהוב',55],['ירוק',120],['תכלת',190],['כחול',230],['סגול',275],['ורוד',320]];
+function colHtml(d){const c=colVal(d),v2=colF(d).code==='colour_data_v2',smax=v2?1000:255;
+  return `<div class="list"><div class="ctl"><div class="ctl-h"><span class="t" id="colL">צבע</span></div>
+   <div class="swatches" role="group" aria-labelledby="colL">${COLS.map(([n,h])=>`<button data-h="${h}" aria-label="${n}" aria-pressed="${Math.abs(c.h-h)<8&&c.s>smax*.6}" style="background:hsl(${h} 95% 55%)"></button>`).join('')}<button data-h="w" aria-label="לבן" style="background:#fff7e8"></button></div>
+   <label class="sr" for="hue">גוון</label><input type="range" class="hue" id="hue" min="0" max="360" step="1" value="${c.h}" aria-valuetext="גוון ${c.h}">
+   <div class="ctl-h"><label class="t" for="sat">רוויה</label><span class="v" id="satV">${Math.round(c.s/smax*100)}%</span></div>
+   <input type="range" id="sat" min="0" max="${smax}" step="1" value="${c.s}" style="accent-color:var(--acc);height:44px;direction:ltr" aria-valuetext="${Math.round(c.s/smax*100)} אחוז"></div></div>`}
+function bindCol(body,d){const f=colF(d),v2=f.code==='colour_data_v2',smax=v2?1000:255,mode=(d.functions||[]).find(x=>x.code===(v2?'work_mode':'work_mode')||x.code==='work_mode');
+  let t;const go=(h,sat,white)=>{clearTimeout(t);t=setTimeout(()=>{const c=colVal(d);const cmds=[];
+    if(white){if(mode)cmds.push({code:mode.code,value:'white'})}else{if(mode)cmds.push({code:mode.code,value:'colour'});cmds.push({code:f.code,value:{h:+h,s:+sat,v:c.v||(v2?1000:255)}})}
+    send(d,cmds)},350)};
+  body.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>b.dataset.h==='w'?go(0,0,true):go(b.dataset.h,smax));
+  const hu=body.querySelector('#hue'),sa=body.querySelector('#sat');
+  hu.onchange=()=>go(hu.value,sa.value);sa.oninput=()=>{const p=Math.round(sa.value/smax*100);body.querySelector('#satV').textContent=p+'%';sa.setAttribute('aria-valuetext',p+' אחוז')};sa.onchange=()=>go(hu.value,sa.value);
+}
 function ctrlHtml(d,f){
   const v=d.status[f.code],id='c_'+f.code,nm=esc(nameOf(f));
   if(f.type==='Boolean')return `<div class="ctl"><div class="ctl-h"><span class="t" id="${id}_l">${nm}</span><button class="sw" id="${id}" role="switch" aria-checked="${v===true}" aria-labelledby="${id}_l"></button></div></div>`;
@@ -388,14 +444,15 @@ function drawTimer(d,box,pc){
   const t=SCHED.find(s=>s.device===d.id&&s.once&&s.label==='טיימר');
   if(t){const on=t.cmds?.[0]?.value===true;
     box.innerHTML=`<div class="row"><span class="grow"><span class="t">${on?'יידלק':'ייכבה'} ב-${esc(t.time)}</span><br><span class="s">פעם אחת</span></span><button class="btn bad" id="tmX">ביטול</button></div>`;
-    box.querySelector('#tmX').onclick=async()=>{try{await api('/schedules/delete',{id:t.id});await loadSched();refreshOpen(d);toast('הטיימר בוטל')}catch(e){toast(e.message)}};return}
+    box.querySelector('#tmX').onclick=async()=>{try{await api('/schedules/delete',{id:t.id});if(LS('unplug_push'))api('/push/cancel').catch(()=>{});await loadSched();refreshOpen(d);toast('הטיימר בוטל')}catch(e){toast(e.message)}};return}
   const on=isOn(d);
   box.innerHTML=`<div class="ctl"><div class="ctl-h"><span class="t" id="tmL">${on?'לכבות בעוד':'להדליק בעוד'}</span></div>
-   <div class="seg" role="group" aria-labelledby="tmL">${[15,30,60,120,240].map(m=>`<button data-m="${m}">${m<60?m+' דק׳':m/60+' שע׳'}</button>`).join('')}<button data-m="x">אחר</button></div></div>`;
+   ${LS('unplug_push')?`<label class="ctl-h" style="min-height:48px"><span class="t">התראה כשמסתיים</span><input type="checkbox" id="tmN" checked style="width:28px;height:28px;accent-color:var(--acc)"></label>`:''}<div class="seg" role="group" aria-labelledby="tmL">${[15,30,60,120,240].map(m=>`<button data-m="${m}">${m<60?m+' דק׳':m/60+' שע׳'}</button>`).join('')}<button data-m="x">אחר</button></div></div>`;
   box.querySelectorAll('[data-m]').forEach(b=>b.onclick=async()=>{
     let m=b.dataset.m;if(m==='x'){m=prompt('בעוד כמה דקות?','45');if(!m)return}m=Math.round(+m);if(!(m>0&&m<=1440))return toast('מספר דקות לא תקין');
     const at=new Date(Date.now()+m*60000);
     try{await api('/schedules/save',{device:d.id,time:hm(at),days:[at.getDay()],cmds:[{code:pc,value:!on}],label:'טיימר',enabled:true,once:true});
+      const n=box.querySelector('#tmN');if(n&&n.checked){const fire=new Date(at);fire.setSeconds(25,0);api('/push/at',{at:fire.getTime()/1000,title:`${dname(d)} ${on?'כבה':'נדלק'}`,body:'הטיימר הסתיים'}).catch(()=>{})}
       await loadSched();refreshOpen(d);toast(`${on?'ייכבה':'יידלק'} ב-${hm(at)}`)}catch(e){toast(e.message)}});
 }
 const hm=t=>String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
@@ -415,10 +472,11 @@ function bindSchedRows(root){
     try{await api('/schedules/save',s)}catch(e){s.enabled=!s.enabled;b.setAttribute('aria-checked',s.enabled);toast(e.message)}});
 }
 function viewSched(v){
-  const list=SCHED.filter(s=>!(s.once&&s.label==='טיימר')).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const list=SCHED.filter(s=>!(s.once&&s.label==='טיימר')&&!String(s.label||'').startsWith('סצנה: ')).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const tm=SCHED.filter(s=>s.once&&s.label==='טיימר');
   v.innerHTML=`<button class="btn pri wide" id="ns">${svg('plus')}תזמון חדש</button>
    ${tm.length?`<div class="sec-h"><h2>טיימרים פעילים</h2></div><div class="list">${tm.map(s=>schedRow(s,true)).join('')}</div>`:''}
+   ${SCENES.some(x=>x.at)?`<div class="sec-h"><h2>סצנות מתוזמנות</h2></div><div class="list">${SCENES.filter(x=>x.at).map(x=>`<div class="row"><span class="grow"><span class="t" style="font-size:1.3rem">${esc(x.at)}</span> <span class="t">${esc(x.name)}</span><br><span class="s">${esc(daysText({days:x.days}))} · ${x.acts.length} פעולות</span></span></div>`).join('')}</div>`:''}
    <div class="sec-h"><h2>תזמונים</h2></div>
    ${list.length?`<div class="list">${list.map(s=>schedRow(s,true)).join('')}</div>`:`<div class="empty"><b>אין תזמונים</b>אפשר לתזמן כל מכשיר, לכל יום ולכל שעה.</div>`}`;
   $('ns').onclick=()=>pickDevice('לאיזה מכשיר?',d=>openSchedEdit(null,d));
@@ -484,7 +542,7 @@ function pickRoom(d,cb){
 /* ---------- scenes (run several actions in one tap) ---------- */
 function viewScenes(v){
   v.innerHTML=`<button class="btn pri wide" id="nsc">${svg('plus')}סצנה חדשה</button><div class="sec-h"><h2>סצנות</h2></div>
-   ${SCENES.length?`<div class="list">${SCENES.map((s,i)=>`<div class="row"><button class="row-btn grow" data-ed="${i}" style="display:block"><span class="t">${esc(s.name)}</span><br><span class="s">${s.acts.length} פעולות</span></button><button class="btn pri" data-run="${i}" aria-label="הפעלת ${esc(s.name)}">${svg('play')}הפעל</button></div>`).join('')}</div>`
+   ${SCENES.length?`<div class="list">${SCENES.map((s,i)=>`<div class="row"><button class="row-btn grow" data-ed="${i}" style="display:block"><span class="t">${esc(s.name)}</span><br><span class="s">${s.acts.length} פעולות${s.at?' · '+esc(s.at)+' '+esc(daysText({days:s.days})):''}</span></button><button class="btn pri" data-run="${i}" aria-label="הפעלת ${esc(s.name)}">${svg('play')}הפעל</button></div>`).join('')}</div>`
    :`<div class="empty"><b>אין סצנות</b>סצנה מפעילה כמה מכשירים בלחיצה אחת, למשל "יוצא מהבית" שמכבה הכול.</div>`}`;
   $('nsc').onclick=()=>openScene(null);
   v.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>openScene(+b.dataset.ed));
@@ -494,27 +552,46 @@ async function runScene(s,b){
   b&&(b.disabled=true);let ok=0,bad=0;
   for(const a of s.acts){const d=DEVS.find(x=>x.id===a.device);if(!d){bad++;continue}
     try{await api('/command',{id:d.id,commands:[a.cmd]});d.status[a.cmd.code]=a.cmd.value;ok++}catch(e){bad++}}
-  b&&(b.disabled=false);render();toast(bad?`בוצעו ${ok}, נכשלו ${bad}`:`"${s.name}" בוצעה`);
+  addLog('סצנה',s.name);b&&(b.disabled=false);render();toast(bad?`בוצעו ${ok}, נכשלו ${bad}`:`"${s.name}" בוצעה`);
 }
 function openScene(i){
   const s=i==null?{name:'',acts:[],_new:true}:JSON.parse(JSON.stringify(SCENES[i]));const isNew=!!s._new;
   const close=sheet(isNew?'סצנה חדשה':'עריכת סצנה',`<div class="field"><label for="scN">שם הסצנה</label><input id="scN" value="${esc(s.name)}" placeholder="יוצא מהבית"></div>
     <div class="sec-h" style="margin:6px 4px 0"><h2>פעולות</h2></div><div class="list" id="scA"></div>
-    <button class="btn wide" id="scAdd">${svg('plus')}הוספת פעולה</button><div class="err" id="scE" role="alert"></div>
+    <button class="btn wide" id="scAdd">${svg('plus')}הוספת פעולה</button>
+    <div class="sec-h" style="margin:6px 4px 0"><h2>הפעלה אוטומטית</h2></div>
+    <div class="list"><label class="row"><span class="grow t">להפעיל בשעה קבועה</span><input type="checkbox" id="scT" ${s.at?'checked':''} style="width:28px;height:28px;accent-color:var(--acc)"></label>
+     <div class="ctl" id="scTB" ${s.at?'':'hidden'}><div class="field"><label for="scTm">שעה</label><input id="scTm" type="time" value="${esc(s.at||'07:00')}" style="font-size:1.5rem;direction:ltr;text-align:center"></div>
+     <div class="days" role="group" aria-label="ימים">${DAYS.map((x,k)=>`<button data-sd="${k}" aria-pressed="${(s.days||[0,1,2,3,4,5,6]).includes(k)}" aria-label="${DAYSL[k]}">${x}</button>`).join('')}</div></div></div>
+    <div class="err" id="scE" role="alert"></div>
     <div class="btns">${!isNew?`<button class="btn bad" id="scD">${svg('trash')}מחיקה</button>`:''}<button class="btn pri" id="scS">שמירה</button></div>`,(el,cl)=>{
     const draw=()=>{el.querySelector('#scA').innerHTML=s.acts.length?s.acts.map((a,k)=>{const d=DEVS.find(x=>x.id===a.device);
       return `<div class="row"><span class="grow"><span class="t">${esc(d?dname(d):'מכשיר שהוסר')}</span><br><span class="s">${esc(cmdsText({device:a.device,cmds:[a.cmd]}))}</span></span><button class="icbtn" data-rm="${k}" aria-label="הסרת פעולה">${svg('trash')}</button></div>`}).join(''):`<div class="row"><span class="s">עוד אין פעולות</span></div>`;
       el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{s.acts.splice(+b.dataset.rm,1);draw()})};
     draw();
-    el.querySelector('#scAdd').onclick=()=>{s.name=el.querySelector('#scN').value;pickDevice('איזה מכשיר?',d=>{const ed=actionEditor(d);
+    const sd=new Set(s.days||[0,1,2,3,4,5,6]);
+    el.querySelector('#scT').onchange=e=>{el.querySelector('#scTB').hidden=!e.target.checked};
+    el.querySelectorAll('[data-sd]').forEach(b=>b.onclick=()=>{const k=+b.dataset.sd;sd.has(k)?sd.delete(k):sd.add(k);b.setAttribute('aria-pressed',sd.has(k))});
+    const keepT=()=>{s._at=el.querySelector('#scT').checked?el.querySelector('#scTm').value:'';s._days=[...sd]};
+    el.querySelector('#scAdd').onclick=()=>{s.name=el.querySelector('#scN').value;keepT();s.at=s._at;s.days=s._days;pickDevice('איזה מכשיר?',d=>{const ed=actionEditor(d);
       sheet(esc(dname(d)),ed.html+`<button class="btn pri wide" id="aOk">הוספה</button>`,(e2,c2)=>{const g=ed.bind(e2);e2.querySelector('#aOk').onclick=()=>{const c=g();if(!c)return toast('ערך לא תקין');s.acts.push({device:d.id,cmd:c});c2();reopen()}})})};
     const reopen=()=>{const tmpI=i;SCENES_TMP=s;openSceneObj(tmpI)};
-    el.querySelector('#scS').onclick=()=>{s.name=el.querySelector('#scN').value.trim();if(!s.name)return el.querySelector('#scE').textContent='תן שם לסצנה';if(!s.acts.length)return el.querySelector('#scE').textContent='הוסף לפחות פעולה אחת';
-      delete s._new;i==null?SCENES.push(s):SCENES[i]=s;saveScenes();cl();render();toast('נשמר')};
-    if(!isNew)el.querySelector('#scD').onclick=()=>{if(!confirm('למחוק את הסצנה?'))return;SCENES.splice(i,1);saveScenes();cl();render()};
+    el.querySelector('#scS').onclick=async()=>{s.name=el.querySelector('#scN').value.trim();if(!s.name)return el.querySelector('#scE').textContent='תן שם לסצנה';if(!s.acts.length)return el.querySelector('#scE').textContent='הוסף לפחות פעולה אחת';
+      keepT();if(s._at&&!s._days.length)return el.querySelector('#scE').textContent='בחר לפחות יום אחד';
+      const b=el.querySelector('#scS');b.disabled=true;b.textContent='שומר...';
+      try{await syncSceneSched(s,s._at,s._days)}catch(e){b.disabled=false;b.textContent='שמירה';return el.querySelector('#scE').textContent='התזמון לא נשמר: '+e.message}
+      delete s._new;delete s._at;delete s._days;i==null?SCENES.push(s):SCENES[i]=s;saveScenes();cl();render();toast('נשמר')};
+    if(!isNew)el.querySelector('#scD').onclick=async()=>{if(!confirm('למחוק את הסצנה?'))return;try{await syncSceneSched(s,'',[])}catch(e){}SCENES.splice(i,1);saveScenes();cl();render()};
   });
 }
 let SCENES_TMP=null;
+/* a scheduled scene = one server schedule per action, all with the same time and days */
+async function syncSceneSched(s,at,days){
+  for(const id of s.schedIds||[])await api('/schedules/delete',{id}).catch(()=>{});
+  s.schedIds=[];s.at=at||'';s.days=days;
+  if(at)for(const a of s.acts){const j=await api('/schedules/save',{device:a.device,time:at,days,cmds:[a.cmd],label:'סצנה: '+s.name,enabled:true,once:false});s.schedIds.push(j.id)}
+  loadSched();
+}
 function openSceneObj(i){const keep=SCENES_TMP;SCENES_TMP=null;if(i==null){SCENES.push(keep);openScene(SCENES.length-1);SCENES.pop()}else{const o=SCENES[i];SCENES[i]=keep;openScene(i);SCENES[i]=o}}
 
 /* ---------- settings ---------- */
@@ -527,15 +604,66 @@ function viewSettings(v){
   <div class="sec-h"><h2>תצוגה</h2></div><div class="list">
     <div class="ctl"><div class="ctl-h"><span class="t" id="tsL">גודל טקסט</span></div><div class="seg" role="group" aria-labelledby="tsL">${[['100','רגיל'],['115','גדול'],['130','גדול מאוד'],['150','ענק']].map(([k,t])=>`<button data-ts="${k}" aria-pressed="${ts===k}">${t}</button>`).join('')}</div></div>
   </div>
+  <div class="sec-h"><h2>התראות</h2></div><div class="list">
+    <div class="row"><span class="grow"><span class="t">התראות לטלפון</span><br><span class="s" id="pushS">${pushStatus()}</span></span>${LS('unplug_push')?`<button class="btn" id="pushT">בדיקה</button>`:`<button class="btn pri" id="pushOn">${svg('bell')}הפעלה</button>`}</div>
+  </div>
+  <div class="sec-h"><h2>קיצורים</h2></div><div class="list">
+    <button class="row row-btn" id="siri"><span class="grow"><span class="t">Siri וקיצורי דרך</span><br><span class="s">"היי סירי, תדליק את הטוסטר"</span></span>${svg('chev')}</button>
+  </div>
   <div class="sec-h"><h2>מכשירים</h2></div><div class="list">
     <button class="row row-btn" id="ad"><span class="grow"><span class="t">הוספת מכשיר חדש</span><br><span class="s">צימוד דרך Smart Life</span></span>${svg('chev')}</button>
+    <button class="row row-btn" id="lg"><span class="grow"><span class="t">היסטוריית פעולות</span><br><span class="s">${LOG.length?'אחרונה: '+esc(LOG[0].name):'ריקה'}</span></span>${svg('chev')}</button>
+    <button class="row row-btn" id="bk"><span class="grow"><span class="t">גיבוי ושחזור</span><br><span class="s">שמות, חדרים, מועדפים וסצנות</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="rr"><span class="grow"><span class="t">ניהול חדרים</span><br><span class="s">${META.roomList.length} חדרים</span></span>${svg('chev')}</button>
   </div>
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
   v.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{LSset('unplug_ts',b.dataset.ts);applyPrefs();render()});
-  $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;
+  $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('bk').onclick=openBackup;$('siri').onclick=openSiri;
+  $('pushOn')&&($('pushOn').onclick=enablePush);$('pushT')&&($('pushT').onclick=async()=>{try{await api('/push/at',{at:Date.now()/1000+3,title:'Unplug',body:'ככה ייראו ההתראות'});toast('ההתראה תגיע תוך דקה')}catch(e){toast(e.message)}});
   $('rc')&&($('rc').onclick=async()=>{try{const j=await api('/recover/create',{});sheet('קוד שחזור',`<p>שמור את הקוד. איתו מתחברים מחדש בכל מכשיר, וגם ב-Breeze.</p><div class="ro" style="text-align:center"><div class="n" style="direction:ltr;letter-spacing:.08em;font-size:1.8rem;user-select:all">${esc(j.code)}</div></div><button class="btn wide" id="cp">העתקה</button>`,el=>el.querySelector('#cp').onclick=()=>{navigator.clipboard?.writeText(j.code).then(()=>toast('הועתק'),()=>{})})}catch(e){toast(e.message)}});
   $('lo')&&($('lo').onclick=()=>{if(!confirm('להתנתק רק מהאפליקציה הזו? Breeze ושאר האפליקציות ימשיכו לעבוד.'))return;setKey('');DEVS=[];LSset('unplug_devs',null);render()});
+}
+/* ---------- push ---------- */
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+function pushStatus(){if(LS('unplug_push'))return 'פעילות - טיימרים שולחים התראה בסיום';if(!('serviceWorker' in navigator)||!('PushManager' in window))return standalone()?'הטלפון לא תומך בהתראות':'עובד רק מהאפליקציה במסך הבית';return 'כבויות'}
+function b64u2u8(b){const p='='.repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))}
+async function enablePush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){sheet('התראות',`<p>${standalone()?'הטלפון לא תומך בהתראות מאתר.':'באייפון התראות עובדות רק מהאפליקציה שעל מסך הבית.'}</p>${standalone()?'':`<ol><li>ב-Safari לחץ <b>שיתוף</b></li><li><b>הוסף למסך הבית</b></li><li>פתח את Unplug ממסך הבית וחזור לכאן</li></ol>`}`);return}
+  try{const reg=await navigator.serviceWorker.register('sw.js');const perm=await Notification.requestPermission();if(perm!=='granted')return toast('ההתראות לא אושרו');
+    const {key}=await api('/push/key');const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u2u8(key)});
+    await api('/push/subscribe',{sub:sub.toJSON()});LSset('unplug_push','1');toast('התראות הופעלו');render()}catch(e){toast('לא הצלחתי: '+e.message)}
+}
+/* ---------- Siri: each action is a link the Shortcuts app opens ---------- */
+const b64url=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+async function openSiri(){
+  let tok;try{tok=(await api('/token')).token}catch(e){return toast(e.message)}
+  const U=(d,cmds,say)=>`${CFG.api.replace(/\/$/,'')}/act?k=${encodeURIComponent(tok)}&d=${encodeURIComponent(d)}&c=${b64url(cmds)}&s=${encodeURIComponent(say)}`;
+  const items=[];
+  DEVS.filter(powerCode).forEach(d=>{const pc=powerCode(d);items.push({t:'הדלקת '+dname(d),urls:[U(d.id,[{code:pc,value:true}],dname(d)+' נדלק')]},{t:'כיבוי '+dname(d),urls:[U(d.id,[{code:pc,value:false}],dname(d)+' כבה')]})});
+  SCENES.forEach(sc=>items.push({t:'סצנה: '+sc.name,urls:sc.acts.map((a,k)=>U(a.device,[a.cmd],k===sc.acts.length-1?'"'+sc.name+'" בוצעה':'.'))}));
+  sheet('Siri וקיצורי דרך',`<p>כל פעולה כאן היא קישור. שמים אותו בקיצור באפליקציית <b>קיצורים</b>, ואז אפשר לבקש מסירי או להוסיף כפתור למסך הבית.</p>
+   <ol><li>לחץ <b>העתקה</b> ליד הפעולה</li><li>בקיצורים: <b>+</b> ← הוסף פעולה ← <b>קבל תוכן של URL</b> והדבק</li><li>${'בסצנה עם כמה קישורים - פעולה אחת לכל קישור'}</li><li>תן לקיצור שם, למשל "תדליק טוסטר". זה מה שאומרים לסירי</li></ol>
+   <div class="list">${items.map((it,k)=>`<div class="row"><span class="grow t">${esc(it.t)}${it.urls.length>1?` <span class="s">(${it.urls.length} קישורים)</span>`:''}</span><button class="btn" data-cp="${k}" aria-label="העתקת הקישור ל${esc(it.t)}">העתקה</button></div>`).join('')||'<div class="row"><span class="s">אין מכשירים</span></div>'}</div>
+   <p style="font-size:.9rem">הקישורים פרטיים. מי שיש לו אותם יכול להפעיל את המכשירים.</p><button class="btn bad wide" id="sR">ביטול כל הקישורים ויצירת חדשים</button>`,(el,close)=>{
+    el.querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(items[+b.dataset.cp].urls.join('\n')).then(()=>{b.textContent='הועתק';toast('הקישור הועתק')},()=>toast('ההעתקה לא הצליחה'))});
+    el.querySelector('#sR').onclick=async()=>{if(!confirm('הקיצורים הקיימים יפסיקו לעבוד. להמשיך?'))return;try{await api('/token',{renew:true});close();openSiri()}catch(e){toast(e.message)}};
+  });
+}
+/* ---------- log & backup ---------- */
+function openLog(){
+  const f=t=>{const d=new Date(t);return d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+' '+hm(d)};
+  sheet('היסטוריית פעולות',`<div class="list">${LOG.length?LOG.map(l=>`<div class="row"><span class="grow"><span class="t">${esc(l.name)}</span><br><span class="s">${esc(l.text)}</span></span><span class="s" style="direction:ltr">${f(l.t)}</span></div>`).join(''):'<div class="row"><span class="s">עוד לא בוצעו פעולות מהאפליקציה</span></div>'}</div>${LOG.length?'<button class="btn bad wide" id="lgC">ניקוי</button>':''}`,(el,close)=>{el.querySelector('#lgC')&&(el.querySelector('#lgC').onclick=()=>{LOG=[];LSset('unplug_log',null);close();render()})});
+}
+function openBackup(){
+  const code='UNPLUG1:'+b64url({meta:META,scenes:SCENES.map(({schedIds,...x})=>x)});
+  sheet('גיבוי ושחזור',`<p>הקוד שומר שמות, חדרים, מועדפים וסצנות. כדאי להעביר אותו כשעוברים מ-Safari לאפליקציה במסך הבית.</p>
+    <div class="code" id="bkC">${esc(code)}</div><button class="btn wide" id="bkCp">${svg('save')}העתקת הקוד</button>
+    <div class="field"><label for="bkI">שחזור מקוד</label><textarea class="field-ta" id="bkI" placeholder="UNPLUG1:..."></textarea></div>
+    <div class="err" id="bkE" role="alert"></div><button class="btn pri wide" id="bkR">שחזור</button>`,(el,close)=>{
+    el.querySelector('#bkCp').onclick=()=>navigator.clipboard?.writeText(code).then(()=>toast('הועתק'),()=>{});
+    el.querySelector('#bkR').onclick=()=>{try{const t=el.querySelector('#bkI').value.trim().replace(/^UNPLUG1:/,'');const o=JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/')))));
+      if(!o.meta)throw 0;Object.assign(META,{names:{},rooms:{},roomList:[],fav:{}},o.meta);saveMeta();SCENES=o.scenes||[];saveScenes();close();render();toast('שוחזר. סצנות מתוזמנות צריך לשמור שוב')}catch(e){el.querySelector('#bkE').textContent='הקוד לא תקין'}};
+  });
 }
 function manageRooms(){
   sheet('חדרים',`<div class="list" id="rl"></div><button class="btn wide" id="ra">${svg('plus')}חדר חדש</button>`,(el)=>{
