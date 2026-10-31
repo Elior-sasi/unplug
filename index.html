@@ -247,7 +247,9 @@ body.scrolled .hello,body.scrolled .pills{display:none}
 .card.is-on .ic,.card.is-on .ic.photo,.card.is-on .ic:has(.art){filter:none}
 .card:not(.is-on) .ic img{filter:grayscale(.35) brightness(.85) drop-shadow(0 6px 12px rgba(0,0,0,.45))}
 .card.wide{grid-column:1/-1;min-height:176px}
-.card.wide .ic,.card.wide .ic.photo{width:150px;height:90px}
+.card.wide .ic,.card.wide .ic.photo,.card.wide .ic:has(.art){position:absolute;left:18px;bottom:14px;width:130px;height:100px;margin:0}
+.card.wide .nm,.card.wide .st{max-width:55%}
+.card.wide .nm{margin-top:auto}
 .card.off-line{opacity:.6}
 /* tab bar */
 nav.bar{height:64px;padding:4px;border-radius:999px;background:rgba(28,30,40,calc(.12 + var(--g)*.4))}
