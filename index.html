@@ -315,6 +315,14 @@ header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,
 .homeBtn svg{width:18px;height:18px;transform:rotate(-90deg)}
 .chip.add{width:44px;padding:0;display:inline-grid;place-items:center;color:var(--mut)}.chip.add svg{width:20px;height:20px}
 .sheet>*{flex-shrink:0}
+.card .ic img.real{border-radius:18px;filter:none!important;box-shadow:0 6px 16px rgba(0,0,0,.45)}
+.card:not(.is-on) .ic img.real{filter:saturate(.55) brightness(.8)!important}
+.card.is-on .ic:has(img.real){filter:drop-shadow(0 0 14px #ff9a3d66)}
+.big-pw img.real{border-radius:38px}
+.big-pw:not([aria-checked="true"]) img.real{filter:saturate(.55) brightness(.8)}
+.mini img.real{border-radius:10px}
+.icgrid button img.real{width:60px;height:60px;border-radius:14px}
+.card.wide .ic:has(img.real){width:96px;height:96px}
 </style>
 </head>
 <body>
@@ -335,7 +343,7 @@ header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,
 </nav>
 <div class="sr" id="live" aria-live="assertive"></div>
 <script src="qr.js"></script>
-<script src="icons.js?v=1"></script>
+<script src="icons.js?v=2"></script>
 <script>
 'use strict';
 const API_DEFAULT='https://europe-west1-tab-fd9b6.cloudfunctions.net/kor';
@@ -424,14 +432,17 @@ const DI={
  plant:['צמח','<path class="d" d="M7 15h10l-1.2 6H8.2z"/><path d="M12 15V9M12 11c-3 0-5-2-5-5 3 0 5 2 5 5zM12 9c0-3 2-5 5-5 0 3-2 5-5 5z"/>'],
  dev:['מכשיר','<rect class="d" x="6" y="3" width="12" height="18" rx="3"/><path d="M11 17h2"/>']
 };
-const NAMEKEY=[[/מזגן|מיזוג|air ?con/i,'ac'],[/טוסטר|toast/i,'toaster'],[/קומקום|kettle/i,'kettle'],[/קפה|coffee|נספרסו/i,'coffee'],[/מיקרו/i,'microwave'],[/תנור חימום|רדיאטור|מפזר חום|heater/i,'heater'],[/תנור|אופה|oven/i,'oven'],[/מקרר|fridge/i,'fridge'],[/כביסה|washer/i,'washer'],[/מדיח|dish/i,'dish'],[/דוד|בויילר|boiler/i,'boiler'],[/מאוורר|fan/i,'fan'],[/פס לד|לד|led/i,'led'],[/תקרה|ceiling/i,'ceiling'],[/מנורה|מנורת|lamp/i,'lamp'],[/נורה|אור|תאורה|light|bulb/i,'bulb'],[/טלוויזיה|tv|מסך/i,'tv'],[/מחשב|לפטופ|pc|laptop/i,'laptop'],[/פלייסטיישן|קונסולה|xbox|ps5|playstation/i,'game'],[/רמקול|speaker/i,'speaker'],[/ראוטר|נתב|router|wifi/i,'router'],[/מטען|charger/i,'charger'],[/וילון|תריס|curtain/i,'curtain'],[/מצלמה|camera/i,'camera'],[/צמח|עציץ|plant/i,'plant'],[/אייפון|iphone|טלפון|פלאפון|נייד|phone/i,'phone']];
-const CATICON={kg:'switch',tdq:'switch',cz:'plug',pc:'strip',dj:'bulb',dd:'led',xdd:'ceiling',fwd:'bulb',dc:'led',kt:'ac',ktkzq:'ac',kts:'ac',infrared_ac:'ac',fs:'fan',qn:'heater',rs:'boiler',wsdcg:'sensor',pir:'sensor',mcs:'sensor',sp:'camera',cl:'curtain',clkg:'curtain',znrb:'plug'};
+const NAMEKEY=[[/מזגן|מיזוג|air ?con/i,'ac'],[/טוסטר|toast/i,'toaster'],[/קומקום|kettle/i,'kettle'],[/קפה|coffee|נספרסו/i,'coffee'],[/מיקרו/i,'microwave'],[/תנור חימום|רדיאטור|מפזר חום|heater/i,'heater'],[/תנור|אופה|oven/i,'oven'],[/מקרר|fridge/i,'fridge'],[/כביסה|washer/i,'washer'],[/מדיח|dish/i,'dish'],[/דוד|בויילר|boiler/i,'boiler'],[/מאוורר|fan/i,'fan'],[/פס לד|לד|led/i,'led'],[/תקרה|ceiling/i,'ceiling'],[/מנורה|מנורת|lamp/i,'lamp'],[/נורה|אור|תאורה|light|bulb/i,'bulb'],[/טלוויזיה|tv|מסך/i,'tv'],[/מחשב|לפטופ|pc|laptop/i,'laptop'],[/פלייסטיישן|קונסולה|xbox|ps5|playstation/i,'game'],[/רמקול|speaker/i,'speaker'],[/ראוטר|נתב|router|wifi/i,'router'],[/מטען|charger/i,'charger'],[/וילון|תריס|curtain/i,'curtain'],[/מצלמה|camera/i,'camera'],[/צמח|עציץ|plant/i,'plant'],[/אייפון|iphone|טלפון|פלאפון|נייד|phone/i,'phone'],[/שלט|remote/i,'remote'],[/שואב|רובוט|vacuum|roborock/i,'vacuum']];
+const CATICON={kg:'switch',tdq:'switch',cz:'plug',pc:'strip',dj:'bulb',dd:'led',xdd:'ceiling',fwd:'bulb',dc:'led',kt:'ac',ktkzq:'ac',kts:'ac',infrared_ac:'ac',fs:'fan',qn:'heater',rs:'boiler',wsdcg:'sensor',pir:'sensor',mcs:'sensor',sp:'camera',cl:'curtain',clkg:'curtain',znrb:'plug',sd:'vacuum',wnykq:'remote',infrared_ac:'ac'};
 function iconOf(d){if(META.icons&&META.icons[d.id]&&ART[META.icons[d.id]])return META.icons[d.id];const n=dname(d)+' '+(d.name||'');for(const[r,k]of NAMEKEY)if(r.test(n))return k;return CATICON[d.category]||'dev'}
 /* product photos - the same images Smart Life shows, read once per device and cached */
 META.img=META.img||{};
-const STYLE=()=>LS('unplug_style')||'photo';
+const STYLE=()=>LS('unplug_style')||'real';
+const REAL=new Set(['washer','fridge','oven','microwave','coffee','kettle','toaster','ac','led','ceiling','bulb','lamp','fan','heater','boiler','dish','plug','phone','charger','router','speaker','game','laptop','tv','remote','plant','sensor','camera','curtain','switch','strip','vacuum']);
+const realImg=k=>`<img class="real" src="real/${REAL.has(k)?k:'plug'}.png" alt="" loading="lazy" decoding="async">`;
+const artFor=(k,st)=>st==='real'||st==='photo'?(REAL.has(k)?realImg(k):artSvg(k,'clay')):artSvg(k,st);
 const photoOf=d=>STYLE()==='photo'&&(!META.icons||META.icons[d.id]==null||META.icons[d.id]==='photo')&&META.img[d.id]?META.img[d.id]:'';
-const drawn=d=>artSvg(iconOf(d),STYLE()==='photo'?'clay':STYLE());
+const drawn=d=>artFor(iconOf(d),STYLE());
 const devArt=(d,w)=>{const u=photoOf(d);return u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createRange().createContextualFragment(this.dataset.fb))" data-fb="${esc(drawn(d))}">`:drawn(d)};
 function findIcon(o){if(!o||typeof o!=='object')return '';for(const[k,v]of Object.entries(o)){if(k==='icon'&&typeof v==='string'&&v)return v;if(typeof v==='object'){const r=findIcon(v);if(r)return r}}return ''}
 let iconsBusy=false;
@@ -831,7 +842,7 @@ function viewSettings(v){
     ${CFG.key?`<button class="row row-btn" id="rc"><span class="grow"><span class="t">קוד שחזור</span><br><span class="s">להתחברות מחדש בלי QR</span></span>${svg('chev')}</button>`:''}
   </div>
   <div class="sec-h"><h2>תצוגה</h2></div><div class="list">
-    <div class="ctl"><div class="ctl-h"><span class="t" id="stL">סגנון סמלילים</span></div><div class="seg" role="group" aria-labelledby="stL">${[['photo','מקורי'],['clay','תלת-ממד'],['glass','אריח'],['neon','ניאון']].map(([k,t])=>`<button data-st2="${k}" aria-pressed="${STYLE()===k}">${t}</button>`).join('')}</div></div>
+    <div class="ctl"><div class="ctl-h"><span class="t" id="stL">סגנון סמלילים</span></div><div class="seg" role="group" aria-labelledby="stL">${[['real','ריאליסטי'],['photo','מקורי'],['clay','תלת-ממד'],['glass','אריח'],['neon','ניאון']].map(([k,t])=>`<button data-st2="${k}" aria-pressed="${STYLE()===k}">${t}</button>`).join('')}</div></div>
     <div class="ctl"><div class="ctl-h"><label class="t" for="glS">זכוכית</label><span class="v" id="glV" aria-hidden="true"></span></div><input type="range" class="glassSlider" id="glS" min="0" max="100" step="5" value="${Math.round((+(LS('unplug_glass')??55)))}"><div class="ctl-h" style="min-height:0"><span class="s">שקוף</span><span class="s">כהה</span></div></div>
     <div class="ctl"><div class="ctl-h"><span class="t" id="tsL">גודל טקסט</span></div><div class="seg" role="group" aria-labelledby="tsL">${[['100','רגיל'],['115','גדול'],['130','גדול מאוד'],['150','ענק']].map(([k,t])=>`<button data-ts="${k}" aria-pressed="${ts===k}">${t}</button>`).join('')}</div></div>
   </div>
@@ -900,7 +911,7 @@ function openBackup(){
 }
 function pickIcon(d,cb){
   const cur=photoOf(d)?'photo':iconOf(d);
-  sheet('סמליל ל'+esc(dname(d)),`<div class="icgrid" role="group" aria-label="בחירת סמליל">${META.img[d.id]?`<button data-ic2="photo" aria-pressed="${cur==='photo'}"><img src="${esc(META.img[d.id])}" alt="" style="width:52px;height:52px;object-fit:contain;border-radius:12px;background:#f4f6f9"><span>תמונת המוצר</span></button>`:''}${Object.entries(ART).map(([k,a])=>`<button data-ic2="${k}" aria-pressed="${k===cur}">${artSvg(k,STYLE()==='photo'?'clay':STYLE())}<span>${esc(a.n)}</span></button>`).join('')}</div>
+  sheet('סמליל ל'+esc(dname(d)),`<div class="icgrid" role="group" aria-label="בחירת סמליל">${META.img[d.id]?`<button data-ic2="photo" aria-pressed="${cur==='photo'}"><img src="${esc(META.img[d.id])}" alt="" style="width:52px;height:52px;object-fit:contain;border-radius:12px;background:#f4f6f9"><span>תמונת המוצר</span></button>`:''}${Object.entries(ART).map(([k,a])=>`<button data-ic2="${k}" aria-pressed="${k===cur}">${artFor(k,STYLE())}<span>${esc(a.n)}</span></button>`).join('')}</div>
    ${META.icons&&META.icons[d.id]?'<button class="btn wide" id="icA">חזרה לבחירה אוטומטית</button>':''}`,(el,close)=>{
     const set=k=>{META.icons=META.icons||{};k&&k!=='photo'?META.icons[d.id]=k:delete META.icons[d.id];saveMeta();close();cb&&cb()};
     el.querySelectorAll('[data-ic2]').forEach(b=>b.onclick=()=>set(b.dataset.ic2));
