@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Unplug">
 <link rel="apple-touch-icon" sizes="180x180" href="https://elior-sasi.github.io/unplug/apple-touch-icon.png?v=2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <link rel="icon" type="image/png" href="icon.png?v=2">
 <link rel="manifest" href="manifest.json?v=1">
 <meta name="theme-color" content="#0a0f14">
@@ -187,6 +188,46 @@ textarea.field-ta{width:100%;min-height:120px;border-radius:14px;border:1px soli
 @keyframes r{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media (prefers-contrast: more){:root{--line:#7d8a9c;--mut:#e3e8ef}}
+
+/* ---- v2: every device has its own colour; a tile lights up in it when on ---- */
+:root{--bg:#0b1120;--card:#141c2e;--line:#232f47;--mut:#9aa6bd}
+body{background:radial-gradient(140% 60% at 100% -10%,#1d2b4a 0,transparent 55%),radial-gradient(90% 50% at -20% 20%,#2a1a3a55 0,transparent 60%),var(--bg) fixed}
+.app{background:none}
+.hello{margin-top:26px;font-size:1.05rem}
+header.top h1{font-size:2.6rem;letter-spacing:-.8px;line-height:1.08}
+.chips{gap:22px;padding:4px 2px 16px;margin-top:4px}
+.chip{min-height:48px;padding:0;background:none;border:0;border-radius:0;font-size:1.4rem;font-weight:700;color:#5d6a85;letter-spacing:-.3px;position:relative}
+.chip[aria-pressed="true"]{background:none;color:var(--ink)}
+.chip[aria-pressed="true"]::after{content:"";position:absolute;inset:auto 0 4px;height:4px;border-radius:2px;background:var(--acc)}
+.quick .btn{background:#ffffff0a;border-color:#ffffff14;color:var(--ink);min-height:50px;border-radius:18px}
+.quick .btn.pri{background:var(--acc);color:var(--acc-ink)}
+.grid{grid-template-columns:repeat(2,1fr);gap:12px}
+@media (min-width:520px){.grid{grid-template-columns:repeat(3,1fr)}}
+.card{min-height:188px;border-radius:30px;padding:16px 16px 14px;background:#141c2e;border:1px solid #ffffff10;box-shadow:none;gap:2px}
+.card::before{display:none}
+.card .nm{order:-1;margin:0;padding:0;font-size:1.15rem;font-weight:700;letter-spacing:-.2px;max-width:100%}
+.card .st{order:0;font-size:.92rem}
+.card .ic,.card .ic.photo,.card .ic:has(.art){position:absolute;bottom:10px;left:8px;width:96px;height:96px;background:none;border:0;padding:0;z-index:0;filter:none;box-shadow:none}
+.card .ic svg:not(.art){width:56px;height:56px}
+.card .ic img{filter:drop-shadow(0 8px 14px #0008)}
+.card .pw{top:auto;bottom:12px;left:auto;right:10px}
+.card .fav{bottom:auto;top:18px;left:16px}
+.card.is-on{background:linear-gradient(165deg,var(--c1) 0%,var(--c2) 100%);border-color:transparent;box-shadow:0 14px 34px -10px var(--c2)}
+.card.is-on .nm{color:#0b1120}
+.card.is-on .st{color:#0b1120cc;font-weight:500}
+.card.is-on .fav{color:#0b1120}
+.card.is-on .ic,.card.is-on .ic.photo,.card.is-on .ic:has(.art){background:none;box-shadow:none;filter:drop-shadow(0 10px 18px #0006)}
+.card.is-on .pw::before{background:#0b112040}
+.card.is-on .pw[aria-checked="true"]::before{background:#0b1120cc}
+.card:not(.is-on) .ic img{filter:grayscale(.5) brightness(.8) drop-shadow(0 8px 14px #0008)}
+.card.wide{grid-column:1/-1;min-height:150px}
+.card.wide .ic{width:150px;height:100px;left:16px;bottom:18px}
+.card.off-line{opacity:.55}
+.icbtn{background:#ffffff0d;border-color:#ffffff17}
+nav.bar{background:linear-gradient(160deg,#3a4560b0,#141c2ee0);border-color:#c7d2e84d}
+nav.bar:before{background:linear-gradient(145deg,#ffffff2e,#ffffff0a 55%,#ffffff1c);border-color:#ffffff55}
+nav.bar button{color:#c9d2e3}
+@media (prefers-contrast: more){.card.is-on .st{color:#0b1120}}
 </style>
 </head>
 <body>
@@ -195,7 +236,7 @@ textarea.field-ta{width:100%;min-height:120px;border-radius:14px;border:1px soli
   <header class="top">
     <div class="brandRow"><span class="brand" aria-label="Unplug"><svg viewBox="100 40 312 422" aria-hidden="true"><defs><linearGradient id="ug" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffc24d"/></linearGradient></defs><path d="M150 214 V320 a106 106 0 0 0 212 0 V210" fill="none" stroke="url(#ug)" stroke-width="58" stroke-linecap="round"/><g class="lid"><g transform="rotate(-10 112 160)"><rect x="180" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="302" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="112" y="112" width="288" height="48" rx="16" fill="#ffc24d"/></g></g></svg><span aria-hidden="true">nplug</span></span>
       <div class="actions"><button class="icbtn" id="addBtn" aria-label="הוספת מכשיר"></button><button class="icbtn" id="refBtn" aria-label="רענון"></button></div></div>
-    <p class="hello" id="hello"></p><h1 id="title">הבית</h1><div class="pills" id="sub" aria-live="polite"></div>
+    <p class="hello" id="hello"></p><h1 id="title" aria-live="polite">הבית</h1><div class="pills" id="sub" aria-live="polite"></div>
   </header>
   <main id="view"></main>
 </div>
@@ -374,7 +415,8 @@ function render(){
   const on=DEVS.filter(d=>d.online&&isOn(d)).length, off=DEVS.filter(d=>!d.online).length;
   {const h=new Date().getHours();$('hello').textContent=h<5?'לילה טוב':h<12?'בוקר טוב':h<17?'צהריים טובים':h<21?'ערב טוב':'לילה טוב'}
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
-  $('sub').innerHTML=!CFG.key?'<span class="pill">לא מחובר</span>':DEVS.length?`<span class="pill${on?' hot':''}">${svg('power')}${on} פועלים מתוך ${DEVS.length}</span>${hasW?`<span class="pill${W>5?' hot':''}">${svg('bolt')}${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}</span>`:''}${off?`<span class="pill bad">${off} מנותקים</span>`:''}`:'';
+  $('title').textContent=!CFG.key||!DEVS.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
+  $('sub').innerHTML=!CFG.key?'<span class="pill">לא מחובר</span>':DEVS.length?`<span class="pill">${DEVS.length} מכשירים</span>${hasW?`<span class="pill${W>5?' hot':''}">${svg('bolt')}${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}</span>`:''}${off?`<span class="pill bad">${off} מנותקים</span>`:''}`:'';
   const tabs=[...document.querySelectorAll('nav.bar button')];tabs.forEach(b=>b.dataset.tab===TAB?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelector('nav.bar').style.setProperty('--tab',tabs.findIndex(b=>b.dataset.tab===TAB));
   const v=$('view');
   if(!CFG.key&&TAB!=='settings'){v.innerHTML=`<div class="empty"><b>עוד לא מחובר</b>מתחברים פעם אחת לחשבון Smart Life, ומכאן הכול כאן.</div><p></p><button class="btn pri wide" id="cn">התחברות</button>`;$('cn').onclick=openConnect;return}
@@ -406,7 +448,8 @@ function viewDevices(v){
 }
 function card(d){
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
-  return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}" role="listitem" data-id="${esc(d.id)}">
+  const c=(ART[iconOf(d)]||ART.dev).p.t,wide=AC.has(d.category)||iconOf(d)==='ac'&&!pc;
+  return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${AC.has(d.category)?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
    <button class="open" aria-label="${nm}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
    <div class="ic${photoOf(d)?' photo':''}">${devArt(d)}</div>
    ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${nm} פועל" ${d.online?'':'aria-disabled="true"'}></button>`:''}
