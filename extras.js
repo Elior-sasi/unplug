@@ -1,0 +1,161 @@
+/* Unplug extras: device groups, quick actions (long-press), Shabbat mode, drag-to-reorder.
+   Loaded after the main script; uses its globals (META, DEVS, api, send, sheet, svg, toast, render...). */
+'use strict';
+META.groups=META.groups||[];META.order=META.order||{};
+let REORDER=false;
+
+/* ---------- timer (shared by quick actions) ---------- */
+async function quickTimer(d,m,notify){
+  const pc=powerCode(d);if(!pc)return;const on=isOn(d),at=new Date(Date.now()+m*60000);
+  const old=SCHED.find(s=>s.device===d.id&&s.once&&s.label==='טיימר');
+  if(old)await api('/schedules/delete',{id:old.id}).catch(()=>{});
+  await api('/schedules/save',{device:d.id,time:hm(at),days:[at.getDay()],cmds:[{code:pc,value:!on}],label:'טיימר',enabled:true,once:true});
+  if(notify&&LS('unplug_push')){const f=new Date(at);f.setSeconds(25,0);api('/push/at',{at:f.getTime()/1000,title:`${dname(d)} ${on?'כבה':'נדלק'}`,body:'הטיימר הסתיים'}).catch(()=>{})}
+  await loadSched();toast(`${dname(d)} ${on?'ייכבה':'יידלק'} ב-${hm(at)}`);
+}
+
+/* ---------- groups ---------- */
+const groupDevs=g=>g.devs.map(id=>DEVS.find(d=>d.id===id)).filter(d=>d&&powerCode(d));
+function groupsHtml(){
+  const gs=META.groups.filter(g=>groupDevs(g).length);
+  if(!gs.length)return '';
+  return `<section class="roomSec" aria-labelledby="gH"><div class="roomH"><h2 class="roomT" id="gH">קבוצות</h2><button class="roomOff" id="gAdd" aria-label="קבוצה חדשה">${svg('plus',2.4)}</button></div>
+   <div class="grpRow" role="list">${gs.map(g=>{const ds=groupDevs(g),on=ds.filter(d=>d.online&&isOn(d)).length,any=on>0;
+     return `<div class="grp${any?' is-on':''}" role="listitem"><button class="grpOpen" data-gopen="${g.id}" aria-label="${esc(g.name)}, ${on} מתוך ${ds.length} פועלים. עריכת קבוצה"></button>
+      <div class="grpIc" aria-hidden="true">${ds.slice(0,3).map(d=>`<span>${devArt(d)}</span>`).join('')}</div>
+      <div class="grpT" aria-hidden="true"><b>${esc(g.name)}</b><span>${on?on+' מתוך '+ds.length+' פועלים':'הכול כבוי'}</span></div>
+      <button class="pw" role="switch" aria-checked="${any}" data-gpw="${g.id}" aria-label="${esc(g.name)} פועלת"></button></div>`}).join('')}</div></section>`;
+}
+function bindGroups(v){
+  v.querySelector('#gAdd')&&(v.querySelector('#gAdd').onclick=()=>editGroup(null));
+  v.querySelectorAll('[data-gopen]').forEach(b=>b.onclick=()=>editGroup(META.groups.find(g=>g.id===b.dataset.gopen)));
+  v.querySelectorAll('[data-gpw]').forEach(b=>b.onclick=async()=>{const g=META.groups.find(x=>x.id===b.dataset.gpw),ds=groupDevs(g).filter(d=>d.online),to=!ds.some(isOn);
+    b.setAttribute('aria-checked',to);for(const d of ds)if(isOn(d)!==to)await send(d,[{code:powerCode(d),value:to}]);addLog('קבוצה',g.name+': '+(to?'הדלקה':'כיבוי'));toast(`${g.name} - ${to?'דלוק':'כבוי'}`)});
+}
+function editGroup(g){
+  const isNew=!g;g=g?JSON.parse(JSON.stringify(g)):{id:'g'+Date.now().toString(36),name:'',devs:[]};
+  const sel=new Set(g.devs),cands=DEVS.filter(powerCode);
+  const sug=[['כל האורות',d=>['bulb','lamp','ceiling','led'].includes(iconOf(d))],['כל המזגנים',d=>iconOf(d)==='ac'],['כל השקעים',d=>['plug','strip','switch','charger'].includes(iconOf(d))]].filter(([,f])=>cands.some(f));
+  sheet(isNew?'קבוצה חדשה':'עריכת קבוצה',`<div class="field"><label for="gN">שם הקבוצה</label><input id="gN" value="${esc(g.name)}" placeholder="כל האורות"></div>
+    ${isNew&&sug.length?`<div class="seg" role="group" aria-label="הצעות">${sug.map(([n],i)=>`<button data-sg="${i}">${n}</button>`).join('')}</div>`:''}
+    <div class="sec-h" style="margin:6px 4px 0"><h2>מכשירים בקבוצה</h2></div>
+    <div class="list" id="gL">${cands.map(d=>`<label class="row"><span class="mini">${devArt(d)}</span><span class="grow t">${esc(dname(d))}<br><span class="s">${esc(roomOf(d)||'בלי חדר')}</span></span><input type="checkbox" data-gd="${esc(d.id)}" ${sel.has(d.id)?'checked':''} style="width:28px;height:28px;accent-color:var(--gold)"></label>`).join('')}</div>
+    <div class="err" id="gE" role="alert"></div>
+    <div class="btns">${isNew?'':`<button class="btn bad" id="gDel">${svg('trash')}מחיקה</button>`}<button class="btn pri" id="gS">שמירה</button></div>`,(el,close)=>{
+    el.querySelectorAll('[data-sg]').forEach(b=>b.onclick=()=>{const[n,f]=sug[+b.dataset.sg];el.querySelector('#gN').value=n;el.querySelectorAll('[data-gd]').forEach(x=>x.checked=f(DEVS.find(d=>d.id===x.dataset.gd)))});
+    el.querySelector('#gS').onclick=()=>{g.name=el.querySelector('#gN').value.trim();g.devs=[...el.querySelectorAll('[data-gd]:checked')].map(x=>x.dataset.gd);
+      if(!g.name)return el.querySelector('#gE').textContent='תן שם לקבוצה';if(g.devs.length<2)return el.querySelector('#gE').textContent='בחר לפחות 2 מכשירים';
+      const i=META.groups.findIndex(x=>x.id===g.id);i<0?META.groups.push(g):META.groups[i]=g;saveMeta();close();render();toast('נשמר')};
+    el.querySelector('#gDel')&&(el.querySelector('#gDel').onclick=()=>{if(!confirm('למחוק את הקבוצה? המכשירים עצמם לא נמחקים.'))return;META.groups=META.groups.filter(x=>x.id!==g.id);saveMeta();close();render()});
+  });
+}
+
+/* ---------- quick actions: long-press a tile ---------- */
+function quickActions(d){
+  const pc=powerCode(d),t=SCHED.find(s=>s.device===d.id&&s.once&&s.label==='טיימר'),on=isOn(d);
+  sheet(esc(dname(d)),`${pc?`<button class="btn pri wide" id="qaP">${svg('power')}${on?'כיבוי':'הדלקה'}</button>`:''}
+    ${pc?`<div class="ctl" style="padding:0"><div class="ctl-h"><span class="t" id="qaL">${t?`${t.cmds?.[0]?.value?'יידלק':'ייכבה'} ב-${esc(t.time)}`:on?'לכבות בעוד':'להדליק בעוד'}</span>${t?'<button class="btn bad" id="qaX">ביטול טיימר</button>':''}</div>
+      ${t?'':`<div class="seg" role="group" aria-labelledby="qaL">${[15,30,60,120].map(m=>`<button data-qm="${m}">${m<60?m+' דק׳':m/60+' שע׳'}</button>`).join('')}</div>`}</div>`:''}
+    <div class="list">
+      <button class="row row-btn" id="qaR"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(d)||'בלי חדר')}</span></span>${svg('chev')}</button>
+      <button class="row row-btn" id="qaF" role="switch" aria-checked="${!!META.fav[d.id]}"><span class="grow t">${META.fav[d.id]?'הסרה ממועדפים':'הוספה למועדפים'}</span>${svg('star')}</button>
+      <button class="row row-btn" id="qaO"><span class="grow t">סידור המכשירים</span>${svg('list')}</button>
+      <button class="row row-btn" id="qaD"><span class="grow t">כל ההגדרות של המכשיר</span>${svg('chev')}</button>
+    </div>`,(el,close)=>{
+    el.querySelector('#qaP')&&(el.querySelector('#qaP').onclick=()=>{close();if(!d.online)return toast('המכשיר מנותק');send(d,[{code:pc,value:!isOn(d)}])});
+    el.querySelectorAll('[data-qm]').forEach(b=>b.onclick=async()=>{close();try{await quickTimer(d,+b.dataset.qm,true)}catch(e){toast(e.message)}});
+    el.querySelector('#qaX')&&(el.querySelector('#qaX').onclick=async()=>{close();try{await api('/schedules/delete',{id:t.id});await loadSched();toast('הטיימר בוטל')}catch(e){toast(e.message)}});
+    el.querySelector('#qaR').onclick=()=>pickRoom(d,render);
+    el.querySelector('#qaF').onclick=()=>{META.fav[d.id]?delete META.fav[d.id]:META.fav[d.id]=true;saveMeta();close();render()};
+    el.querySelector('#qaO').onclick=()=>{close();setReorder(true)};
+    el.querySelector('#qaD').onclick=()=>{close();openDevice(d)};
+  });
+}
+function bindLongPress(v){
+  v.querySelectorAll('.card').forEach(c=>{let t=0,x0=0,y0=0,fired=false;const o=c.querySelector('.open');
+    o.addEventListener('pointerdown',e=>{if(REORDER)return;fired=false;x0=e.clientX;y0=e.clientY;t=setTimeout(()=>{fired=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}quickActions(DEVS.find(d=>d.id===c.dataset.id))},480)});
+    o.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-x0,e.clientY-y0)>10)clearTimeout(t)});
+    ['pointerup','pointercancel','pointerleave'].forEach(n=>o.addEventListener(n,()=>clearTimeout(t)));
+    o.addEventListener('click',e=>{if(fired||REORDER){e.stopImmediatePropagation();e.preventDefault();fired=false}},true);
+    o.addEventListener('contextmenu',e=>e.preventDefault());
+  });
+}
+
+/* ---------- reorder (drag, plus arrow buttons for VoiceOver) ---------- */
+function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);render();if(on)toast('גרור מכשירים כדי לסדר. "סיום" כשגמרת')}
+function saveOrderFrom(grid){[...grid.querySelectorAll('.card')].forEach((c,i)=>META.order[c.dataset.id]=i+(+grid.dataset.base||0));saveMeta()}
+function bindReorder(v){
+  if(!REORDER)return;
+  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="status"><span>מצב סידור - גרור כרטיס למקום החדש</span><button class="btn pri" id="reDone">סיום</button></div>`);
+  v.querySelector('#reDone').onclick=()=>setReorder(false);
+  v.querySelectorAll('.grid').forEach((grid,gi)=>{grid.dataset.base=gi*100;
+    grid.querySelectorAll('.card').forEach(c=>{
+      c.insertAdjacentHTML('beforeend',`<div class="reBtns"><button data-mv="-1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} קדימה">${svg('chev',2.4)}</button><button data-mv="1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} אחורה">${svg('chev',2.4)}</button></div>`);
+      c.querySelectorAll('[data-mv]').forEach(b=>b.onclick=e=>{e.stopPropagation();const sib=+b.dataset.mv<0?c.previousElementSibling:c.nextElementSibling;if(!sib)return;+b.dataset.mv<0?grid.insertBefore(c,sib):grid.insertBefore(sib,c);saveOrderFrom(grid);b.focus()});
+      const o=c.querySelector('.open');
+      o.addEventListener('pointerdown',e=>{e.preventDefault();o.setPointerCapture(e.pointerId);c.classList.add('dragging');
+        const move=ev=>{const el=document.elementFromPoint(ev.clientX,ev.clientY),over=el&&el.closest('.card');
+          if(over&&over!==c&&over.parentElement===grid){const r=over.getBoundingClientRect(),after=ev.clientX<r.left+r.width/2===(getComputedStyle(grid).direction==='rtl');grid.insertBefore(c,after?over.nextElementSibling:over)}};
+        const up=()=>{c.classList.remove('dragging');o.removeEventListener('pointermove',move);o.removeEventListener('pointerup',up);o.removeEventListener('pointercancel',up);saveOrderFrom(grid)};
+        o.addEventListener('pointermove',move);o.addEventListener('pointerup',up);o.addEventListener('pointercancel',up);
+      });
+    });
+  });
+}
+
+/* ---------- Shabbat mode ---------- */
+const CITIES={jer:['ירושלים',31.778,35.235,40],ta:['תל אביב',32.085,34.782,21],hai:['חיפה',32.794,34.99,30],bs:['באר שבע',31.252,34.791,21],pt:['פתח תקווה',32.087,34.887,21],ash:['אשדוד',31.804,34.655,21]};
+function sunAlt(date,lat,lng){ // solar altitude in degrees (NOAA-style approximation)
+  const rad=Math.PI/180,d=date/864e5-10957.5,g=(357.529+.98560028*d)*rad,q=280.459+.98564736*d,L=(q+1.915*Math.sin(g)+.02*Math.sin(2*g))*rad,e=(23.439-36e-8*d)*rad;
+  const dec=Math.asin(Math.sin(e)*Math.sin(L)),ra=Math.atan2(Math.cos(e)*Math.sin(L),Math.cos(L)),gmst=(18.697374558+24.06570982441908*d)%24;
+  const ha=((gmst*15+lng)*rad-ra);return Math.asin(Math.sin(lat*rad)*Math.sin(dec)+Math.cos(lat*rad)*Math.cos(dec)*Math.cos(ha))/rad;
+}
+function crossTime(day,lat,lng,alt){ // first minute after 14:00 when the sun drops below alt
+  const t=new Date(day);t.setHours(14,0,0,0);for(let i=0;i<480;i++){const x=new Date(t.getTime()+i*60000);if(sunAlt(x,lat,lng)<alt)return x}return null;
+}
+function nextShabbat(city){
+  const [,lat,lng,candle]=CITIES[city]||CITIES.ta,now=new Date(),fri=new Date(now);fri.setHours(12,0,0,0);
+  fri.setDate(fri.getDate()+((5-fri.getDay()+7)%7));
+  const sat=new Date(fri);sat.setDate(fri.getDate()+1);
+  let inT=new Date(crossTime(fri,lat,lng,-.833).getTime()-candle*60000),outT=crossTime(sat,lat,lng,-8.5);
+  if(outT<now){fri.setDate(fri.getDate()+7);sat.setDate(sat.getDate()+7);inT=new Date(crossTime(fri,lat,lng,-.833).getTime()-candle*60000);outT=crossTime(sat,lat,lng,-8.5)}
+  return {inT,outT};
+}
+const SHB=()=>LSj('unplug_shabbat',{on:false,city:'ta',acts:[],ids:[],week:''});
+const fmtDay=t=>t.toLocaleDateString('he-IL',{weekday:'long'})+' '+hm(t);
+async function syncShabbat(force){
+  const c=SHB();if(!CFG.key)return;const {inT,outT}=nextShabbat(c.city),wk=inT.toISOString().slice(0,10);
+  if(!force&&c.week===wk&&c.on)return;
+  for(const id of c.ids||[])await api('/schedules/delete',{id}).catch(()=>{});
+  c.ids=[];
+  if(c.on){for(const a of c.acts){const d=DEVS.find(x=>x.id===a.device),pc=d&&powerCode(d);if(!pc)continue;
+      const base=a.when==='in'?inT:outT,t=new Date(base.getTime()+(+a.off||0)*60000);
+      if(t<new Date())continue;
+      try{const j=await api('/schedules/save',{device:d.id,time:hm(t),days:[t.getDay()],cmds:[{code:pc,value:a.to==='on'}],label:'שבת',enabled:true,once:true});c.ids.push(j.id)}catch(e){}}}
+  c.week=c.on?wk:'';LSset('unplug_shabbat',JSON.stringify(c));loadSched();
+}
+function openShabbat(){
+  const c=SHB(),{inT,outT}=nextShabbat(c.city),cands=DEVS.filter(powerCode);
+  const actRow=(a,i)=>{const d=DEVS.find(x=>x.id===a.device);return `<div class="row"><span class="grow"><span class="t">${esc(d?dname(d):'מכשיר שהוסר')}: ${a.to==='on'?'הדלקה':'כיבוי'}</span><br><span class="s">${a.when==='in'?'בכניסת שבת':'ביציאת שבת'}${+a.off?` · ${Math.abs(a.off)} דק׳ ${a.off<0?'לפני':'אחרי'}`:''}</span></span><button class="icbtn" data-rmA="${i}" aria-label="הסרת פעולה">${svg('trash')}</button></div>`};
+  sheet('מצב שבת',`<div class="ro"><div class="k">השבת הקרובה ב${esc(CITIES[c.city][0])}</div><div class="n" style="font-size:1.1rem">כניסה ${esc(fmtDay(inT))}<br>יציאה ${esc(fmtDay(outT))}</div></div>
+    <label class="row list" style="border-radius:22px"><span class="grow t">מצב שבת פעיל</span><input type="checkbox" id="shOn" ${c.on?'checked':''} style="width:30px;height:30px;accent-color:var(--gold)"></label>
+    <div class="field"><label for="shC">עיר (לזמני השבת)</label><select id="shC">${Object.entries(CITIES).map(([k,[n]])=>`<option value="${k}"${k===c.city?' selected':''}>${n}</option>`).join('')}</select></div>
+    <div class="sec-h" style="margin:4px 4px 0"><h2>מה קורה בשבת</h2></div>
+    <div class="list" id="shL">${c.acts.length?c.acts.map(actRow).join(''):'<div class="row"><span class="s">עוד אין פעולות. למשל: להדליק את המזגן 10 דק׳ לפני כניסת שבת</span></div>'}</div>
+    <div class="list"><div class="ctl">
+      <div class="field"><label for="shD">מכשיר</label><select id="shD">${cands.map(d=>`<option value="${esc(d.id)}">${esc(dname(d))}</option>`).join('')}</select></div>
+      <div class="seg" role="group" aria-label="מה לעשות"><button data-to="on" aria-pressed="true">הדלקה</button><button data-to="off" aria-pressed="false">כיבוי</button></div>
+      <div class="seg" role="group" aria-label="מתי"><button data-wh="in" aria-pressed="true">בכניסת שבת</button><button data-wh="out" aria-pressed="false">ביציאת שבת</button></div>
+      <div class="field"><label for="shO">הפרש בדקות (מינוס = לפני)</label><input id="shO" type="number" inputmode="numeric" value="0" style="direction:ltr;text-align:center"></div>
+      <button class="btn wide" id="shA">${svg('plus')}הוספת פעולה</button></div></div>
+    <p style="font-size:.92rem">הזמנים מחושבים לפי השקיעה בעיר. האפליקציה מתזמנת כל פעם את השבת הקרובה, אז צריך לפתוח אותה לפחות פעם בשבוע. חגים עוד לא נכללים.</p>
+    <button class="btn pri wide" id="shS">שמירה</button>`,(el,close)=>{
+    let to='on',wh='in';
+    el.querySelectorAll('[data-to]').forEach(b=>b.onclick=()=>{to=b.dataset.to;el.querySelectorAll('[data-to]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+    el.querySelectorAll('[data-wh]').forEach(b=>b.onclick=()=>{wh=b.dataset.wh;el.querySelectorAll('[data-wh]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+    const drawL=()=>{el.querySelector('#shL').innerHTML=c.acts.length?c.acts.map(actRow).join(''):'<div class="row"><span class="s">עוד אין פעולות</span></div>';el.querySelectorAll('[data-rmA]').forEach(b=>b.onclick=()=>{c.acts.splice(+b.dataset.rma,1);drawL()})};drawL();
+    el.querySelector('#shA').onclick=()=>{const dv=el.querySelector('#shD').value;if(!dv)return;c.acts.push({device:dv,to,when:wh,off:Math.round(+el.querySelector('#shO').value||0)});drawL();toast('נוסף')};
+    el.querySelector('#shS').onclick=async()=>{c.on=el.querySelector('#shOn').checked;c.city=el.querySelector('#shC').value;LSset('unplug_shabbat',JSON.stringify(c));
+      const b=el.querySelector('#shS');b.disabled=true;b.textContent='מתזמן...';await syncShabbat(true);close();render();toast(c.on?'מצב שבת פעיל':'מצב שבת כבוי')};
+  });
+}

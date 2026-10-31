@@ -331,6 +331,27 @@ header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,
 .roomT:disabled{opacity:1;color:var(--mut)}
 .roomN{font-size:.9rem;font-weight:500;color:var(--mut)}
 .roomOff{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#151a24;border:1px solid #ffffff14;color:var(--gold-txt)}.roomOff svg{width:20px;height:20px}
+.grpRow{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.grp{position:relative;min-height:96px;border-radius:26px;padding:14px 16px;background:#151a24;border:1px solid #ffffff10;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
+.grp.is-on{background:linear-gradient(160deg,#2f1c10 0%,#171b25 70%);border-color:#ff9a3d70}
+.grpOpen{position:absolute;inset:0;border-radius:25px;z-index:1}
+.grpIc{position:absolute;top:12px;right:14px;display:flex;gap:0}
+.grpIc span{width:34px;height:34px;margin-inline-start:-8px;border-radius:10px;overflow:hidden;box-shadow:0 0 0 2px #151a24;display:block}
+.grpIc span:first-child{margin-inline-start:0}.grpIc img,.grpIc svg{width:100%;height:100%;display:block}
+.grpT b{display:block;font-size:1.02rem;margin-top:30px}.grpT span{font-size:.85rem;color:var(--mut)}.grp.is-on .grpT span{color:var(--gold-txt)}
+.grp .pw{position:absolute;top:8px;left:8px;z-index:2;width:58px;height:48px;display:grid;place-items:center}
+.grp .pw::before{content:"";width:52px;height:32px;border-radius:999px;background:#ffffff1a;transition:background .25s}
+.grp .pw::after{content:"";position:absolute;top:10px;right:6px;width:28px;height:28px;border-radius:50%;background:#e9edf3;box-shadow:0 2px 6px #0007;transition:transform .25s cubic-bezier(.3,1.3,.5,1)}
+.grp .pw[aria-checked="true"]::before{background:linear-gradient(90deg,var(--gold2),var(--gold))}
+.grp .pw[aria-checked="true"]::after{transform:translateX(-20px);background:#fff}
+.reBar{position:sticky;top:calc(env(safe-area-inset-top) + 70px);z-index:12;display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px 10px 16px;margin-bottom:12px;border-radius:999px;background:rgba(30,32,44,.85);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid #ff9a3d55;font-weight:600}
+.reordering .card{animation:wig .32s ease-in-out infinite alternate;touch-action:none}
+.reordering .card .pw{display:none}
+.reordering .card.dragging{animation:none;transform:scale(1.05);box-shadow:0 20px 40px #000a;z-index:5;opacity:.92}
+@keyframes wig{from{transform:rotate(-.8deg)}to{transform:rotate(.8deg)}}
+.reBtns{position:absolute;top:10px;left:10px;z-index:3;display:flex;gap:6px}
+.reBtns button{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;color:#fff}
+.reBtns button svg{width:18px;height:18px}.reBtns button[data-mv="-1"] svg{transform:scaleX(-1)}
 </style>
 </head>
 <body>
@@ -512,7 +533,7 @@ function toast(t){document.querySelector('.toast')?.remove();const e=document.cr
 
 async function loadDevices(){
   if(!CFG.key||busy)return;busy=true;$('refBtn').setAttribute('aria-busy','true');document.querySelector('.brand').classList.add('busy');
-  try{const j=await api('/devices');DEVS=j.devices||[];LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300)}
+  try{const j=await api('/devices');DEVS=j.devices||[];LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300);setTimeout(()=>typeof syncShabbat==='function'&&syncShabbat(false),1500)}
   catch(e){if(CFG.key)toast(e.message)}
   finally{busy=false;$('refBtn').removeAttribute('aria-busy');document.querySelector('.brand').classList.remove('busy')}
 }
@@ -552,7 +573,8 @@ function viewDevices(v){
   const chips=[['all','הכול'],...(hasFav?[['fav','מועדפים']]:[]),...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
   v.innerHTML=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
       (DEVS.length?`<div class="quick"><button class="btn" id="allOff" ${onDevs.length?'':'disabled'}>${svg('power')}לכבות הכול${onDevs.length?` (${onDevs.length})`:''}</button>${SCENES.slice(0,1).map(sc=>`<button class="btn pri" id="sc0">${svg('play')}${esc(sc.name)}</button>`).join('')}</div>`:'')+
-   `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים">${svg('edit',2)}</button></div>`+
+   (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
+   `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="reOn" aria-label="סידור המכשירים">${svg('list',2.2)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים">${svg('edit',2)}</button></div>`+
    (list.length?(ROOM==='all'&&!q&&rooms.length?groupedRooms(list,rooms):`<div class="grid" role="list">${list.map(card).join('')}</div>`):`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
   $('roomAdd').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=META.home;saveMeta();manageRooms(n)};
@@ -566,6 +588,8 @@ function viewDevices(v){
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
     c.querySelector('.open').onclick=()=>openDevice(d);
     const pw=c.querySelector('.pw');if(pw)pw.onclick=()=>{if(!d.online)return toast('המכשיר מנותק');send(d,[{code:powerCode(d),value:!isOn(d)}])}});
+  $('reOn')&&($('reOn').onclick=()=>typeof setReorder==='function'&&setReorder(!REORDER));
+  if(typeof bindGroups==='function'){bindGroups(v);bindLongPress(v);bindReorder(v)}
 }
 /* "הכול" view: one section per room, like Apple Home */
 function groupedRooms(list,rooms){
@@ -801,10 +825,10 @@ function pickRoom(d,cb){
 
 /* ---------- scenes (run several actions in one tap) ---------- */
 function viewScenes(v){
-  v.innerHTML=`<button class="btn pri wide" id="nsc">${svg('plus')}סצנה חדשה</button><div class="sec-h"><h2>סצנות</h2></div>
+  v.innerHTML=`<button class="row row-btn list" id="shbS" style="margin-bottom:12px"><span class="grow"><span class="t">מצב שבת</span><br><span class="s">הדלקה וכיבוי לפי זמני כניסת ויציאת שבת</span></span>${svg('chev')}</button><button class="btn pri wide" id="nsc">${svg('plus')}סצנה חדשה</button><div class="sec-h"><h2>סצנות</h2></div>
    ${SCENES.length?`<div class="list">${SCENES.map((s,i)=>`<div class="row"><button class="row-btn grow" data-ed="${i}" style="display:block"><span class="t">${esc(s.name)}</span><br><span class="s">${s.acts.length} פעולות${s.at?' · '+esc(s.at)+' '+esc(daysText({days:s.days})):''}</span></button><button class="btn pri" data-run="${i}" aria-label="הפעלת ${esc(s.name)}">${svg('play')}הפעל</button></div>`).join('')}</div>`
    :`<div class="empty"><b>אין סצנות</b>סצנה מפעילה כמה מכשירים בלחיצה אחת, למשל "יוצא מהבית" שמכבה הכול.</div>`}`;
-  $('nsc').onclick=()=>openScene(null);
+  $('nsc').onclick=()=>openScene(null);$('shbS').onclick=()=>openShabbat();
   v.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>openScene(+b.dataset.ed));
   v.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>runScene(SCENES[+b.dataset.run],b));
 }
@@ -866,6 +890,10 @@ function viewSettings(v){
     <div class="ctl"><div class="ctl-h"><label class="t" for="glS">זכוכית</label><span class="v" id="glV" aria-hidden="true"></span></div><input type="range" class="glassSlider" id="glS" min="0" max="100" step="5" value="${Math.round((+(LS('unplug_glass')??55)))}"><div class="ctl-h" style="min-height:0"><span class="s">שקוף</span><span class="s">כהה</span></div></div>
     <div class="ctl"><div class="ctl-h"><span class="t" id="tsL">גודל טקסט</span></div><div class="seg" role="group" aria-labelledby="tsL">${[['100','רגיל'],['115','גדול'],['130','גדול מאוד'],['150','ענק']].map(([k,t])=>`<button data-ts="${k}" aria-pressed="${ts===k}">${t}</button>`).join('')}</div></div>
   </div>
+  <div class="sec-h"><h2>אוטומציות</h2></div><div class="list">
+    <button class="row row-btn" id="shb"><span class="grow"><span class="t">מצב שבת</span><br><span class="s">${(()=>{try{const c=SHB();return c.on?'פעיל · '+c.acts.length+' פעולות':'כבוי'}catch(e){return ''}})()}</span></span>${svg('chev')}</button>
+    <button class="row row-btn" id="grp"><span class="grow"><span class="t">קבוצות מכשירים</span><br><span class="s">${(META.groups||[]).length} קבוצות</span></span>${svg('chev')}</button>
+  </div>
   <div class="sec-h"><h2>התראות</h2></div><div class="list">
     <div class="row"><span class="grow"><span class="t">התראות לטלפון</span><br><span class="s" id="pushS">${pushStatus()}</span></span>${LS('unplug_push')?`<button class="btn" id="pushT">בדיקה</button>`:`<button class="btn pri" id="pushOn">${svg('bell')}הפעלה</button>`}</div>
   </div>
@@ -882,7 +910,7 @@ function viewSettings(v){
   {const g=$('glS'),gv=$('glV'),sh=()=>{const t=+g.value<25?'שקוף מאוד':+g.value<70?'רגיל':'כהה';gv.textContent=t;g.setAttribute('aria-valuetext',t)};sh();g.oninput=()=>{LSset('unplug_glass',g.value);applyPrefs();sh()}}
   v.querySelectorAll('[data-st2]').forEach(b=>b.onclick=()=>{LSset('unplug_style',b.dataset.st2);render()});
   v.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{LSset('unplug_ts',b.dataset.ts);applyPrefs();render()});
-  $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('bk').onclick=openBackup;$('siri').onclick=openSiri;
+  $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('shb').onclick=()=>openShabbat();$('grp').onclick=()=>META.groups&&META.groups.length?sheet('קבוצות',`<div class="list">${META.groups.map(g=>`<button class="row row-btn" data-eg="${g.id}"><span class="grow t">${esc(g.name)}</span>${svg('chev')}</button>`).join('')}</div><button class="btn wide" id="ngr">${svg('plus')}קבוצה חדשה</button>`,(el,cl)=>{el.querySelectorAll('[data-eg]').forEach(b=>b.onclick=()=>editGroup(META.groups.find(g=>g.id===b.dataset.eg)));el.querySelector('#ngr').onclick=()=>editGroup(null)}):editGroup(null);$('bk').onclick=openBackup;$('siri').onclick=openSiri;
   $('pushOn')&&($('pushOn').onclick=enablePush);$('pushT')&&($('pushT').onclick=async()=>{try{await api('/push/at',{at:Date.now()/1000+3,title:'Unplug',body:'ככה ייראו ההתראות'});toast('ההתראה תגיע תוך דקה')}catch(e){toast(e.message)}});
   $('rc')&&($('rc').onclick=async()=>{try{const j=await api('/recover/create',{});sheet('קוד שחזור',`<p>שמור את הקוד. איתו מתחברים מחדש בכל מכשיר, וגם ב-Breeze.</p><div class="ro" style="text-align:center"><div class="n" style="direction:ltr;letter-spacing:.08em;font-size:1.8rem;user-select:all">${esc(j.code)}</div></div><button class="btn wide" id="cp">העתקה</button>`,el=>el.querySelector('#cp').onclick=()=>{navigator.clipboard?.writeText(j.code).then(()=>toast('הועתק'),()=>{})})}catch(e){toast(e.message)}});
   $('lo')&&($('lo').onclick=()=>{if(!confirm('להתנתק רק מהאפליקציה הזו? Breeze ושאר האפליקציות ימשיכו לעבוד.'))return;setKey('');DEVS=[];LSset('unplug_devs',null);render()});
@@ -1030,5 +1058,7 @@ if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConne
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active'))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
 </script>
+<script src="extras.js?v=2"></script>
+<script>render();</script>
 </body>
 </html>
