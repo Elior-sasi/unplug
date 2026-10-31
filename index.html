@@ -55,6 +55,12 @@ header.top h1{font-size:2.3rem;font-weight:700;letter-spacing:-.6px;margin:2px 0
 .card .ic svg{width:36px;height:36px}
 .card.is-on .ic{background:linear-gradient(150deg,#ffd27a,#ff8a3d);border-color:transparent;color:#2a1500;box-shadow:0 8px 24px #ff9a3d66}
 svg .d{fill:currentColor;fill-opacity:.22}
+.card .ic.photo{background:linear-gradient(160deg,#ffffff,#e6ebf1);border-color:#ffffff40;padding:6px}
+.card .ic img,.big-pw img,.mini img{width:100%;height:100%;object-fit:contain;display:block}
+.card.is-on .ic.photo{background:linear-gradient(160deg,#fff7e6,#ffe0b0);box-shadow:0 0 0 3px #ffb23e,0 8px 26px #ff9a3d77}
+.big-pw[data-photo]{background:linear-gradient(160deg,#ffffff,#e3e9f0);padding:22px}
+.big-pw[data-photo][aria-checked="true"]{background:linear-gradient(160deg,#fff7e6,#ffd89a);box-shadow:0 0 0 4px #ffb23e,0 12px 44px #ff9a3d77}
+.mini{width:44px;height:44px;color:var(--acc);display:grid;place-items:center;flex:none}.mini svg{width:34px;height:34px}.mini.photo{background:#f4f6f9;border-radius:12px;padding:4px}
 .card.is-on .ic svg .d{fill-opacity:.35}
 .card .nm{font-weight:600;font-size:1.08rem;line-height:1.25;overflow-wrap:anywhere;margin-top:auto;padding-top:10px}
 .card .st{color:var(--mut);font-size:.9rem;font-variant-numeric:tabular-nums}
@@ -275,6 +281,18 @@ const DI={
 const NAMEKEY=[[/מזגן|מיזוג|air ?con/i,'ac'],[/טוסטר|toast/i,'toaster'],[/קומקום|kettle/i,'kettle'],[/קפה|coffee|נספרסו/i,'coffee'],[/מיקרו/i,'microwave'],[/תנור חימום|רדיאטור|מפזר חום|heater/i,'heater'],[/תנור|אופה|oven/i,'oven'],[/מקרר|fridge/i,'fridge'],[/כביסה|washer/i,'washer'],[/מדיח|dish/i,'dish'],[/דוד|בויילר|boiler/i,'boiler'],[/מאוורר|fan/i,'fan'],[/פס לד|לד|led/i,'led'],[/תקרה|ceiling/i,'ceiling'],[/מנורה|מנורת|lamp/i,'lamp'],[/נורה|אור|תאורה|light|bulb/i,'bulb'],[/טלוויזיה|tv|מסך/i,'tv'],[/מחשב|לפטופ|pc|laptop/i,'laptop'],[/פלייסטיישן|קונסולה|xbox|ps5|playstation/i,'game'],[/רמקול|speaker/i,'speaker'],[/ראוטר|נתב|router|wifi/i,'router'],[/מטען|charger/i,'charger'],[/וילון|תריס|curtain/i,'curtain'],[/מצלמה|camera/i,'camera'],[/צמח|עציץ|plant/i,'plant']];
 const CATICON={kg:'switch',tdq:'switch',cz:'plug',pc:'strip',dj:'bulb',dd:'led',xdd:'ceiling',fwd:'bulb',dc:'led',kt:'ac',ktkzq:'ac',kts:'ac',infrared_ac:'ac',fs:'fan',qn:'heater',rs:'boiler',wsdcg:'sensor',pir:'sensor',mcs:'sensor',sp:'camera',cl:'curtain',clkg:'curtain',znrb:'plug'};
 function iconOf(d){if(META.icons&&META.icons[d.id]&&DI[META.icons[d.id]])return META.icons[d.id];const n=dname(d)+' '+(d.name||'');for(const[r,k]of NAMEKEY)if(r.test(n))return k;return CATICON[d.category]||'dev'}
+/* product photos - the same images Smart Life shows, read once per device and cached */
+META.img=META.img||{};
+const photoOf=d=>(!META.icons||META.icons[d.id]==null||META.icons[d.id]==='photo')&&META.img[d.id]?META.img[d.id]:'';
+const devArt=(d,w)=>{const u=photoOf(d);return u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createRange().createContextualFragment(this.dataset.fb))" data-fb="${esc(dIcon(iconOf(d),w))}">`:dIcon(iconOf(d),w)};
+function findIcon(o){if(!o||typeof o!=='object')return '';for(const[k,v]of Object.entries(o)){if(k==='icon'&&typeof v==='string'&&v)return v;if(typeof v==='object'){const r=findIcon(v);if(r)return r}}return ''}
+let iconsBusy=false;
+async function loadPhotos(){
+  if(iconsBusy||!CFG.key)return;iconsBusy=true;let changed=false;
+  for(const d of DEVS){if(META.img[d.id]!==undefined)continue;
+    try{const j=await api('/debug',{id:d.id});let u=findIcon(j);if(u&&!/^https?:/.test(u))u='https://images.tuyaeu.com/'+u.replace(/^\//,'');META.img[d.id]=u||'';changed=true}catch(e){break}}
+  iconsBusy=false;if(changed){saveMeta();render()}
+}
 const dIcon=(k,w=1.7)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(DI[k]||DI.dev)[1]}</svg>`;
 const svg=(n,w=2)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]||P.dev}</svg>`;
 document.querySelectorAll('[data-ic]').forEach(e=>e.outerHTML=svg(e.dataset.ic));
@@ -326,7 +344,7 @@ function toast(t){document.querySelector('.toast')?.remove();const e=document.cr
 
 async function loadDevices(){
   if(!CFG.key||busy)return;busy=true;$('refBtn').setAttribute('aria-busy','true');document.querySelector('.brand').classList.add('busy');
-  try{const j=await api('/devices');DEVS=j.devices||[];LSset('unplug_devs',JSON.stringify(DEVS));render()}
+  try{const j=await api('/devices');DEVS=j.devices||[];LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300)}
   catch(e){if(CFG.key)toast(e.message)}
   finally{busy=false;$('refBtn').removeAttribute('aria-busy');document.querySelector('.brand').classList.remove('busy')}
 }
@@ -377,7 +395,7 @@ function card(d){
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
   return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}" role="listitem" data-id="${esc(d.id)}">
    <button class="open" aria-label="${nm}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
-   <div class="ic">${dIcon(iconOf(d))}</div>
+   <div class="ic${photoOf(d)?' photo':''}">${devArt(d)}</div>
    ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${nm} פועל" ${d.online?'':'aria-disabled="true"'}></button>`:''}
    <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${esc(stateText(d))}</div>${META.fav[d.id]?`<span class="fav" aria-hidden="true">${svg('star',2)}</span>`:''}</div>`;
 }
@@ -424,7 +442,7 @@ function openDevice(d,generic){
       const mySched=SCHED.filter(s=>s.device===d.id);
       body.innerHTML=`
         ${!d.online?`<div class="empty" role="alert"><b>המכשיר מנותק</b>בדוק שהוא מחובר לחשמל ול-WiFi.</div>`:''}
-        ${pc?`<button class="big-pw" id="bigPw" role="switch" aria-checked="${on}" aria-label="${esc(dname(d))} פועל">${dIcon(iconOf(d),1.5)}</button><div class="state-line" aria-hidden="true">${on?'פועל':'כבוי'}</div>`:''}
+        ${pc?`<button class="big-pw" id="bigPw" role="switch" aria-checked="${on}" aria-label="${esc(dname(d))} פועל"${photoOf(d)?' data-photo="1"':''}>${devArt(d,1.5)}</button><div class="state-line" aria-hidden="true">${on?'פועל':'כבוי'}</div>`:''}
         ${ros.length?`<div class="readouts">${ros.map(f=>`<div class="ro"><div class="k">${esc(nameOf(f))}</div><div class="n">${esc(roVal(d,f))}</div></div>`).join('')}</div>`:''}
         ${colF(d)?colHtml(d):''}
         ${ctrls.length?`<div class="list" id="ctrls">${ctrls.map(f=>ctrlHtml(d,f)).join('')}</div>`:''}
@@ -434,7 +452,7 @@ function openDevice(d,generic){
         <div class="sec-h"><h2>פרטים</h2></div>
         <div class="list">
           <button class="row row-btn" id="fav" role="switch" aria-checked="${!!META.fav[d.id]}"><span class="grow"><span class="t">מועדף</span><br><span class="s">${META.fav[d.id]?'מופיע ראשון בבית':'לא'}</span></span>${svg('star')}</button>
-          <button class="row row-btn" id="icn"><span class="grow"><span class="t">סמליל</span><br><span class="s">${esc(DI[iconOf(d)][0])}</span></span><span style="width:36px;height:36px;color:var(--acc)">${dIcon(iconOf(d))}</span></button>
+          <button class="row row-btn" id="icn"><span class="grow"><span class="t">סמליל</span><br><span class="s">${photoOf(d)?'תמונת המוצר':esc(DI[iconOf(d)][0])}</span></span><span class="mini${photoOf(d)?' photo':''}">${devArt(d)}</span></button>
           <button class="row row-btn" id="ren"><span class="grow"><span class="t">שם</span><br><span class="s">${esc(dname(d))}</span></span>${svg('edit')}</button>
           <button class="row row-btn" id="room"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(d)||'ללא')}</span></span>${svg('edit')}</button>
           <div class="row"><span class="grow"><span class="t">סוג</span><br><span class="s">${esc(cat)} (${esc(d.category)})</span></span></div>
@@ -722,10 +740,10 @@ function openBackup(){
   });
 }
 function pickIcon(d,cb){
-  const cur=iconOf(d);
-  sheet('סמליל ל'+esc(dname(d)),`<div class="icgrid" role="group" aria-label="בחירת סמליל">${Object.entries(DI).map(([k,[n]])=>`<button data-ic2="${k}" aria-pressed="${k===cur}">${dIcon(k)}<span>${esc(n)}</span></button>`).join('')}</div>
+  const cur=photoOf(d)?'photo':iconOf(d);
+  sheet('סמליל ל'+esc(dname(d)),`<div class="icgrid" role="group" aria-label="בחירת סמליל">${META.img[d.id]?`<button data-ic2="photo" aria-pressed="${cur==='photo'}"><img src="${esc(META.img[d.id])}" alt="" style="width:52px;height:52px;object-fit:contain;border-radius:12px;background:#f4f6f9"><span>תמונת המוצר</span></button>`:''}${Object.entries(DI).map(([k,[n]])=>`<button data-ic2="${k}" aria-pressed="${k===cur}">${dIcon(k)}<span>${esc(n)}</span></button>`).join('')}</div>
    ${META.icons&&META.icons[d.id]?'<button class="btn wide" id="icA">חזרה לבחירה אוטומטית</button>':''}`,(el,close)=>{
-    const set=k=>{META.icons=META.icons||{};k?META.icons[d.id]=k:delete META.icons[d.id];saveMeta();close();cb&&cb()};
+    const set=k=>{META.icons=META.icons||{};k&&k!=='photo'?META.icons[d.id]=k:delete META.icons[d.id];saveMeta();close();cb&&cb()};
     el.querySelectorAll('[data-ic2]').forEach(b=>b.onclick=()=>set(b.dataset.ic2));
     el.querySelector('#icA')&&(el.querySelector('#icA').onclick=()=>set(null));
   });
