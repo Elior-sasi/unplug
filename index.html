@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <link rel="icon" type="image/png" href="icon.png?v=2">
 <link rel="manifest" href="manifest.json?v=1">
-<meta name="theme-color" content="#0a0f1f">
+<meta name="theme-color" content="#0c0f16">
 <title>Unplug</title>
 <style>
 /* Unplug - same family as Unbox: black base, one accent (amber), Rubik, glass pill nav, cards with soft top light. */
@@ -194,10 +194,9 @@ textarea.field-ta{width:100%;min-height:120px;border-radius:14px;border:1px soli
  --ink:#fff;--mut:rgba(235,235,245,.62);--sep:rgba(255,255,255,.12);--sys-green:#30d158;--sys-blue:#0a84ff;--acc:#ffb23e}
 body{font-family:var(--f);letter-spacing:-.01em;background:#05070d}
 body::before{content:"";position:fixed;inset:-10%;z-index:-1;background:
- radial-gradient(55% 40% at 85% 8%,#2f6bff 0,transparent 70%),
- radial-gradient(50% 45% at 5% 30%,#b0357e 0,transparent 70%),
- radial-gradient(60% 45% at 70% 70%,#ff8a3d 0,transparent 70%),
- radial-gradient(60% 50% at 15% 95%,#14b8a6 0,transparent 70%),#0a0f1f;filter:blur(30px) saturate(1.2)}
+ radial-gradient(55% 40% at 85% 5%,#24324f 0,transparent 70%),
+ radial-gradient(50% 45% at 5% 40%,#2a2438 0,transparent 70%),
+ radial-gradient(60% 45% at 75% 80%,#1f2a33 0,transparent 70%),#0b0d13;filter:blur(30px)}
 .app{background:none;padding-top:calc(8px + env(safe-area-inset-top))}
 /* glass recipe */
 .glass,.card,.icbtn,nav.bar,.list,.chip,.quick .btn,.pill,.sheet,.search,.seg,.ro,.empty,.btn{--gt:calc(.06 + var(--g)*.22)}
@@ -239,9 +238,9 @@ body.scrolled .hello,body.scrolled .pills{display:none}
 .card .pw[aria-checked="true"]::before{background:var(--sys-green)}
 .card .fav{top:auto;bottom:18px;left:18px;color:#ffd60a}
 .card.is-on{background:rgba(255,255,255,calc(.78 + var(--g)*.16));border-color:rgba(255,255,255,.6);
- box-shadow:inset 0 1px 0 #fff,0 0 0 .5px rgba(0,0,0,.25),0 16px 36px -12px var(--c2)}
+ box-shadow:inset 0 1px 0 #fff,0 0 0 .5px rgba(0,0,0,.25),0 14px 30px -14px rgba(0,0,0,.6)}
 .card.is-on .nm{color:#000}
-.card.is-on .st{color:color-mix(in srgb,var(--c2) 80%,#000);font-weight:600}
+.card.is-on .st{color:#3c3c43;font-weight:600}
 .card.is-on .fav{color:#c79300}
 .card.is-on .pw[aria-checked="true"]::before{background:var(--sys-green)}
 .card.is-on .ic,.card.is-on .ic.photo,.card.is-on .ic:has(.art){filter:none}
@@ -290,6 +289,29 @@ nav.bar button[aria-current="page"] svg{stroke-width:2.4}
  .card.is-on{background:#f2f2f7!important}}
 @media (prefers-contrast: more){.card,.icbtn,nav.bar,.list,.chip,.pill,.sheet{border-color:rgba(255,255,255,.55)!important}.row .s,.card .st{color:#fff}.card.is-on .st{color:#000}}
 .glassSlider{width:100%;accent-color:var(--sys-blue);height:44px;direction:ltr}
+
+/* ---- v4: TAB family - calm dark base, opaque cards, gold as the only accent; glass only on the bar and sheets ---- */
+:root{--gold:#e2b55a;--gold2:#c8952f;--gold-txt:#f0cf8a;--bg:#0c0f16}
+body{background:var(--bg)}
+body::before{display:none}
+.card,.list,.chip,.quick .btn,.pill,.search,.ro,.empty,.icbtn,.btn:not(.pri){background:#151a24;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid #ffffff10;box-shadow:inset 0 1px 0 #ffffff0a}
+.card.is-on{background:linear-gradient(160deg,#2b2314 0%,#171b25 70%);border-color:#e2b55a70;box-shadow:inset 0 1px 0 #ffffff12,0 12px 30px -16px #e2b55a66}
+.card.is-on .nm{color:#fff}
+.card.is-on .st{color:var(--gold-txt)}
+.card.is-on .fav{color:var(--gold)}
+.card .pw[aria-checked="true"]::before,.card.is-on .pw[aria-checked="true"]::before{background:linear-gradient(90deg,var(--gold2),var(--gold))}
+.sw[aria-checked="true"]{background:var(--gold2)}
+.chip[aria-pressed="true"]{background:var(--gold);color:#1a1205;border-color:transparent}
+.quick .btn.pri,.btn.pri{background:var(--gold);color:#1a1205}
+.pill.hot{color:var(--gold-txt);border-color:#e2b55a55;background:#e2b55a14}
+nav.bar button[aria-current="page"]{color:var(--gold-txt)}
+.seg button[aria-pressed="true"]{background:var(--gold);color:#1a1205}
+.days button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1a1205}
+.ctl-h .v{color:var(--gold-txt)}
+.step input[type=range],.glassSlider{accent-color:var(--gold)}
+.sheet{background:rgba(22,26,36,calc(.7 + var(--g)*.25))}
+header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,15,22,0))}
+:focus-visible{outline-color:var(--gold-txt)}
 </style>
 </head>
 <body>
