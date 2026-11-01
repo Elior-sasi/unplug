@@ -460,6 +460,10 @@ nav.bar:before{background:#ff9a3d24!important;box-shadow:inset 0 0 0 1px #ff9a3d
 .device-options{display:grid;grid-template-columns:repeat(var(--options),minmax(0,1fr));gap:4px;border-radius:16px}
 .device-options button{min-width:0;min-height:48px;padding:10px 4px;border-radius:12px;overflow-wrap:anywhere;line-height:1.35}
 @media(max-width:380px){.device-options{grid-template-columns:repeat(auto-fit,minmax(84px,1fr))}}
+.tabTitle{display:none;margin:4px 2px 14px;font-size:2rem;font-weight:700;letter-spacing:-.03em}
+body:not([data-tab="devices"]) .tabTitle{display:block}
+body:not([data-tab="devices"]) .brandRow,body:not([data-tab="devices"]) .statusLine{display:none}
+.seg{flex-wrap:wrap}.seg button{min-width:0;flex:1 1 30%}
 </style>
 </head>
 <body>
@@ -468,7 +472,7 @@ nav.bar:before{background:#ff9a3d24!important;box-shadow:inset 0 0 0 1px #ff9a3d
   <header class="top">
     <div class="brandRow"><button class="homeBtn" id="homeBtn" aria-haspopup="dialog"></button>
       <div class="actions"><button class="icbtn" id="offBtn" aria-label="לכבות הכול"></button><button class="icbtn" id="editBtn" aria-label="עריכת המסך - סדר, גודל ומועדפים"></button><button class="icbtn" id="addBtn" aria-label="הוספת מכשיר"></button><button class="icbtn" id="refBtn" aria-label="רענון"></button></div></div>
-    <h1 class="sr" id="title" aria-live="polite">הבית</h1><p class="statusLine" id="sub" aria-live="polite"></p>
+    <h1 class="sr" id="title" aria-live="polite">הבית</h1><h1 class="tabTitle" id="tabTitle"></h1><p class="statusLine" id="sub" aria-live="polite"></p>
   </header>
   <main id="view"></main>
 </div>
@@ -658,6 +662,7 @@ async function refreshOne(id){try{const j=await api('/device',{id});if(!j.device
 /* ---------- render ---------- */
 function render(){
   window.DEVS_ALL=DEVS;
+  {const t={scenes:'סצנות',sched:'תזמונים',settings:'הגדרות'}[TAB];document.body.dataset.tab=TAB;const tt=document.getElementById('tabTitle');if(tt)tt.textContent=t||''}
   const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d)).length, off=HD.filter(d=>!d.online).length;
   $('homeBtn').innerHTML=`<span>${esc(curHome().name)}</span>${svg('chev',2.6)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
   const W=HD.reduce((t,d)=>t+watts(d),0),hasW=HD.some(d=>d.status.cur_power!=null);
@@ -998,7 +1003,6 @@ function viewSettings(v){
   </div>
   <div class="sec-h"><h2>תצוגה</h2></div><div class="list">
     <div class="ctl"><div class="ctl-h"><span class="t" id="stL">סגנון סמלילים</span></div><div class="seg" role="group" aria-labelledby="stL">${[['real','ריאליסטי'],['photo','מקורי'],['clay','תלת-ממד'],['glass','אריח'],['neon','ניאון']].map(([k,t])=>`<button data-st2="${k}" aria-pressed="${STYLE()===k}">${t}</button>`).join('')}</div></div>
-    <div class="ctl"><div class="ctl-h"><label class="t" for="glS">זכוכית</label><span class="v" id="glV" aria-hidden="true"></span></div><input type="range" class="glassSlider" id="glS" min="0" max="100" step="5" value="${Math.round((+(LS('unplug_glass')??55)))}"><div class="ctl-h" style="min-height:0"><span class="s">שקוף</span><span class="s">כהה</span></div></div>
     <div class="ctl"><div class="ctl-h"><span class="t" id="tsL">גודל טקסט</span></div><div class="seg" role="group" aria-labelledby="tsL">${[['100','רגיל'],['115','גדול'],['130','גדול מאוד'],['150','ענק']].map(([k,t])=>`<button data-ts="${k}" aria-pressed="${ts===k}">${t}</button>`).join('')}</div></div>
   </div>
   <div class="sec-h"><h2>אוטומציות</h2></div><div class="list">
@@ -1018,7 +1022,6 @@ function viewSettings(v){
     <button class="row row-btn" id="rr"><span class="grow"><span class="t">ניהול חדרים</span><br><span class="s">${roomsOf(META.home).length} חדרים ב${esc(curHome().name)}</span></span>${svg('chev')}</button>
   </div>
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
-  {const g=$('glS'),gv=$('glV'),sh=()=>{const t=+g.value<25?'שקוף מאוד':+g.value<70?'רגיל':'כהה';gv.textContent=t;g.setAttribute('aria-valuetext',t)};sh();g.oninput=()=>{LSset('unplug_glass',g.value);applyPrefs();sh()}}
   v.querySelectorAll('[data-st2]').forEach(b=>b.onclick=()=>{LSset('unplug_style',b.dataset.st2);render()});
   v.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{LSset('unplug_ts',b.dataset.ts);applyPrefs();render()});
   $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('shb').onclick=()=>openShabbat();$('grp').onclick=()=>META.groups&&META.groups.length?sheet('קבוצות',`<div class="list">${META.groups.map(g=>`<button class="row row-btn" data-eg="${g.id}"><span class="grow t">${esc(g.name)}</span>${svg('chev')}</button>`).join('')}</div><button class="btn wide" id="ngr">${svg('plus')}קבוצה חדשה</button>`,(el,cl)=>{el.querySelectorAll('[data-eg]').forEach(b=>b.onclick=()=>editGroup(META.groups.find(g=>g.id===b.dataset.eg)));el.querySelector('#ngr').onclick=()=>editGroup(null)}):editGroup(null);$('bk').onclick=openBackup;$('siri').onclick=openSiri;
