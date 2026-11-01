@@ -591,7 +591,16 @@ const curHome=()=>META.homes.find(h=>h.id===META.home)||META.homes[0];
 let SCENES=LSj('unplug_scenes',[]),LOG=LSj('unplug_log',[]),Q='',FILTER='';
 META.fav=META.fav||{};
 const addLog=(name,text)=>{LOG.unshift({t:Date.now(),name,text});LOG=LOG.slice(0,150);LSset('unplug_log',JSON.stringify(LOG))};
-const saveMeta=()=>LSset('unplug_meta',JSON.stringify(META));
+let metaT=0,metaPulled=false;
+const saveMeta=()=>{LSset('unplug_meta',JSON.stringify(META));clearTimeout(metaT);metaT=setTimeout(()=>{if(CFG.key)api('/meta/save',{meta:META}).catch(()=>{})},1500)};
+/* names, rooms, icons and order are also kept on the server, so deleting and re-adding the app keeps them */
+async function pullMeta(){if(metaPulled||!CFG.key)return;metaPulled=true;
+  try{const m=(await api('/meta')).meta;if(!m||typeof m!=='object'){api('/meta/save',{meta:META}).catch(()=>{});return}
+    let changed=false;for(const k of Object.keys(m)){const v=m[k],cur=META[k];
+      if(cur==null||(typeof cur==='object'&&!Array.isArray(cur)&&!Object.keys(cur).length)||(Array.isArray(cur)&&!cur.length)){META[k]=v;changed=true}
+      else if(typeof v==='object'&&v&&!Array.isArray(v)&&typeof cur==='object'&&!Array.isArray(cur)){for(const j of Object.keys(v))if(!(j in cur)){cur[j]=v[j];changed=true}}}
+    if(changed){LSset('unplug_meta',JSON.stringify(META));render()}
+  }catch(e){metaPulled=false}}
 const saveScenes=()=>LSset('unplug_scenes',JSON.stringify(SCENES));
 
 /* ---------- icons ---------- */
@@ -668,7 +677,7 @@ const STYLE=()=>'real';
 const REALN={"washer": "מכונת כביסה", "fridge": "מקרר", "oven": "תנור אפייה", "microwave": "מיקרוגל", "coffee": "מכונת קפה", "kettle": "קומקום", "toaster": "טוסטר", "ac": "מזגן", "led": "פס לד", "ceiling": "מנורת תקרה", "bulb": "נורה", "lamp": "מנורת שולחן", "fan": "מאוורר", "heater": "רדיאטור", "boiler": "דוד חשמל", "dish": "מדיח כלים", "plug": "שקע בקיר", "phone": "טלפון", "charger": "מטען USB", "router": "ראוטר", "speaker": "רמקול", "game": "קונסולה", "laptop": "מחשב נייד", "tv": "טלוויזיה", "remote": "שלט רחוק", "plant": "עציץ", "sensor": "חיישן תנועה", "camera": "מצלמת אבטחה", "curtain": "תריס חשמלי", "switch": "מפסק תאורה", "strip": "מפצל חשמל", "vacuum": "שואב רובוטי", "dryer": "מייבש כביסה", "stickvac": "שואב אבק", "fanheater": "מפזר חום", "water": "בר מים", "ceilfan": "מאוורר תקרה", "lock": "מנעול חכם", "doorsensor": "חיישן דלת וחלון", "purifier": "מטהר אוויר", "humidifier": "מכשיר אדים", "dehumid": "סופח לחות", "projector": "מקרן", "streamer": "סטרימר", "receiver": "רסיבר", "doorbell": "פעמון דלת", "smoke": "גלאי עשן", "leak": "חיישן נזילה", "thermo_h": "מד טמפ׳ ולחות", "gate": "שער חשמלי", "irrigation": "מערכת השקיה", "adapter": "מתאם שקע", "portac": "מזגן נייד", "hood": "קולט אדים", "cooktop": "כיריים", "toasteroven": "טוסטר אובן", "airfryer": "אייר פרייר", "urn": "מיחם", "blanket": "שמיכה חשמלית", "towerfan": "מאוורר מגדל", "soundbar": "סאונדבר", "screen": "מסך הקרנה", "garage": "דלת מוסך", "hub": "רכזת בית חכם", "blindsw": "מפסק תריס", "dimmer": "דימר", "thermostat": "תרמוסטט", "presence": "חיישן נוכחות", "gas": "גלאי גז", "valve": "ברז ראשי חשמלי", "intercom": "אינטרקום", "siren": "סירנה", "gardenlight": "תאורת גינה", "walllight": "תאורת קיר", "mop": "שואב שוטף", "petfeeder": "מאכיל חיות"};
 const REAL=new Set(Object.keys(REALN));
 const realImg=k=>`<img class="real" src="real/${REAL.has(k)?k:'plug'}.png?v=2" alt="" loading="lazy" decoding="async">`;
-const artFor=(k,st)=>st==='real'||st==='photo'?(REAL.has(k)?realImg(k):artSvg(k,'clay')):artSvg(k,st);
+const artFor=(k,st)=>realImg(k);
 const photoOf=d=>STYLE()==='photo'&&(!META.icons||META.icons[d.id]==null||META.icons[d.id]==='photo')&&META.img[d.id]?META.img[d.id]:'';
 const drawn=d=>artFor(iconOf(d),STYLE());
 const devArt=(d,w)=>{const u=photoOf(d);return u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createRange().createContextualFragment(this.dataset.fb))" data-fb="${esc(drawn(d))}">`:drawn(d)};
@@ -731,6 +740,7 @@ function setKey(k){CFG.key=k;LSset('unplug_key',k||null)}
 function toast(t){document.querySelector('.toast')?.remove();const e=document.createElement('div');e.className='toast';e.setAttribute('role','status');e.textContent=t;document.body.append(e);$('live').textContent=t;setTimeout(()=>e.remove(),2600)}
 
 async function loadDevices(){
+  pullMeta();
   if(!CFG.key||busy)return;busy=true;$('refBtn').setAttribute('aria-busy','true');
   try{const j=await api('/devices');DEVS=(j.devices||[]).map(norm);LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300);setTimeout(()=>typeof syncShabbat==='function'&&syncShabbat(false),1500);if(!META.tuyaAt||Date.now()-META.tuyaAt>6*3600e3)setTimeout(()=>importTuya(false),800)}
   catch(e){if(CFG.key)toast(e.message)}
