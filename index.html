@@ -388,6 +388,12 @@ header.top::before{display:none!important}
 body.scrolled header.top h1{font-size:2.15rem}
 body.scrolled .hello,body.scrolled .pills{display:flex}
 .reBar{top:calc(env(safe-area-inset-top) + 8px)}
+.card .pw,.grp .pw{top:10px;left:10px;width:46px;height:46px;border-radius:50%;background:#ffffff14;border:1px solid #ffffff1a;display:grid;place-items:center;color:#c9d2e3}
+.card .pw::before,.card .pw::after,.grp .pw::before,.grp .pw::after{display:none!important}
+.card .pw svg,.grp .pw svg{display:block!important;width:22px;height:22px}
+.card .pw[aria-checked="true"],.grp .pw[aria-checked="true"]{background:var(--gold);border-color:transparent;color:#1f0e00;box-shadow:0 4px 14px #ff9a3d66}
+.edFav{bottom:-8px;right:-8px;background:#3a3f4b;color:#fff}.edFav[aria-pressed="true"]{background:var(--gold);color:#1f0e00}
+#editBtn[aria-pressed="true"]{background:var(--gold);color:#1f0e00}
 </style>
 </head>
 <body>
@@ -395,7 +401,7 @@ body.scrolled .hello,body.scrolled .pills{display:flex}
 <div class="app">
   <header class="top">
     <div class="brandRow"><span class="brand" aria-label="Unplug"><svg viewBox="100 40 312 422" aria-hidden="true"><defs><linearGradient id="ug" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffc24d"/></linearGradient></defs><path d="M150 214 V320 a106 106 0 0 0 212 0 V210" fill="none" stroke="url(#ug)" stroke-width="58" stroke-linecap="round"/><g class="lid"><g transform="rotate(-10 112 160)"><rect x="180" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="302" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="112" y="112" width="288" height="48" rx="16" fill="#ffc24d"/></g></g></svg><span aria-hidden="true">nplug</span></span>
-      <div class="actions"><button class="icbtn" id="addBtn" aria-label="הוספת מכשיר"></button><button class="icbtn" id="refBtn" aria-label="רענון"></button></div></div>
+      <div class="actions"><button class="icbtn" id="editBtn" aria-label="עריכת המסך - סדר, גודל ומועדפים"></button><button class="icbtn" id="addBtn" aria-label="הוספת מכשיר"></button><button class="icbtn" id="refBtn" aria-label="רענון"></button></div></div>
     <button class="homeBtn" id="homeBtn" aria-haspopup="dialog"></button><h1 id="title" aria-live="polite">הבית</h1><div class="pills" id="sub" aria-live="polite"></div>
   </header>
   <main id="view"></main>
@@ -523,7 +529,7 @@ async function loadPhotos(){
 const dIcon=(k,w=1.7)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(DI[k]||DI.dev)[1]}</svg>`;
 const svg=(n,w=2)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]||P.dev}</svg>`;
 document.querySelectorAll('[data-ic]').forEach(e=>e.outerHTML=svg(e.dataset.ic));
-$('addBtn').innerHTML=svg('plus',2.4);$('refBtn').innerHTML=svg('ref');
+$('addBtn').innerHTML=svg('plus',2.4);$('editBtn').innerHTML=svg('edit',2.2);$('refBtn').innerHTML=svg('ref');
 
 /* ---------- Tuya vocabulary (Hebrew) ---------- */
 const CAT={kg:['מתג','toggle'],tdq:['מתג','toggle'],cz:['שקע חכם','plug'],pc:['מפצל','strip'],dj:['תאורה','bulb'],dd:['פס לד','bulb'],xdd:['תאורת תקרה','bulb'],fwd:['תאורה','bulb'],dc:['תאורה','bulb'],
@@ -644,7 +650,7 @@ function card(d){
   return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
    <button class="open" aria-label="${nm}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
    <div class="ic${photoOf(d)?' photo':''}">${devArt(d)}</div>
-   ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${nm} פועל" ${d.online?'':'aria-disabled="true"'}></button>`:''}
+   ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${nm} פועל" ${d.online?'':'aria-disabled="true"'}>${svg('power',2.6)}</button>`:''}
    <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${esc(stateText(d))}</div>${META.fav[d.id]?`<span class="fav" aria-hidden="true">${svg('star',2)}</span>`:''}</div>`;
 }
 
@@ -1106,6 +1112,7 @@ function applyPrefs(){document.documentElement.style.setProperty('--ts',(LS('unp
 document.querySelectorAll('nav.bar button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();if(TAB==='sched')loadSched().then(render);window.scrollTo(0,0)});
 $('refBtn').onclick=()=>{loadDevices();loadSched()};
 $('homeBtn').onclick=openHomes;
+$('editBtn').onclick=()=>{if(TAB!=='devices'){TAB='devices'}typeof setReorder==='function'&&setReorder(!REORDER)};
 $('addBtn').onclick=openAdd;
 setTimeout(()=>{const sp=$('splash');if(!sp)return;sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
 applyPrefs();try{render()}catch(e){console.error(e)}
@@ -1113,7 +1120,7 @@ if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConne
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active'))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
 </script>
-<script src="extras.js?v=3"></script>
+<script src="extras.js?v=4"></script>
 <script>render();</script>
 </body>
 </html>

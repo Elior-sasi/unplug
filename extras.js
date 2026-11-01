@@ -24,7 +24,7 @@ function groupsHtml(){
      return `<div class="grp${any?' is-on':''}" role="listitem"><button class="grpOpen" data-gopen="${g.id}" aria-label="${esc(g.name)}, ${on} מתוך ${ds.length} פועלים. עריכת קבוצה"></button>
       <div class="grpIc" aria-hidden="true">${ds.slice(0,3).map(d=>`<span>${devArt(d)}</span>`).join('')}</div>
       <div class="grpT" aria-hidden="true"><b>${esc(g.name)}</b><span>${on?on+' מתוך '+ds.length+' פועלים':'הכול כבוי'}</span></div>
-      <button class="pw" role="switch" aria-checked="${any}" data-gpw="${g.id}" aria-label="${esc(g.name)} פועלת"></button></div>`}).join('')}</div></section>`;
+      <button class="pw" role="switch" aria-checked="${any}" data-gpw="${g.id}" aria-label="${esc(g.name)} פועלת">${svg('power',2.6)}</button></div>`}).join('')}</div></section>`;
 }
 function bindGroups(v){
   v.querySelector('#gAdd')&&(v.querySelector('#gAdd').onclick=()=>editGroup(null));
@@ -73,7 +73,7 @@ function quickActions(d){
 }
 function bindLongPress(v){
   v.querySelectorAll('.card').forEach(c=>{let t=0,x0=0,y0=0,fired=false;const o=c.querySelector('.open');
-    o.addEventListener('pointerdown',e=>{if(REORDER)return;fired=false;x0=e.clientX;y0=e.clientY;t=setTimeout(()=>{fired=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}quickActions(DEVS.find(d=>d.id===c.dataset.id))},480)});
+    o.addEventListener('pointerdown',e=>{if(REORDER)return;fired=false;x0=e.clientX;y0=e.clientY;t=setTimeout(()=>{fired=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}setReorder(true)},480)});
     o.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-x0,e.clientY-y0)>10)clearTimeout(t)});
     ['pointerup','pointercancel','pointerleave'].forEach(n=>o.addEventListener(n,()=>clearTimeout(t)));
     o.addEventListener('click',e=>{if(fired||REORDER){e.stopImmediatePropagation();e.preventDefault();fired=false}},true);
@@ -82,12 +82,12 @@ function bindLongPress(v){
 }
 
 /* ---------- reorder (drag, plus arrow buttons for VoiceOver) ---------- */
-function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);render();if(on)toast('גרור כדי להזיז, הפינה משנה גודל')}
+function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);const eb=document.getElementById('editBtn');eb&&eb.setAttribute('aria-pressed',on);render();if(on)toast('גרור כדי להזיז, הפינה משנה גודל')}
 function saveOrderFrom(grid){[...grid.querySelectorAll('.card')].forEach((c,i)=>META.order[c.dataset.id]=i+(+grid.dataset.base||0));saveMeta()}
 function bindReorder(v){
   if(!REORDER)return;
   META.size=META.size||{};META.hidden=META.hidden||{};
-  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="status"><span>עריכת המסך - גרור, שנה גודל או הסתר</span><button class="btn pri" id="reDone">סיום</button></div>`);
+  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="status"><span>עריכה: גרור להזזה · ⭐ מועדף · פינה = גודל · ✕ הסתרה</span><button class="btn pri" id="reDone">סיום</button></div>`);
   v.insertAdjacentHTML('beforeend',`<button class="btn wide addCard" id="addCard">${svg('plus')}הוספת כרטיס${Object.keys(META.hidden).length?' ('+Object.keys(META.hidden).length+' מוסתרים)':''}</button>`);
   v.querySelector('#reDone').onclick=()=>setReorder(false);
   v.querySelector('#addCard').onclick=()=>{const hs=DEVS.filter(d=>META.hidden[d.id]);if(!hs.length)return toast('כל המכשירים כבר מוצגים');
@@ -96,7 +96,8 @@ function bindReorder(v){
     grid.querySelectorAll('.card').forEach(c=>{
       const id=c.dataset.id,nm=esc(c.querySelector('.nm').textContent),wide=META.size[id]==='w';
       if(META.hidden[id])c.classList.add('hiddenCard');
-      c.insertAdjacentHTML('beforeend',`<button class="edCorner edDel" data-hide aria-label="${META.hidden[id]?'הצגת':'הסתרת'} ${nm}">${svg(META.hidden[id]?'plus':'close',2.6)}</button><button class="edCorner edSize" data-size aria-label="${wide?'כרטיס מרובע':'כרטיס מלבני'} - ${nm}">${svg(wide?'close':'plus',2.6)}</button>`);
+      c.insertAdjacentHTML('beforeend',`<button class="edCorner edFav" data-fav aria-pressed="${!!META.fav[id]}" aria-label="מועדף - ${nm}">${svg('star',2.4)}</button><button class="edCorner edDel" data-hide aria-label="${META.hidden[id]?'הצגת':'הסתרת'} ${nm}">${svg(META.hidden[id]?'plus':'close',2.6)}</button><button class="edCorner edSize" data-size aria-label="${wide?'כרטיס מרובע':'כרטיס מלבני'} - ${nm}">${svg(wide?'close':'plus',2.6)}</button>`);
+      c.querySelector('[data-fav]').onclick=e=>{e.stopPropagation();META.fav[id]?delete META.fav[id]:META.fav[id]=true;saveMeta();render()};
       c.querySelector('[data-hide]').onclick=e=>{e.stopPropagation();META.hidden[id]?delete META.hidden[id]:META.hidden[id]=true;saveMeta();render()};
       c.querySelector('[data-size]').onclick=e=>{e.stopPropagation();wide?delete META.size[id]:META.size[id]='w';saveMeta();render()};
       c.querySelector('[data-size]').innerHTML=wide?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
