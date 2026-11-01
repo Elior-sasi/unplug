@@ -490,6 +490,18 @@ header.top,header.top::before,.icbtn,.reBar{-webkit-backdrop-filter:none!importa
 .dropMenu button svg{width:20px;height:20px;color:var(--gold);flex:none}
 .dropMenu button:active,.dropMenu button:focus-visible{background:#ffffff12}
 .dropMenu button:disabled{opacity:.4}
+/* edit mode: calm, no text selection on long-press */
+.app,.card,.chips,.grp,nav.bar{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+.reordering .card .reBtns{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);top:0;left:0}
+.reordering .card .reBtns button:focus{position:fixed;clip:auto;width:44px;height:44px}
+.edCorner{width:30px;height:30px;box-shadow:0 2px 6px #0009}
+.edCorner svg{width:14px;height:14px}
+.edDel{top:6px;left:6px;right:auto}.edFav{top:6px;left:42px;right:auto;bottom:auto}.edSize{top:6px;left:78px;bottom:auto}
+.reordering .card .ic{opacity:.9}
+.reordering .card{outline:1.5px dashed #ff9a3d66;outline-offset:-1.5px}
+.reBar{border-radius:16px!important;padding:8px 8px 8px 14px!important;font-size:.92rem}
+.reBar .btn{min-height:40px;padding:0 18px}
 </style>
 </head>
 <body>
@@ -1230,7 +1242,7 @@ if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConne
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active'))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
 </script>
-<script src="extras.js?v=4"></script>
+<script src="extras.js?v=5"></script>
 <script>render();</script>
 </body>
 </html>

@@ -82,12 +82,12 @@ function bindLongPress(v){
 }
 
 /* ---------- reorder (drag, plus arrow buttons for VoiceOver) ---------- */
-function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);const eb=document.getElementById('editBtn');eb&&eb.setAttribute('aria-pressed',on);render();if(on)toast('גרור כדי להזיז, הפינה משנה גודל')}
+function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);const eb=document.getElementById('editBtn');eb&&eb.setAttribute('aria-pressed',on);render();}
 function saveOrderFrom(grid){[...grid.querySelectorAll('.card')].forEach((c,i)=>META.order[c.dataset.id]=i+(+grid.dataset.base||0));saveMeta()}
 function bindReorder(v){
   if(!REORDER)return;
   META.size=META.size||{};META.hidden=META.hidden||{};
-  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="status"><span>עריכה: גרור להזזה · ⭐ מועדף · פינה = גודל · ✕ הסתרה</span><button class="btn pri" id="reDone">סיום</button></div>`);
+  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="status"><span>גרור כדי להזיז</span><button class="btn pri" id="reDone">סיום</button></div>`);
   v.insertAdjacentHTML('beforeend',`<button class="btn wide addCard" id="addCard">${svg('plus')}הוספת כרטיס${Object.keys(META.hidden).length?' ('+Object.keys(META.hidden).length+' מוסתרים)':''}</button>`);
   v.querySelector('#reDone').onclick=()=>setReorder(false);
   v.querySelector('#addCard').onclick=()=>{const hs=DEVS.filter(d=>META.hidden[d.id]);if(!hs.length)return toast('כל המכשירים כבר מוצגים');
