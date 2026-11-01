@@ -520,6 +520,13 @@ html,body{height:100%;overflow:hidden}
 html,body,button,a,.card,.chip,.row{touch-action:manipulation}
 input,select,textarea{font-size:max(16px,1rem)!important}
 #shT:focus,#shT:focus-visible{outline:none}
+.cmdBar{display:flex;align-items:center;gap:8px;background:#1c1c1e;border-radius:16px;padding:4px 6px 4px 14px;margin:0 0 14px}
+.cmdBar input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;min-height:44px}
+.cmdBar input::placeholder{color:#8e8e93}
+.cmdMic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--gold);flex:none}
+.cmdMic svg{width:22px;height:22px}.cmdMic.rec{background:var(--gold);color:#1f0e00;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px #ff9a3d33}}
+.cmdEx{margin:0;padding-inline-start:20px;color:var(--mut);line-height:1.9}
 </style>
 </head>
 <body>
@@ -749,7 +756,7 @@ function viewDevices(v){
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
   const chips=[['all','הכול'],...(hasFav?[['fav','מועדפים']]:[]),...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
   v.innerHTML=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
-      (SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
+      (typeof cmdBarHtml==='function'?cmdBarHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
    `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים"><span style="display:inline-grid;transform:rotate(-90deg)">${svg('chev',2.4)}</span></button></div>`+
    (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
@@ -761,6 +768,7 @@ function viewDevices(v){
     b.addEventListener('pointerdown',()=>{t=setTimeout(()=>{b._lp=1;try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}renameRoom(r)},500)});
     ['pointerup','pointerleave','pointercancel'].forEach(n=>b.addEventListener(n,()=>clearTimeout(t)));b.addEventListener('contextmenu',e=>{e.preventDefault()})});
   $('emAs')&&($('emAs').onclick=()=>manageRooms());
+  typeof bindCmdBar==='function'&&bindCmdBar(v);
   v.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ROOM=b.dataset.go;render();document.querySelector('.app').scrollTo(0,0)});
   v.querySelectorAll('[data-roff]').forEach(b=>b.onclick=async()=>{const r=b.dataset.roff,ds=DEVS.filter(d=>(r?roomOf(d)===r:!roomOf(d))&&d.online&&isOn(d));for(const d of ds)await send(d,[{code:powerCode(d),value:false}]);toast((r||'המכשירים בלי חדר')+' - כבוי')});
   $('allOff')&&($('allOff').onclick=async()=>{if(!confirm(`לכבות ${onDevs.length} מכשירים?`))return;for(const d of onDevs)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')});
@@ -1104,6 +1112,8 @@ function viewSettings(v){
     <div class="ctl"><div class="ctl-h"><span class="t" id="tsL">גודל טקסט</span></div><div class="seg" role="group" aria-labelledby="tsL">${[['100','רגיל'],['115','גדול'],['130','גדול מאוד'],['150','ענק']].map(([k,t])=>`<button data-ts="${k}" aria-pressed="${ts===k}">${t}</button>`).join('')}</div></div>
   </div>
   <div class="sec-h"><h2>אוטומציות</h2></div><div class="list">
+    <button class="row row-btn" id="gdr"><span class="grow"><span class="t">שומר בית</span><br><span class="s">התראה על מכשיר שנשאר דלוק או מכונה שסיימה</span></span>${svg('chev')}</button>
+    <button class="row row-btn" id="prs"><span class="grow"><span class="t">יצאתי / חזרתי</span><br><span class="s">לכבות ביציאה, להדליק בחזרה - לפי המיקום</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="shb"><span class="grow"><span class="t">מצב שבת</span><br><span class="s">${(()=>{try{const c=SHB();return c.on?'פעיל · '+c.acts.length+' פעולות':'כבוי'}catch(e){return ''}})()}</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="grp"><span class="grow"><span class="t">קבוצות מכשירים</span><br><span class="s">${(META.groups||[]).length} קבוצות</span></span>${svg('chev')}</button>
   </div>
@@ -1121,7 +1131,7 @@ function viewSettings(v){
   </div>
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
   v.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{LSset('unplug_ts',b.dataset.ts);applyPrefs();render()});
-  $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('shb').onclick=()=>openShabbat();$('grp').onclick=()=>META.groups&&META.groups.length?sheet('קבוצות',`<div class="list">${META.groups.map(g=>`<button class="row row-btn" data-eg="${g.id}"><span class="grow t">${esc(g.name)}</span>${svg('chev')}</button>`).join('')}</div><button class="btn wide" id="ngr">${svg('plus')}קבוצה חדשה</button>`,(el,cl)=>{el.querySelectorAll('[data-eg]').forEach(b=>b.onclick=()=>editGroup(META.groups.find(g=>g.id===b.dataset.eg)));el.querySelector('#ngr').onclick=()=>editGroup(null)}):editGroup(null);$('bk').onclick=openBackup;$('siri').onclick=openSiri;
+  $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('shb').onclick=()=>openShabbat();$('gdr').onclick=()=>openGuard();$('prs').onclick=()=>openPresence();$('grp').onclick=()=>META.groups&&META.groups.length?sheet('קבוצות',`<div class="list">${META.groups.map(g=>`<button class="row row-btn" data-eg="${g.id}"><span class="grow t">${esc(g.name)}</span>${svg('chev')}</button>`).join('')}</div><button class="btn wide" id="ngr">${svg('plus')}קבוצה חדשה</button>`,(el,cl)=>{el.querySelectorAll('[data-eg]').forEach(b=>b.onclick=()=>editGroup(META.groups.find(g=>g.id===b.dataset.eg)));el.querySelector('#ngr').onclick=()=>editGroup(null)}):editGroup(null);$('bk').onclick=openBackup;$('siri').onclick=openSiri;
   $('pushOn')&&($('pushOn').onclick=enablePush);$('pushT')&&($('pushT').onclick=async()=>{try{await api('/push/at',{at:Date.now()/1000+3,title:'Unplug',body:'ככה ייראו ההתראות'});toast('ההתראה תגיע תוך דקה')}catch(e){toast(e.message)}});
   $('rc')&&($('rc').onclick=async()=>{try{const j=await api('/recover/create',{});sheet('קוד שחזור',`<p>שמור את הקוד. איתו מתחברים מחדש בכל מכשיר, וגם ב-Breeze.</p><div class="ro" style="text-align:center"><div class="n" style="direction:ltr;letter-spacing:.08em;font-size:1.8rem;user-select:all">${esc(j.code)}</div></div><button class="btn wide" id="cp">העתקה</button>`,el=>el.querySelector('#cp').onclick=()=>{navigator.clipboard?.writeText(j.code).then(()=>toast('הועתק'),()=>{})})}catch(e){toast(e.message)}});
   $('lo')&&($('lo').onclick=()=>{if(!confirm('להתנתק רק מהאפליקציה הזו? Breeze ושאר האפליקציות ימשיכו לעבוד.'))return;setKey('');DEVS=[];LSset('unplug_devs',null);render()});
@@ -1308,11 +1318,15 @@ $('editBtn').onclick=()=>{if(TAB!=='devices'){TAB='devices'}typeof setReorder===
 $('addBtn').onclick=openAdd;
 setTimeout(()=>{const sp=$('splash');if(!sp)return;sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
 applyPrefs();try{render()}catch(e){console.error(e)}
+function openFromHash(){const m=location.hash.match(/dev=([^&]+)/);if(!m)return;const id=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname);
+  const go=()=>{const d=DEVS.find(x=>x.id===id);if(d){TAB='devices';render();openDevice(d)}};DEVS.length?go():setTimeout(go,2500)}
+addEventListener('hashchange',openFromHash);setTimeout(openFromHash,600);
 if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConnect();
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active')&&!(typeof REORDER!=='undefined'&&REORDER))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
 </script>
 <script src="extras.js?v=8"></script>
+<script src="smart.js?v=2"></script>
 <script>render();</script>
 </body>
 </html>
