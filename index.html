@@ -538,7 +538,7 @@ function toast(t){document.querySelector('.toast')?.remove();const e=document.cr
 
 async function loadDevices(){
   if(!CFG.key||busy)return;busy=true;$('refBtn').setAttribute('aria-busy','true');document.querySelector('.brand').classList.add('busy');
-  try{const j=await api('/devices');DEVS=j.devices||[];LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300);setTimeout(()=>typeof syncShabbat==='function'&&syncShabbat(false),1500)}
+  try{const j=await api('/devices');DEVS=j.devices||[];LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300);setTimeout(()=>typeof syncShabbat==='function'&&syncShabbat(false),1500);if(!META.tuyaAt||Date.now()-META.tuyaAt>6*3600e3)setTimeout(()=>importTuya(false),800)}
   catch(e){if(CFG.key)toast(e.message)}
   finally{busy=false;$('refBtn').removeAttribute('aria-busy');document.querySelector('.brand').classList.remove('busy')}
 }
@@ -992,8 +992,23 @@ function manageRooms(focusRoom){
     if(focusRoom){const sel=el.querySelector('[data-dr]');sel&&sel.focus()}
   });
 }
+/* import homes & rooms from Smart Life (needs the /homes server route) */
+async function importTuya(manual){
+  let j;try{j=await api('/homes')}catch(e){if(manual)toast(/נתיב לא מוכר|404/.test(e.message)?'השרת עוד לא מעודכן - צריך עדכון שרת אחד':e.message);return false}
+  if(!j.homes||!j.homes.length){if(manual)toast('לא נמצאו בתים ב-Smart Life');return false}
+  const idOf=h=>'t'+h.id;
+  for(const h of j.homes){const ex=META.homes.find(x=>x.id===idOf(h));ex?ex.name=h.name||ex.name:META.homes.push({id:idOf(h),name:h.name||'בית'})}
+  // drop the placeholder home if it is empty
+  META.homes=META.homes.filter(h=>h.id.startsWith('t')||DEVS.some(d=>META.devHome[d.id]===h.id)||META.roomList.some(r=>META.roomHome[r]===h.id));
+  if(!META.homes.length)META.homes=[{id:idOf(j.homes[0]),name:j.homes[0].name}];
+  for(const[did,w]of Object.entries(j.where||{})){META.devHome[did]=idOf({id:w.home});
+    if(w.room&&w.room.name){const r=w.room.name;if(!META.roomList.includes(r))META.roomList.push(r);META.roomHome[r]=idOf({id:w.home});if(manual||!META.rooms[did])META.rooms[did]=r}}
+  if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
+  META.tuyaAt=Date.now();saveMeta();render();if(manual)toast('יובא מ-Smart Life');return true;
+}
 function openHomes(){
   sheet('הבתים שלי',`<div class="list" id="hl"></div><button class="btn wide" id="ha">${svg('plus')}בית חדש</button>
+    <button class="btn wide" id="hImp">${svg('ref')}ייבוא בתים וחדרים מ-Smart Life</button>
     <p style="font-size:.92rem">לכל בית יש חדרים ומכשירים משלו. מעבירים מכשיר בית מתוך "חדרים" ← שיוך מכשירים.</p>`,(el,close)=>{
     const draw=()=>{el.querySelector('#hl').innerHTML=META.homes.map(h=>`<div class="row"><button class="row-btn grow" data-hs="${h.id}" aria-pressed="${h.id===META.home}" style="display:block"><span class="t">${esc(h.name)}${h.id===META.home?' ✓':''}</span><br><span class="s">${DEVS.filter(d=>homeOf(d)===h.id).length} מכשירים · ${roomsOf(h.id).length} חדרים</span></button>
       <button class="icbtn" data-hr="${h.id}" aria-label="שינוי שם לבית ${esc(h.name)}">${svg('edit')}</button>${META.homes.length>1?`<button class="icbtn" data-hd="${h.id}" aria-label="מחיקת הבית ${esc(h.name)}">${svg('trash')}</button>`:''}</div>`).join('');
@@ -1003,6 +1018,7 @@ function openHomes(){
         META.homes=META.homes.filter(x=>x.id!==h.id);const to=META.homes[0].id;for(const k in META.devHome)if(META.devHome[k]===h.id)META.devHome[k]=to;for(const k in META.roomHome)if(META.roomHome[k]===h.id)META.roomHome[k]=to;if(META.home===h.id)META.home=to;saveMeta();draw();render()});
     };
     draw();
+    el.querySelector('#hImp').onclick=async()=>{const b=el.querySelector('#hImp');b.disabled=true;b.textContent='מייבא...';const ok=await importTuya(true);if(ok)close();else{b.disabled=false;b.textContent='ייבוא בתים וחדרים מ-Smart Life'}};
     el.querySelector('#ha').onclick=()=>{const n=(prompt('שם הבית החדש','בית ההורים')||'').trim();if(!n)return;const id='h'+Date.now().toString(36);META.homes.push({id,name:n});saveMeta();draw()};
   });
 }
