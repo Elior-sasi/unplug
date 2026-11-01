@@ -704,6 +704,7 @@ const unitHe=u=>({'℃':'°','°C':'°','W':'וואט','V':'וולט','mA':'מי
 function readOf(d,code){return (d.statusRange||[]).find(x=>x.code===code)||(d.functions||[]).find(x=>x.code===code)}
 function stateText(d){
   if(!d.online)return 'מנותק';
+  if(typeof isWasher==='function'&&isWasher(d))return washText(d);
   const pc=powerCode(d);let t=pc?(d.status[pc]?'פועל':'כבוי'):'';
   if(d.status.cur_power!=null&&d.status[pc]){t+=' · '+fmtNum(d.status.cur_power,readOf(d,'cur_power'))}
   else if(d.status.temp_current!=null)t+=(t?' · ':'')+fmtNum(d.status.temp_current,readOf(d,'temp_current'));
@@ -735,6 +736,7 @@ async function loadSched(){if(!CFG.key)return;try{const j=await api('/schedules'
 const FAIL={};
 const norm=d=>{if(!d)return d;d.cloudOnline=d.online;d.online=!FAIL[d.id];return d};
 async function send(d,cmds){
+  if(typeof washGuardOff==='function'&&!washGuardOff(d,cmds))return;
   const old={...d.status};cmds.forEach(c=>d.status[c.code]=c.value);refreshOpen(d);render();
   try{await api('/command',{id:d.id,commands:cmds});if(FAIL[d.id]){delete FAIL[d.id];d.online=true}addLog(dname(d),cmdsText({device:d.id,cmds}));LSset('unplug_devs',JSON.stringify(DEVS));setTimeout(()=>refreshOne(d.id),1800)}
   catch(e){d.status=old;if(/offline|not online|device is offline|1106|2008|נותק|מנותק/i.test(e.message)){FAIL[d.id]=Date.now();d.online=false;toast(dname(d)+' לא מגיב - בדוק שהוא מחובר לחשמל ול-WiFi')}else toast('לא בוצע: '+e.message);refreshOpen(d);render()}
@@ -749,7 +751,7 @@ function render(){
   $('homeBtn').innerHTML=`<span>${esc(curHome().name)}</span>${svg('chev',2.6)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
   const W=HD.reduce((t,d)=>t+watts(d),0),hasW=HD.some(d=>d.status.cur_power!=null);
   $('title').textContent=!CFG.key||!HD.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
-  $('sub').innerHTML=!CFG.key?'לא מחובר':HD.length?[on?`<b>${on===1?'מכשיר אחד פועל':on+' פועלים'}</b>`:'הכול כבוי',`${HD.length} מכשירים`,hasW&&W>0?`${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קוט״ש'}`:'',off?`<span class="bad">${off} מנותקים</span>`:''].filter(Boolean).join('<span aria-hidden="true"> · </span>'):'';
+  $('sub').innerHTML=!CFG.key?'לא מחובר':HD.length?[on?`<b>${on===1?'מכשיר אחד פועל':on+' פועלים'}</b>`:'הכול כבוי',`${HD.length} מכשירים`,hasW&&W>0?`${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}`:'',off?`<span class="bad">${off} מנותקים</span>`:''].filter(Boolean).join('<span aria-hidden="true"> · </span>'):'';
   {const ob=$('offBtn');ob.disabled=!on;ob.onclick=async()=>{const ds=HD.filter(d=>d.online&&isOn(d));if(!ds.length||!confirm(`לכבות ${ds.length} מכשירים?`))return;for(const d of ds)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')}}
   const tabs=[...document.querySelectorAll('nav.bar button')];tabs.forEach(b=>b.dataset.tab===TAB?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelector('nav.bar').style.setProperty('--tab',tabs.findIndex(b=>b.dataset.tab===TAB));
   const v=$('view');
@@ -874,6 +876,7 @@ const SKIP=new Set(['colour_data','colour_data_v2','scene_data','scene_data_v2',
 const AC=new Set(['kt','ktkzq','kts']);
 function openDevice(d,generic){
   if(!generic&&AC.has(d.category))return openBreeze(d);
+  if(!generic&&typeof isWasher==='function'&&isWasher(d))return openWasher(d);
   const close=sheet(esc(dname(d)),`<div id="dBody"></div>`,(el)=>{
     const body=el.querySelector('#dBody');body.style.cssText='display:flex;flex-direction:column;gap:14px';
     OPEN={id:d.id,draw:dd=>draw(dd)};
@@ -896,6 +899,7 @@ function openDevice(d,generic){
         <div class="list">
           <button class="row row-btn" id="fav" role="switch" aria-checked="${!!META.fav[d.id]}"><span class="grow"><span class="t">מועדף</span><br><span class="s">${META.fav[d.id]?'מופיע ראשון בבית':'לא'}</span></span>${svg('star')}</button>
           <button class="row row-btn" id="icn"><span class="grow"><span class="t">סמליל</span><br><span class="s">${photoOf(d)?'תמונת המוצר':esc(REALN[iconOf(d)]||(ART[iconOf(d)]||ART.dev).n)}</span></span><span class="mini${photoOf(d)?' photo':''}">${devArt(d)}</span></button>
+          ${d.status.cur_power!=null&&iconOf(d)!=='washer'?`<button class="row row-btn" id="mkW"><span class="grow"><span class="t">מכונת כביסה מחוברת לשקע הזה?</span><br><span class="s">מצב כביסה: זמן סיום, התראה כשמסיימת</span></span>${svg('chev')}</button>`:''}
           <button class="row row-btn" id="ren"><span class="grow"><span class="t">שם</span><br><span class="s">${esc(dname(d))}</span></span>${svg('edit')}</button>
           <button class="row row-btn" id="room"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(d)||'ללא')}</span></span>${svg('edit')}</button>
           <div class="row"><span class="grow"><span class="t">סוג</span><br><span class="s">${esc(cat)} (${esc(d.category)})</span></span></div>
@@ -907,6 +911,7 @@ function openDevice(d,generic){
       bindSchedRows(body);
       body.querySelector('#ren').onclick=()=>{const n=prompt('שם חדש למכשיר',dname(d));if(n==null)return;n.trim()&&n.trim()!==d.name?META.names[d.id]=n.trim():delete META.names[d.id];saveMeta();el.querySelector('#shT').textContent=dname(d);draw(d);render()};
       body.querySelector('#fav').onclick=()=>{META.fav[d.id]?delete META.fav[d.id]:META.fav[d.id]=true;saveMeta();draw(d);render()};
+      body.querySelector('#mkW')&&(body.querySelector('#mkW').onclick=()=>{META.icons=META.icons||{};META.icons[d.id]='washer';if(!META.names[d.id]&&!/כביסה/.test(d.name||''))META.names[d.id]='מכונת כביסה';saveMeta();render();close();openDevice(d)});
       body.querySelector('#icn').onclick=()=>pickIcon(d,()=>{render();openDevice(d,true)});
       body.querySelector('#room').onclick=()=>pickRoom(d,()=>{draw(d);render()});
     }
@@ -1344,6 +1349,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 <script src="extras.js?v=8"></script>
 <script src="smart.js?v=2"></script>
 <script src="motion.js?v=1"></script>
+<script src="washer.js?v=1"></script>
 <script>render();</script>
 </body>
 </html>
