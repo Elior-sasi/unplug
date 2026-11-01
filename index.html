@@ -721,6 +721,7 @@ function readOf(d,code){return (d.statusRange||[]).find(x=>x.code===code)||(d.fu
 function stateText(d){
   if(!d.online)return 'מנותק';
   if(typeof isWasher==='function'&&isWasher(d))return washText(d);
+  if(typeof isAcPlug==='function'&&isAcPlug(d))return acpText(d);
   const pc=powerCode(d);let t=pc?(d.status[pc]?'פועל':'כבוי'):'';
   if(d.status.cur_power!=null&&d.status[pc]){t+=' · '+fmtNum(d.status.cur_power,readOf(d,'cur_power'))}
   else if(d.status.temp_current!=null)t+=(t?' · ':'')+fmtNum(d.status.temp_current,readOf(d,'temp_current'));
@@ -754,6 +755,7 @@ const FAIL={};
 const norm=d=>{if(!d)return d;d.cloudOnline=d.online;d.online=!FAIL[d.id];return d};
 async function send(d,cmds){
   if(typeof washGuardOff==='function'&&!washGuardOff(d,cmds))return;
+  if(typeof acGuardOn==='function'&&!acGuardOn(d,cmds))return;
   const old={...d.status};cmds.forEach(c=>d.status[c.code]=c.value);refreshOpen(d);render();
   try{await api('/command',{id:d.id,commands:cmds});if(FAIL[d.id]){delete FAIL[d.id];d.online=true}addLog(dname(d),cmdsText({device:d.id,cmds}));LSset('unplug_devs',JSON.stringify(DEVS));setTimeout(()=>refreshOne(d.id),1800)}
   catch(e){d.status=old;if(/offline|not online|device is offline|1106|2008|נותק|מנותק/i.test(e.message)){FAIL[d.id]=Date.now();d.online=false;toast(dname(d)+' לא מגיב - בדוק שהוא מחובר לחשמל ול-WiFi')}else toast('לא בוצע: '+e.message);refreshOpen(d);render()}
@@ -894,6 +896,7 @@ const AC=new Set(['kt','ktkzq','kts']);
 function openDevice(d,generic){
   if(!generic&&AC.has(d.category))return openBreeze(d);
   if(!generic&&typeof isWasher==='function'&&isWasher(d))return openWasher(d);
+  if(!generic&&typeof isAcPlug==='function'&&isAcPlug(d))return openAcPlug(d);
   const close=sheet(esc(dname(d)),`<div id="dBody"></div>`,(el)=>{
     const body=el.querySelector('#dBody');body.style.cssText='display:flex;flex-direction:column;gap:14px';
     OPEN={id:d.id,draw:dd=>draw(dd)};
@@ -1367,6 +1370,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 <script src="smart.js?v=2"></script>
 <script src="motion.js?v=3"></script>
 <script src="washer.js?v=1"></script>
+<script src="acplug.js?v=1"></script>
 <script>render();</script>
 </body>
 </html>
