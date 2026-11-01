@@ -6,8 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="HomeOn">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=6">
-<link rel="icon" type="image/png" href="icon.png?v=6">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=7">
+<link rel="icon" type="image/png" href="icon.png?v=7">
 <link rel="manifest" href="manifest.json?v=3">
 <meta name="theme-color" content="#0c0f16">
 <title>HomeOn</title>
@@ -541,6 +541,9 @@ nav.bar:before{background:linear-gradient(145deg,#ffb36b3d,#ff9a3d14 55%,#ffd2a8
 .grid.slideN{animation:slN .28s cubic-bezier(.2,.8,.2,1)}.grid.slideP{animation:slP .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes slN{from{transform:translateX(-44px);opacity:.2}}@keyframes slP{from{transform:translateX(44px);opacity:.2}}
 .sheet.dragging{transition:none!important}
+/* two-tone: blue power buttons on orange "on" cards */
+.card .pw[aria-checked="true"],.grp .pw[aria-checked="true"],.card .pw[data-ember]:active{background:radial-gradient(circle,#3d8bff 0 17px,transparent 17.5px)!important;color:#fff!important}
+.roomOff{color:#6fa8ff!important}
 nav.bar{touch-action:none}nav.bar.dragging:before{transition:none!important;transform:scaleY(1.12) scaleX(1.06);background:linear-gradient(145deg,#ffb36b55,#ff9a3d22 55%,#ffd2a840)!important}
 nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ease!important}
 /* splash: roof drops in, two tiles light up */
@@ -551,7 +554,7 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 </style>
 </head>
 <body>
-<div class="splash" id="splash" aria-hidden="true"><svg viewBox="40 30 452 420" aria-hidden="true"><defs><linearGradient id="sr" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="260"><stop offset="0" stop-color="#ffc35a"/><stop offset="1" stop-color="#ff7a2e"/></linearGradient><linearGradient id="sw" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="180"><stop offset="0" stop-color="#ffc35a"/><stop offset="1" stop-color="#ffa040"/></linearGradient><radialGradient id="sg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb347" stop-opacity=".9"/><stop offset="1" stop-color="#ff7a2e" stop-opacity="0"/></radialGradient></defs><circle class="glow" cx="240" cy="330" r="200" fill="url(#sg)" opacity=".45"/><path d="M240 104 Q252 104 262 112 L388 214 Q404 227 404 248 V398 Q404 428 374 428 H106 Q76 428 76 398 V248 Q76 227 92 214 L218 112 Q228 104 240 104 Z" fill="#1c2130"/><path class="roof" d="M90 224 L230 112 Q240 104 250 112 L390 224" fill="none" stroke="url(#sr)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><rect x="150" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="250" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="150" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect x="250" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect class="t1" x="150" y="264" width="80" height="64" rx="16" fill="#ffc35a"/><rect class="t2" x="250" y="342" width="80" height="62" rx="16" fill="#ff8a33"/><g class="wav" fill="none" stroke="url(#sw)" stroke-width="26" stroke-linecap="round"><path class="w1" d="M352 104 a58 58 0 0 1 58 58"/><path class="w2" d="M352 50 a112 112 0 0 1 112 112"/></g></svg><b>HomeOn</b></div>
+<div class="splash" id="splash" aria-hidden="true"><svg viewBox="40 30 452 420" aria-hidden="true"><defs><linearGradient id="sr" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="260"><stop offset="0" stop-color="#6fa8ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient><linearGradient id="sw" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="180"><stop offset="0" stop-color="#ffc35a"/><stop offset="1" stop-color="#ffa040"/></linearGradient><radialGradient id="sg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb347" stop-opacity=".9"/><stop offset="1" stop-color="#ff7a2e" stop-opacity="0"/></radialGradient></defs><circle class="glow" cx="240" cy="330" r="200" fill="url(#sg)" opacity=".45"/><path d="M240 104 Q252 104 262 112 L388 214 Q404 227 404 248 V398 Q404 428 374 428 H106 Q76 428 76 398 V248 Q76 227 92 214 L218 112 Q228 104 240 104 Z" fill="#1c2130"/><path class="roof" d="M90 224 L230 112 Q240 104 250 112 L390 224" fill="none" stroke="url(#sr)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><rect x="150" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="250" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="150" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect x="250" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect class="t1" x="150" y="264" width="80" height="64" rx="16" fill="#5aa0ff"/><rect class="t2" x="250" y="342" width="80" height="62" rx="16" fill="#ff8a33"/><g class="wav" fill="none" stroke="url(#sw)" stroke-width="26" stroke-linecap="round"><path class="w1" d="M352 104 a58 58 0 0 1 58 58"/><path class="w2" d="M352 50 a112 112 0 0 1 112 112"/></g></svg><b>HomeOn</b></div>
 <div class="app">
   <header class="top">
     <div class="brandRow"><button class="homeBtn" id="homeBtn" aria-haspopup="dialog"></button>
