@@ -599,7 +599,7 @@ const CATICON={kg:'switch',tdq:'switch',cz:'plug',pc:'strip',dj:'bulb',dd:'led',
 function iconOf(d){if(META.icons&&META.icons[d.id]&&(ART[META.icons[d.id]]||REALN[META.icons[d.id]]))return META.icons[d.id];const n=dname(d)+' '+(d.name||'');for(const[r,k]of NAMEKEY)if(r.test(n))return k;return CATICON[d.category]||'dev'}
 /* product photos - the same images Smart Life shows, read once per device and cached */
 META.img=META.img||{};
-const STYLE=()=>LS('unplug_style')||'real';
+const STYLE=()=>'real';
 const REALN={"washer": "מכונת כביסה", "fridge": "מקרר", "oven": "תנור אפייה", "microwave": "מיקרוגל", "coffee": "מכונת קפה", "kettle": "קומקום", "toaster": "טוסטר", "ac": "מזגן", "led": "פס לד", "ceiling": "מנורת תקרה", "bulb": "נורה", "lamp": "מנורת שולחן", "fan": "מאוורר", "heater": "רדיאטור", "boiler": "דוד חשמל", "dish": "מדיח כלים", "plug": "שקע בקיר", "phone": "טלפון", "charger": "מטען USB", "router": "ראוטר", "speaker": "רמקול", "game": "קונסולה", "laptop": "מחשב נייד", "tv": "טלוויזיה", "remote": "שלט רחוק", "plant": "עציץ", "sensor": "חיישן תנועה", "camera": "מצלמת אבטחה", "curtain": "תריס חשמלי", "switch": "מפסק תאורה", "strip": "מפצל חשמל", "vacuum": "שואב רובוטי", "dryer": "מייבש כביסה", "stickvac": "שואב אבק", "fanheater": "מפזר חום", "water": "בר מים", "ceilfan": "מאוורר תקרה", "lock": "מנעול חכם", "doorsensor": "חיישן דלת וחלון", "purifier": "מטהר אוויר", "humidifier": "מכשיר אדים", "dehumid": "סופח לחות", "projector": "מקרן", "streamer": "סטרימר", "receiver": "רסיבר", "doorbell": "פעמון דלת", "smoke": "גלאי עשן", "leak": "חיישן נזילה", "thermo_h": "מד טמפ׳ ולחות", "gate": "שער חשמלי", "irrigation": "מערכת השקיה", "adapter": "מתאם שקע", "portac": "מזגן נייד", "hood": "קולט אדים", "cooktop": "כיריים", "toasteroven": "טוסטר אובן", "airfryer": "אייר פרייר", "urn": "מיחם", "blanket": "שמיכה חשמלית", "towerfan": "מאוורר מגדל", "soundbar": "סאונדבר", "screen": "מסך הקרנה", "garage": "דלת מוסך", "hub": "רכזת בית חכם", "blindsw": "מפסק תריס", "dimmer": "דימר", "thermostat": "תרמוסטט", "presence": "חיישן נוכחות", "gas": "גלאי גז", "valve": "ברז ראשי חשמלי", "intercom": "אינטרקום", "siren": "סירנה", "gardenlight": "תאורת גינה", "walllight": "תאורת קיר", "mop": "שואב שוטף", "petfeeder": "מאכיל חיות"};
 const REAL=new Set(Object.keys(REALN));
 const realImg=k=>`<img class="real" src="real/${REAL.has(k)?k:'plug'}.png?v=2" alt="" loading="lazy" decoding="async">`;
@@ -1021,7 +1021,6 @@ function viewSettings(v){
     ${CFG.key?`<button class="row row-btn" id="rc"><span class="grow"><span class="t">קוד שחזור</span><br><span class="s">להתחברות מחדש בלי QR</span></span>${svg('chev')}</button>`:''}
   </div>
   <div class="sec-h"><h2>תצוגה</h2></div><div class="list">
-    <div class="ctl"><div class="ctl-h"><span class="t" id="stL">סגנון סמלילים</span></div><div class="seg" role="group" aria-labelledby="stL">${[['real','ריאליסטי'],['photo','מקורי'],['clay','תלת-ממד'],['glass','אריח'],['neon','ניאון']].map(([k,t])=>`<button data-st2="${k}" aria-pressed="${STYLE()===k}">${t}</button>`).join('')}</div></div>
     <div class="ctl"><div class="ctl-h"><span class="t" id="tsL">גודל טקסט</span></div><div class="seg" role="group" aria-labelledby="tsL">${[['100','רגיל'],['115','גדול'],['130','גדול מאוד'],['150','ענק']].map(([k,t])=>`<button data-ts="${k}" aria-pressed="${ts===k}">${t}</button>`).join('')}</div></div>
   </div>
   <div class="sec-h"><h2>אוטומציות</h2></div><div class="list">
@@ -1041,7 +1040,6 @@ function viewSettings(v){
     <button class="row row-btn" id="rr"><span class="grow"><span class="t">ניהול חדרים</span><br><span class="s">${roomsOf(META.home).length} חדרים ב${esc(curHome().name)}</span></span>${svg('chev')}</button>
   </div>
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
-  v.querySelectorAll('[data-st2]').forEach(b=>b.onclick=()=>{LSset('unplug_style',b.dataset.st2);render()});
   v.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{LSset('unplug_ts',b.dataset.ts);applyPrefs();render()});
   $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('shb').onclick=()=>openShabbat();$('grp').onclick=()=>META.groups&&META.groups.length?sheet('קבוצות',`<div class="list">${META.groups.map(g=>`<button class="row row-btn" data-eg="${g.id}"><span class="grow t">${esc(g.name)}</span>${svg('chev')}</button>`).join('')}</div><button class="btn wide" id="ngr">${svg('plus')}קבוצה חדשה</button>`,(el,cl)=>{el.querySelectorAll('[data-eg]').forEach(b=>b.onclick=()=>editGroup(META.groups.find(g=>g.id===b.dataset.eg)));el.querySelector('#ngr').onclick=()=>editGroup(null)}):editGroup(null);$('bk').onclick=openBackup;$('siri').onclick=openSiri;
   $('pushOn')&&($('pushOn').onclick=enablePush);$('pushT')&&($('pushT').onclick=async()=>{try{await api('/push/at',{at:Date.now()/1000+3,title:'Unplug',body:'ככה ייראו ההתראות'});toast('ההתראה תגיע תוך דקה')}catch(e){toast(e.message)}});
