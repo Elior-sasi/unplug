@@ -1,25 +1,37 @@
 /* Unplug - swipe gestures: sideways on the home screen switches room, pull a sheet down to close it. */
 (function(){
   const calm=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
-  /* rooms: in RTL, a finger moving right goes to the next room (the one on the left) */
-  let sx=null,sy=0,st=0;
+  /* rooms: the page follows the finger sideways, release to move to the next room.
+     In RTL the next room is on the left, so a finger moving right brings it in. */
+  let sx=null,sy=0,lx=0,ly=0,axis=null,parts=[];
+  const room=()=>{const keys=[...document.querySelectorAll('.chips .chip[data-room]')].map(b=>b.dataset.room);return {keys,i:keys.indexOf(ROOM)}};
+  const setX=(x,anim)=>parts.forEach(p=>{p.style.transition=anim?'transform .22s cubic-bezier(.2,.8,.2,1), opacity .22s':'none';p.style.transform=x?`translateX(${x}px)`:'';p.style.opacity=x?String(Math.max(.35,1-Math.abs(x)/500)):''});
   document.addEventListener('touchstart',e=>{
-    const t=e.target;sx=null;
-    if(TAB!=='devices'||document.querySelector('.scrim,.breeze')||(typeof REORDER!=='undefined'&&REORDER))return;
-    if(!t.closest||!t.closest('.app')||t.closest('.chips,input,select,textarea,.cmdBar,.grp-row,.quick,[role="slider"]'))return;
-    sx=e.touches[0].clientX;sy=e.touches[0].clientY;st=Date.now()},{passive:true});
-  document.addEventListener('touchend',e=>{
-    if(sx==null)return;const p=e.changedTouches[0],dx=p.clientX-sx,dy=p.clientY-sy;sx=null;
-    if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*.6||Date.now()-st>700)return;
-    const keys=[...document.querySelectorAll('.chips .chip[data-room]')].map(b=>b.dataset.room);
-    const i=keys.indexOf(ROOM),n=i+(dx>0?1:-1);if(i<0||n<0||n>=keys.length)return;
-    ROOM=keys[n];render();
-    const g=document.querySelector('.app .grid');if(g&&!calm())g.classList.add(dx>0?'slideN':'slideP');
-    const c=document.querySelector(`.chips .chip[data-room="${CSS.escape(ROOM)}"]`);
-    if(c){c.scrollIntoView({inline:'center',block:'nearest',behavior:calm()?'auto':'smooth'});
-      const sr=document.getElementById('srLive')||Object.assign(document.body.appendChild(document.createElement('div')),{id:'srLive',className:'sr'});
-      sr.setAttribute('aria-live','polite');sr.textContent=c.textContent}
-  },{passive:true});
+    const t=e.target;sx=null;axis=null;parts=[];
+    if(e.touches.length>1||TAB!=='devices'||document.querySelector('.scrim,.breeze')||(typeof REORDER!=='undefined'&&REORDER))return;
+    if(!t.closest||!t.closest('.app')||t.closest('header,.chips,input,select,textarea,.cmdBar,form,.search,[role="slider"]'))return;
+    sx=lx=e.touches[0].clientX;sy=ly=e.touches[0].clientY},{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(sx==null)return;lx=e.touches[0].clientX;ly=e.touches[0].clientY;const dx=lx-sx,dy=ly-sy;
+    if(!axis){if(Math.abs(dx)<10&&Math.abs(dy)<10)return;axis=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y';
+      if(axis==='x'){const ch=document.querySelector('#view .chips');parts=ch?[...document.querySelectorAll('#view .chips ~ *')]:[]}}
+    if(axis!=='x')return;
+    const {keys,i}=room(),edge=(dx>0&&i>=keys.length-1)||(dx<0&&i<=0);
+    if(!calm())setX(edge?dx*.25:dx)},{passive:true});
+  const finish=()=>{
+    if(sx==null)return;const dx=lx-sx;sx=null;if(axis!=='x'){axis=null;return}axis=null;
+    const {keys,i}=room(),n=i+(dx>0?1:-1),go=Math.abs(dx)>55&&i>=0&&n>=0&&n<keys.length;
+    if(!go){setX(0,true);setTimeout(()=>setX(0),240);return}
+    const w=innerWidth;if(!calm())setX(dx>0?w:-w,true);
+    setTimeout(()=>{ROOM=keys[n];render();
+      parts=[...document.querySelectorAll('#view .chips ~ *')];
+      if(!calm()){setX(dx>0?-w*.35:w*.35);requestAnimationFrame(()=>requestAnimationFrame(()=>{setX(0,true);setTimeout(()=>setX(0),240)}))}
+      const c=document.querySelector(`.chips .chip[data-room="${CSS.escape(ROOM)}"]`);
+      if(c){c.scrollIntoView({inline:'center',block:'nearest',behavior:calm()?'auto':'smooth'});
+        const sr=document.getElementById('srLive')||Object.assign(document.body.appendChild(document.createElement('div')),{id:'srLive',className:'sr'});
+        sr.setAttribute('aria-live','polite');sr.textContent=c.textContent}
+    },calm()?0:170)};
+  document.addEventListener('touchend',finish,{passive:true});document.addEventListener('touchcancel',finish,{passive:true});
   /* sheets: drag down from the top to close, like Unbox */
   let sh=null,y0=0,dy=0;
   document.addEventListener('touchstart',e=>{const s=e.target.closest&&e.target.closest('.sheet');sh=null;
