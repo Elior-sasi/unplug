@@ -104,16 +104,49 @@ function bindReorder(v){
       c.insertAdjacentHTML('beforeend',`<div class="reBtns"><button data-mv="-1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} קדימה">${svg('chev',2.4)}</button><button data-mv="1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} אחורה">${svg('chev',2.4)}</button></div>`);
       c.querySelectorAll('[data-mv]').forEach(b=>b.onclick=e=>{e.stopPropagation();const sib=+b.dataset.mv<0?c.previousElementSibling:c.nextElementSibling;if(!sib)return;+b.dataset.mv<0?grid.insertBefore(c,sib):grid.insertBefore(sib,c);saveOrderFrom(grid);b.focus()});
       const o=c.querySelector('.open');
-      o.addEventListener('pointerdown',e=>{if(e.target.closest('.edCorner,.reBtns'))return;e.preventDefault();o.setPointerCapture(e.pointerId);c.classList.add('dragging');
-        const move=ev=>{const el=document.elementFromPoint(ev.clientX,ev.clientY),over=el&&el.closest('.card');
-          if(over&&over!==c&&over.parentElement===grid){const r=over.getBoundingClientRect(),after=ev.clientX<r.left+r.width/2===(getComputedStyle(grid).direction==='rtl');grid.insertBefore(c,after?over.nextElementSibling:over)}};
-        const up=()=>{c.classList.remove('dragging');o.removeEventListener('pointermove',move);o.removeEventListener('pointerup',up);o.removeEventListener('pointercancel',up);saveOrderFrom(grid)};
-        o.addEventListener('pointermove',move);o.addEventListener('pointerup',up);o.addEventListener('pointercancel',up);
-      });
+      o.addEventListener('pointerdown',e=>startDrag(e,c,grid,o));
     });
   });
 }
 
+/* smooth drag: the card follows the finger, a placeholder keeps its spot, neighbours slide (FLIP) */
+function flip(grid,mutate){
+  const items=[...grid.children],before=new Map(items.map(el=>[el,el.getBoundingClientRect()]));
+  mutate();
+  for(const el of items){const a=before.get(el),b=el.getBoundingClientRect();if(!a||el.classList.contains('dragging'))continue;
+    const dx=a.left-b.left,dy=a.top-b.top;if(!dx&&!dy)continue;
+    el.style.transition='none';el.style.transform=`translate(${dx}px,${dy}px)`;el.offsetWidth;
+    el.style.transition='transform .22s cubic-bezier(.2,.8,.2,1)';el.style.transform=''}
+}
+function startDrag(e,c,grid,o){
+  if(e.target.closest('.edCorner,.reBtns')||e.button>0)return;
+  e.preventDefault();
+  const r=c.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;
+  const ph=document.createElement('div');ph.className='card dragPh'+(c.classList.contains('wide')?' wide':'');ph.style.height=r.height+'px';
+  grid.insertBefore(ph,c);
+  Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',zIndex:60,transition:'none',pointerEvents:'none'});
+  c.classList.add('dragging');document.body.appendChild(c);
+  try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}
+  let lx=e.clientX,ly=e.clientY,raf=0,scrollV=0,last=0;
+  const place=()=>{raf=0;
+    c.style.left=(lx-dx)+'px';c.style.top=(ly-dy)+'px';
+    const now=performance.now();if(now-last<70)return;last=now;
+    const sibs=[...grid.querySelectorAll('.card:not(.dragPh)')];let best=null,bd=1e9;
+    for(const el of sibs){const b=el.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2,d=Math.hypot(lx-cx,ly-cy);if(d<bd){bd=d;best=el}}
+    if(!best)return;const b=best.getBoundingClientRect();if(lx<b.left-20||lx>b.right+20||ly<b.top-20||ly>b.bottom+20)return;
+    const rtl=getComputedStyle(grid).direction==='rtl',after=b.width>=grid.clientWidth*0.9?ly>b.top+b.height/2:(rtl?lx<b.left+b.width/2:lx>b.left+b.width/2);
+    const ref=after?best.nextElementSibling:best;if(ref===ph||ref===ph.nextElementSibling&&!after&&best===ph.nextElementSibling)return;
+    if((after&&best.nextElementSibling===ph)||(!after&&best.previousElementSibling===ph))return;
+    flip(grid,()=>grid.insertBefore(ph,ref));
+  };
+  const tick=()=>{if(scrollV){scrollBy(0,scrollV);if(!raf)raf=requestAnimationFrame(place)}if(c.isConnected&&c.classList.contains('dragging'))requestAnimationFrame(tick)};
+  requestAnimationFrame(tick);
+  const move=ev=>{lx=ev.clientX;ly=ev.clientY;scrollV=ly<90?-10:ly>innerHeight-130?10:0;if(!raf)raf=requestAnimationFrame(place)};
+  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);scrollV=0;
+    const pr=ph.getBoundingClientRect();c.style.transition='left .18s ease,top .18s ease';c.style.left=pr.left+'px';c.style.top=pr.top+'px';
+    setTimeout(()=>{grid.insertBefore(c,ph);ph.remove();c.classList.remove('dragging');c.removeAttribute('style');saveOrderFrom(grid)},180)};
+  addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
 /* ---------- Shabbat mode ---------- */
 const CITIES={jer:['ירושלים',31.778,35.235,40],ta:['תל אביב',32.085,34.782,21],hai:['חיפה',32.794,34.99,30],bs:['באר שבע',31.252,34.791,21],pt:['פתח תקווה',32.087,34.887,21],ash:['אשדוד',31.804,34.655,21]};
 function sunAlt(date,lat,lng){ // solar altitude in degrees (NOAA-style approximation)

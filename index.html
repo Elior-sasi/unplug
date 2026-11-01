@@ -502,6 +502,9 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .reordering .card{outline:1.5px dashed #ff9a3d66;outline-offset:-1.5px}
 .reBar{border-radius:16px!important;padding:8px 8px 8px 14px!important;font-size:.92rem}
 .reBar .btn{min-height:40px;padding:0 18px}
+.dragPh{background:transparent!important;outline:2px dashed #ff9a3d88!important;box-shadow:none!important;aspect-ratio:auto}
+.card.dragging{transform:scale(1.04) rotate(-1deg)!important;box-shadow:0 24px 48px #000c!important;animation:none!important;opacity:.96}
+.reordering .card:not(.dragging){animation:none}
 </style>
 </head>
 <body>
@@ -1239,10 +1242,10 @@ $('addBtn').onclick=openAdd;
 setTimeout(()=>{const sp=$('splash');if(!sp)return;sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
 applyPrefs();try{render()}catch(e){console.error(e)}
 if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConnect();
-setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active'))loadDevices()},30000);
+setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active')&&!(typeof REORDER!=='undefined'&&REORDER))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
 </script>
-<script src="extras.js?v=5"></script>
+<script src="extras.js?v=7"></script>
 <script>render();</script>
 </body>
 </html>
