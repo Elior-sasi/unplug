@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Unplug">
@@ -516,6 +516,9 @@ html,body{height:100%;overflow:hidden}
 .sheet>*,.sheet .list,.sheet .row,.sheet .seg{max-width:100%;min-width:0;box-sizing:border-box}
 .sheet .row .grow{min-width:0;overflow-wrap:anywhere}
 .app{touch-action:pan-y}
+/* no accidental zoom: no double-tap zoom, and inputs at 16px+ so iOS doesn't zoom on focus */
+html,body,button,a,.card,.chip,.row{touch-action:manipulation}
+input,select,textarea{font-size:max(16px,1rem)!important}
 </style>
 </head>
 <body>
@@ -535,6 +538,8 @@ html,body{height:100%;overflow:hidden}
   <button data-tab="settings"><span data-ic="gear"></span>הגדרות</button>
 </nav>
 <div class="sr" id="live" aria-live="assertive"></div>
+<script>['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+let __lt=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-__lt<300&&!e.target.closest('input,textarea,select'))e.preventDefault();__lt=n},{passive:false});</script>
 <script>addEventListener('error',()=>{const sp=document.getElementById('splash');sp&&sp.remove()});setTimeout(()=>{const sp=document.getElementById('splash');sp&&sp.remove()},4000)</script>
 <script src="qr.js"></script>
 <script src="icons.js?v=2"></script>
