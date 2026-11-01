@@ -148,7 +148,7 @@ async function openPresence(){
     el.querySelectorAll('[data-pl]').forEach(b=>b.onchange=()=>{P.leave=[...el.querySelectorAll('[data-pl]:checked')].map(x=>x.dataset.pl);LSset('unplug_presence',JSON.stringify(P))});
     el.querySelectorAll('[data-pad]').forEach(b=>b.onclick=()=>{P.arrive.splice(+b.dataset.pad,1);LSset('unplug_presence',JSON.stringify(P));render2(el)});
   };
-  sheet('יצאתי / חזרתי',`<p>האייפון מזהה כשאתה יוצא מהבית או מגיע אליו, ומפעיל את Smartly לבד. מגדירים פעם אחת באפליקציית <b>קיצורים</b>.</p>
+  sheet('יצאתי / חזרתי',`<p>האייפון מזהה כשאתה יוצא מהבית או מגיע אליו, ומפעיל את HomeOn לבד. מגדירים פעם אחת באפליקציית <b>קיצורים</b>.</p>
     <div class="sec-h" style="margin:6px 4px 0"><h2>כשאני יוצא - לכבות</h2></div><div class="list" id="plL"></div>
     <button class="btn wide" id="plC">${svg('save')}העתקת קישור "יצאתי"</button>
     <div class="sec-h" style="margin:6px 4px 0"><h2>כשאני חוזר</h2></div><div class="list" id="paL"></div>

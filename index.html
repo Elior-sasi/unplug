@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Smartly">
+<meta name="apple-mobile-web-app-title" content="HomeOn">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=6">
 <link rel="icon" type="image/png" href="icon.png?v=6">
 <link rel="manifest" href="manifest.json?v=3">
 <meta name="theme-color" content="#0c0f16">
-<title>Smartly</title>
+<title>HomeOn</title>
 <style>
 /* Unplug - same family as Unbox: black base, one accent (amber), Rubik, glass pill nav, cards with soft top light. */
 @font-face{font-family:Rubik;src:url(fonts/rubik-hebrew-400-normal.woff2) format('woff2');font-weight:400;font-display:swap;unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
@@ -551,7 +551,7 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 </style>
 </head>
 <body>
-<div class="splash" id="splash" aria-hidden="true"><svg viewBox="40 30 452 420" aria-hidden="true"><defs><linearGradient id="sr" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="260"><stop offset="0" stop-color="#ffc35a"/><stop offset="1" stop-color="#ff7a2e"/></linearGradient><linearGradient id="sw" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="180"><stop offset="0" stop-color="#ffc35a"/><stop offset="1" stop-color="#ffa040"/></linearGradient><radialGradient id="sg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb347" stop-opacity=".9"/><stop offset="1" stop-color="#ff7a2e" stop-opacity="0"/></radialGradient></defs><circle class="glow" cx="240" cy="330" r="200" fill="url(#sg)" opacity=".45"/><path d="M240 104 Q252 104 262 112 L388 214 Q404 227 404 248 V398 Q404 428 374 428 H106 Q76 428 76 398 V248 Q76 227 92 214 L218 112 Q228 104 240 104 Z" fill="#1c2130"/><path class="roof" d="M90 224 L230 112 Q240 104 250 112 L390 224" fill="none" stroke="url(#sr)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><rect x="150" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="250" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="150" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect x="250" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect class="t1" x="150" y="264" width="80" height="64" rx="16" fill="#ffc35a"/><rect class="t2" x="250" y="342" width="80" height="62" rx="16" fill="#ff8a33"/><g class="wav" fill="none" stroke="url(#sw)" stroke-width="26" stroke-linecap="round"><path class="w1" d="M352 104 a58 58 0 0 1 58 58"/><path class="w2" d="M352 50 a112 112 0 0 1 112 112"/></g></svg><b>Smartly</b></div>
+<div class="splash" id="splash" aria-hidden="true"><svg viewBox="40 30 452 420" aria-hidden="true"><defs><linearGradient id="sr" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="260"><stop offset="0" stop-color="#ffc35a"/><stop offset="1" stop-color="#ff7a2e"/></linearGradient><linearGradient id="sw" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="180"><stop offset="0" stop-color="#ffc35a"/><stop offset="1" stop-color="#ffa040"/></linearGradient><radialGradient id="sg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb347" stop-opacity=".9"/><stop offset="1" stop-color="#ff7a2e" stop-opacity="0"/></radialGradient></defs><circle class="glow" cx="240" cy="330" r="200" fill="url(#sg)" opacity=".45"/><path d="M240 104 Q252 104 262 112 L388 214 Q404 227 404 248 V398 Q404 428 374 428 H106 Q76 428 76 398 V248 Q76 227 92 214 L218 112 Q228 104 240 104 Z" fill="#1c2130"/><path class="roof" d="M90 224 L230 112 Q240 104 250 112 L390 224" fill="none" stroke="url(#sr)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><rect x="150" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="250" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="150" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect x="250" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect class="t1" x="150" y="264" width="80" height="64" rx="16" fill="#ffc35a"/><rect class="t2" x="250" y="342" width="80" height="62" rx="16" fill="#ff8a33"/><g class="wav" fill="none" stroke="url(#sw)" stroke-width="26" stroke-linecap="round"><path class="w1" d="M352 104 a58 58 0 0 1 58 58"/><path class="w2" d="M352 50 a112 112 0 0 1 112 112"/></g></svg><b>HomeOn</b></div>
 <div class="app">
   <header class="top">
     <div class="brandRow"><button class="homeBtn" id="homeBtn" aria-haspopup="dialog"></button>
@@ -836,7 +836,7 @@ function openEmber(){
     <div class="list">
       <button class="row row-btn" data-emp="open"><span class="grow"><span class="t">פתיחת Ember</span><br><span class="s">זמן שנשאר, תזמונים וסטטיסטיקה</span></span>${svg('chev')}</button>
       <button class="row row-btn" id="emR"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(EMBER)||'בלי חדר')}</span></span>${svg('chev')}</button>
-      <button class="row row-btn" id="emH"><span class="grow"><span class="t">הסתרת הדוד מ-Smartly</span></span>${svg('close')}</button>
+      <button class="row row-btn" id="emH"><span class="grow"><span class="t">הסתרת הדוד מ-HomeOn</span></span>${svg('close')}</button>
     </div>
     <p style="font-size:.9rem">כל כפתור פותח את Ember לרגע, והוא מבצע את הפקודה. זה עובד כשהטלפון מחובר ל-WiFi של הבית.</p>`,(el,close)=>{
     const log=t=>{LSset('unplug_ember_last',JSON.stringify({t,at:hm(new Date())}));addLog(dname(EMBER),t)};
@@ -1170,7 +1170,7 @@ function viewSettings(v){
   v.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{LSset('unplug_ts',b.dataset.ts);applyPrefs();render()});
   {const g=$('glS'),gv=$('glV'),sh=()=>{const t=+g.value<25?'שקוף מאוד':+g.value<70?'רגיל':'כהה';gv.textContent=t;g.setAttribute('aria-valuetext',t)};sh();g.oninput=()=>{LSset('unplug_glass',g.value);applyPrefs();sh()}}
   $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('shb').onclick=()=>openShabbat();$('gdr').onclick=()=>openGuard();$('prs').onclick=()=>openPresence();$('grp').onclick=()=>META.groups&&META.groups.length?sheet('קבוצות',`<div class="list">${META.groups.map(g=>`<button class="row row-btn" data-eg="${g.id}"><span class="grow t">${esc(g.name)}</span>${svg('chev')}</button>`).join('')}</div><button class="btn wide" id="ngr">${svg('plus')}קבוצה חדשה</button>`,(el,cl)=>{el.querySelectorAll('[data-eg]').forEach(b=>b.onclick=()=>editGroup(META.groups.find(g=>g.id===b.dataset.eg)));el.querySelector('#ngr').onclick=()=>editGroup(null)}):editGroup(null);$('bk').onclick=openBackup;$('siri').onclick=openSiri;
-  $('pushOn')&&($('pushOn').onclick=enablePush);$('pushT')&&($('pushT').onclick=async()=>{try{await api('/push/at',{at:Date.now()/1000+3,title:'Smartly',body:'ככה ייראו ההתראות'});toast('ההתראה תגיע תוך דקה')}catch(e){toast(e.message)}});
+  $('pushOn')&&($('pushOn').onclick=enablePush);$('pushT')&&($('pushT').onclick=async()=>{try{await api('/push/at',{at:Date.now()/1000+3,title:'HomeOn',body:'ככה ייראו ההתראות'});toast('ההתראה תגיע תוך דקה')}catch(e){toast(e.message)}});
   $('rc')&&($('rc').onclick=async()=>{try{const j=await api('/recover/create',{});sheet('קוד שחזור',`<p>שמור את הקוד. איתו מתחברים מחדש בכל מכשיר, וגם ב-Breeze.</p><div class="ro" style="text-align:center"><div class="n" style="direction:ltr;letter-spacing:.08em;font-size:1.8rem;user-select:all">${esc(j.code)}</div></div><button class="btn wide" id="cp">העתקה</button>`,el=>el.querySelector('#cp').onclick=()=>{navigator.clipboard?.writeText(j.code).then(()=>toast('הועתק'),()=>{})})}catch(e){toast(e.message)}});
   $('lo')&&($('lo').onclick=()=>{if(!confirm('להתנתק רק מהאפליקציה הזו? Breeze ושאר האפליקציות ימשיכו לעבוד.'))return;setKey('');DEVS=[];LSset('unplug_devs',null);render()});
 }
@@ -1285,7 +1285,7 @@ function openHomes(){
   });
 }
 function openAdd(){
-  if(META.ember===false&&confirm('להחזיר את הדוד (Ember) ל-Smartly?')){delete META.ember;saveMeta();render();return}
+  if(META.ember===false&&confirm('להחזיר את הדוד (Ember) ל-HomeOn?')){delete META.ember;saveMeta();render();return}
   sheet('הוספת מכשיר',`<p>אייפון לא מאפשר לאפליקציית רשת להעביר למכשיר את סיסמת ה-WiFi, אז את הצימוד עצמו עושים פעם אחת ב-Smart Life:</p>
     <ol><li>פתח את Smart Life ולחץ <b>+</b> למעלה</li><li><b>הוספת מכשיר</b> ובחר את המכשיר, או חכה שיזוהה לבד</li><li>הזן את סיסמת ה-WiFi של הבית וסיים</li><li>חזור לכאן ולחץ <b>רענון</b> - המכשיר יופיע</li></ol>
     <button class="btn pri wide" id="aR">${svg('ref')}כבר צימדתי, רענן</button>`,(el,close)=>el.querySelector('#aR').onclick=()=>{close();TAB='devices';loadDevices()});
