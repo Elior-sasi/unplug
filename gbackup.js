@@ -26,10 +26,10 @@ async function gbSignIn(){await gbLoad();const p=new firebase.auth.GoogleAuthPro
     if(localEmpty||confirm('נמצא גיבוי בחשבון Google. לשחזר ממנו? (ההגדרות הנוכחיות יוחלפו)')){gbApply(o);render();toast('שוחזר מהגיבוי ב-Google');return}}
   await gbSave();toast('מחובר. הגיבוי פועל')}
 /* restore on a fresh install: if already signed in and this phone has nothing yet */
-setTimeout(()=>{if(!LS('unplug_gb_on'))return;gbLoad().then(async()=>{if(!GB.user)return;
+setTimeout(()=>{if(!LS('unplug_gb_on')||(typeof IN_APP!=='undefined'&&IN_APP))return;gbLoad().then(async()=>{if(!GB.user)return;
   if(!Object.keys(META.names||{}).length&&!Object.keys(META.icons||{}).length){const s=await gbDoc().get();if(s.exists&&gbApply(JSON.parse(s.data().data||'null'))){render();toast('ההגדרות שוחזרו מ-Google')}}
   else gbSave()}).catch(()=>{})},3000);
-function gbRowHtml(){const on=!!LS('unplug_gb_on');
+function gbRowHtml(){if(typeof IN_APP!=='undefined'&&IN_APP)return `<div class="sec-h"><h2>גיבוי בחשבון Google</h2></div><div class="list"><div class="row"><span class="grow"><span class="t">מנוהל מגרסת ה-Safari</span><br><span class="s">גוגל לא מאפשרת להתחבר מתוך אפליקציה מותקנת בלי חשבון מפתח. השמות, החדרים והסמלילים נשמרים בשרת בכל מקרה.</span></span></div></div>`;const on=!!LS('unplug_gb_on');
   return `<div class="sec-h"><h2>גיבוי בחשבון Google</h2></div><div class="list" id="gbBox">
     ${on?`<div class="row"><span class="grow"><span class="t">הגיבוי פועל</span><br><span class="s" id="gbWho">${GB.user?esc(GB.user.email||''):'מחובר'}${GB.last?' · נשמר '+esc(new Date(GB.last).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):''}</span></span></div>
       <button class="row row-btn" id="gbNow"><span class="grow t">גיבוי עכשיו</span>${svg('save')}</button>

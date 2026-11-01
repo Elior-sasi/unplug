@@ -823,8 +823,8 @@ function viewDevices(v){
   $('allOff')&&($('allOff').onclick=async()=>{if(!confirm(`לכבות ${onDevs.length} מכשירים?`))return;for(const d of onDevs)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')});
   $('sc0')&&($('sc0').onclick=e=>runScene(SCENES[0],e.currentTarget));
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
-    if(d&&d.id==='router'){c.querySelector('.open').onclick=()=>openRouter();return}
-    if(d&&d.virtual){c.querySelector('.open').onclick=()=>openEmber();const pb=c.querySelector('[data-ember]');if(pb)pb.onclick=()=>{LSset('unplug_ember_last',JSON.stringify({t:'הדלקה/כיבוי',at:hm(new Date())}));emberGo('toggle')};return}
+    if(d&&d.id==='router'){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openRouter'}):openRouter();return}
+    if(d&&d.virtual){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openHeater'}):openEmber();const pb=c.querySelector('[data-ember]');if(pb)pb.onclick=()=>{LSset('unplug_ember_last',JSON.stringify({t:'הדלקה/כיבוי',at:hm(new Date())}));emberGo('toggle')};return}
     c.querySelector('.open').onclick=()=>openDevice(d);
     const pw=c.querySelector('.pw');if(pw)pw.onclick=()=>{if(!d.online)return toast('המכשיר מנותק');send(d,[{code:powerCode(d),value:!isOn(d)}])}});
   $('reOn')&&($('reOn').onclick=()=>typeof setReorder==='function'&&setReorder(!REORDER));
@@ -853,7 +853,14 @@ function openRouter(){
     el.querySelector('#rtH').onclick=()=>{META.router=false;saveMeta();close();render();toast('הראוטר הוסתר. מחזירים מהתפריט ⋯ ← הוספת מכשיר')};
   });
 }
-const emberGo=(path)=>{const t=Date.now();location.href='ember://'+path;
+/* inside the installed HomeOn app the heater and the router are native; in Safari they go through ember:// links */
+const IN_APP=!!(window.HOMEON_APP&&window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.homeon);
+const nativeCall=msg=>window.webkit.messageHandlers.homeon.postMessage(msg);
+const emberGo=(path)=>{
+  if(IN_APP){if(path==='open')return nativeCall({action:'openHeater'});if(path==='router')return nativeCall({action:'openRouter'});
+    const cmd=path.split('?')[0],m=+((path.match(/m=(\d+)/)||[])[1]||0);
+    return nativeCall({action:'heater',cmd,m}).then(r=>{try{const o=JSON.parse(r);toast(o.on?'הדוד דולק'+(o.left?' · עוד '+Math.round(o.left/60)+' דק׳':''):'הדוד כבוי')}catch(e){}}).catch(()=>toast('הדוד לא עונה - צריך להיות ב-WiFi של הבית'))}
+  const t=Date.now();location.href='ember://'+path;
   setTimeout(()=>{if(document.visibilityState==='visible'&&Date.now()-t<2600)toast('Ember לא נפתח - צריך את הגרסה החדשה של Ember על הטלפון')},1800)};
 function openEmber(){
   const L=JSON.parse(LS('unplug_ember_last')||'null');
@@ -878,15 +885,15 @@ function openEmber(){
 function card(d){
   if(d.id==='router'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="router">
-     <button class="open" aria-label="${nm}, ראוטר דרך Ember${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
+     <button class="open" aria-label="${nm}, ראוטר${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}מכשירים, מהירות ו-WiFi</div></div>`}
   if(d.virtual){const nm=esc(dname(d)),L=JSON.parse(LS('unplug_ember_last')||'null');
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
-     <button class="open" aria-label="${nm}, דוד חכם דרך Ember${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
+     <button class="open" aria-label="${nm}, דוד חכם${IN_APP?'':' דרך Ember'}${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
-     <button class="pw" data-ember aria-label="${nm}: הדלקה או כיבוי דרך Ember">${svg('power',2.6)}</button>
-     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${L?esc(L.t):'דרך Ember'}</div></div>`}
+     <button class="pw" data-ember aria-label="${nm}: הדלקה או כיבוי">${svg('power',2.6)}</button>
+     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${L?esc(L.t):IN_APP?'דוד חשמלי':'דרך Ember'}</div></div>`}
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
   const c=(ART[iconOf(d)]||ART.dev).p.t,wide=AC.has(d.category)||iconOf(d)==='ac'&&!pc;
   return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
@@ -1215,9 +1222,10 @@ function viewSettings(v){
 }
 /* ---------- push ---------- */
 const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-function pushStatus(){if(LS('unplug_push'))return 'פעילות - טיימרים שולחים התראה בסיום';if(!('serviceWorker' in navigator)||!('PushManager' in window))return standalone()?'הטלפון לא תומך בהתראות':'עובד רק מהאפליקציה במסך הבית';return 'כבויות'}
+function pushStatus(){if(typeof IN_APP!=='undefined'&&IN_APP)return 'מגיעות דרך גרסת ה-Safari של HomeOn';if(LS('unplug_push'))return 'פעילות - טיימרים שולחים התראה בסיום';if(!('serviceWorker' in navigator)||!('PushManager' in window))return standalone()?'הטלפון לא תומך בהתראות':'עובד רק מהאפליקציה במסך הבית';return 'כבויות'}
 function b64u2u8(b){const p='='.repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))}
 async function enablePush(){
+  if(IN_APP){sheet('התראות',`<p>באפליקציה המותקנת אין התראות בלי חשבון מפתח בתשלום. ההתראות מגיעות דרך גרסת ה-Safari של HomeOn: מפעילים אותן שם פעם אחת, ואפשר להעביר אותה לספריית היישומים.</p>`);return}
   if(!('serviceWorker' in navigator)||!('PushManager' in window)){sheet('התראות',`<p>${standalone()?'הטלפון לא תומך בהתראות מאתר.':'באייפון התראות עובדות רק מהאפליקציה שעל מסך הבית.'}</p>${standalone()?'':`<ol><li>ב-Safari לחץ <b>שיתוף</b></li><li><b>הוסף למסך הבית</b></li><li>פתח את Unplug ממסך הבית וחזור לכאן</li></ol>`}`);return}
   try{const reg=await navigator.serviceWorker.register('sw.js');const perm=await Notification.requestPermission();if(perm!=='granted')return toast('ההתראות לא אושרו');
     const {key}=await api('/push/key');const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u2u8(key)});
