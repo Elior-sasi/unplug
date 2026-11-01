@@ -407,6 +407,7 @@ body.scrolled .hello,body.scrolled .pills{display:flex}
   <button data-tab="settings"><span data-ic="gear"></span>הגדרות</button>
 </nav>
 <div class="sr" id="live" aria-live="assertive"></div>
+<script>addEventListener('error',()=>{const sp=document.getElementById('splash');sp&&sp.remove()});setTimeout(()=>{const sp=document.getElementById('splash');sp&&sp.remove()},4000)</script>
 <script src="qr.js"></script>
 <script src="icons.js?v=2"></script>
 <script>
@@ -603,7 +604,7 @@ function viewDevices(v){
   if(ROOM!=='all'&&ROOM!=='fav'&&ROOM!=='off'&&!rooms.includes(ROOM))ROOM='all';
   const hasFav=DEVS.some(d=>META.fav[d.id]),offN=DEVS.filter(d=>!d.online).length,onDevs=DEVS.filter(d=>d.online&&isOn(d));
   const q=Q.trim().toLowerCase();
-  let list=DEVS.filter(d=>(REORDER||!(META.hidden||{})[d.id])&&(ROOM==='all'||(ROOM==='fav'?META.fav[d.id]:ROOM==='off'?!d.online:roomOf(d)===ROOM)));
+  let list=DEVS.filter(d=>((typeof REORDER!=='undefined'&&REORDER)||!(META.hidden||{})[d.id])&&(ROOM==='all'||(ROOM==='fav'?META.fav[d.id]:ROOM==='off'?!d.online:roomOf(d)===ROOM)));
   if(q)list=list.filter(d=>(dname(d)+' '+catOf(d)[0]+' '+roomOf(d)).toLowerCase().includes(q));
   list=list.slice().sort((x,y)=>(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0)||(META.order?.[x.id]??999)-(META.order?.[y.id]??999));
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
@@ -1106,7 +1107,8 @@ document.querySelectorAll('nav.bar button').forEach(b=>b.onclick=()=>{TAB=b.data
 $('refBtn').onclick=()=>{loadDevices();loadSched()};
 $('homeBtn').onclick=openHomes;
 $('addBtn').onclick=openAdd;
-applyPrefs();render();addEventListener('scroll',()=>document.body.classList.toggle('scrolled',scrollY>40),{passive:true});setTimeout(()=>{const sp=$('splash');sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
+setTimeout(()=>{const sp=$('splash');if(!sp)return;sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
+applyPrefs();try{render()}catch(e){console.error(e)}
 if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConnect();
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active'))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
