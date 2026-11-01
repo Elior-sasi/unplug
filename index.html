@@ -398,15 +398,55 @@ body.scrolled .hello,body.scrolled .pills{display:flex}
 .card .pw svg,.grp .pw svg{width:16px!important;height:16px!important}
 .card .pw[aria-checked="true"],.grp .pw[aria-checked="true"]{background:radial-gradient(circle,var(--gold) 0 16px,transparent 16.5px)!important;filter:drop-shadow(0 3px 8px #ff9a3d55)}
 .grid{grid-auto-flow:row dense}
+/* ---- v5: Smart Life-like - flat, quiet, content first ---- */
+:root{--bg:#000;--tile:#1c1c1e;--tile-on:#2a2420}
+body{background:#000}
+.app{padding-top:calc(6px + env(safe-area-inset-top))}
+header.top{margin:0 0 6px!important;padding:6px 2px 0!important}
+.brandRow{flex-direction:row}
+.homeBtn{margin:0;min-height:48px;padding:0;background:none!important;border:0!important;font-size:1.75rem;font-weight:700;color:#fff!important;letter-spacing:-.02em;gap:6px}
+.homeBtn svg{width:20px!important;height:20px!important;transform:rotate(-90deg)!important;color:var(--mut)}
+.icbtn{width:44px;height:44px;background:none!important;border:0!important;box-shadow:none!important;color:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
+.icbtn svg{width:24px;height:24px}
+.icbtn:disabled{opacity:.35}
+#editBtn[aria-pressed="true"]{background:var(--gold)!important;border-radius:50%;color:#1f0e00}
+.statusLine{margin:0 2px 12px;color:var(--mut);font-size:.95rem}.statusLine b{color:var(--gold-txt);font-weight:600}.statusLine .bad{color:#ff8f8f}
+/* room tabs: text tabs like Smart Life */
+.chips{gap:20px;padding:4px 2px 14px;align-items:center}
+.chip{min-height:44px;padding:0;background:none!important;border:0!important;border-radius:0;font-size:1.3rem;font-weight:700;color:#5c5c63;letter-spacing:-.02em;box-shadow:none}
+.chip[aria-pressed="true"]{color:#fff!important;background:none!important}
+.chip[aria-pressed="true"]::after{display:none}
+.chip.add{width:40px;height:40px;min-height:40px;border-radius:50%!important;color:var(--mut);font-size:1rem}
+/* tiles */
+.grid{gap:10px}
+.card,.roomSec .card{background:var(--tile)!important;border:0!important;box-shadow:none!important;border-radius:22px;padding:14px}
+.card.is-on,.roomSec .card.is-on{background:var(--tile-on)!important;box-shadow:none!important}
+.card::before{display:none}
+.card .nm{font-size:1.02rem;font-weight:600}
+.card .st{color:#8e8e93!important;font-size:.82rem;margin-top:2px}
+.card.is-on .st{color:var(--gold-txt)!important}
+.card .ic,.card .ic.photo,.card .ic:has(.art),.card .ic:has(img.real){width:50px;height:50px}
+.card.is-on .ic:has(img.real){filter:none}
+.card:not(.is-on) .ic img.real{filter:none!important;opacity:.9}
+.card .pw,.grp .pw{top:8px;left:8px}
+.card .pw,.grp .pw{background:radial-gradient(circle,#3a3a3c 0 17px,transparent 17.5px)!important;color:#d1d1d6}
+.card .pw[aria-checked="true"],.grp .pw[aria-checked="true"]{background:radial-gradient(circle,var(--gold) 0 17px,transparent 17.5px)!important;color:#1f0e00;filter:none}
+.quick{margin-bottom:12px}.quick .btn{min-height:46px;border-radius:14px}
+.grp{background:var(--tile);border:0}.grp.is-on{background:var(--tile-on);border:0}
+.list,.ro,.empty,.search{background:var(--tile)!important;border:0!important;box-shadow:none!important}
+.sheet{background:#1c1c1e!important;-webkit-backdrop-filter:none;backdrop-filter:none;border:0;box-shadow:0 -10px 40px #000a}
+.sheet .list,.sheet .ro{background:#2c2c2e!important}
+nav.bar{background:rgba(28,28,30,.88)!important;border:0;box-shadow:0 0 0 .5px #ffffff1f,0 10px 30px #000c}
+nav.bar:before{background:#ffffff14;border:0;box-shadow:none}
 </style>
 </head>
 <body>
 <div class="splash" id="splash" aria-hidden="true"><svg viewBox="100 40 312 422" aria-hidden="true"><defs><linearGradient id="ug2" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffc24d"/></linearGradient></defs><path d="M150 214 V320 a106 106 0 0 0 212 0 V210" fill="none" stroke="url(#ug2)" stroke-width="58" stroke-linecap="round"/><g class="lid"><g transform="rotate(-10 112 160)"><rect x="180" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="302" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="112" y="112" width="288" height="48" rx="16" fill="#ffc24d"/></g></g><g class="spk" stroke="#ffd28a" stroke-width="16" stroke-linecap="round"><path d="M92 170 l-34 -16"/><path d="M96 214 l-38 4"/><path d="M420 150 l34 -20"/><path d="M424 196 l38 0"/></g></svg><b>Unplug</b></div>
 <div class="app">
   <header class="top">
-    <div class="brandRow"><span class="brand" aria-label="Unplug"><svg viewBox="100 40 312 422" aria-hidden="true"><defs><linearGradient id="ug" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffc24d"/></linearGradient></defs><path d="M150 214 V320 a106 106 0 0 0 212 0 V210" fill="none" stroke="url(#ug)" stroke-width="58" stroke-linecap="round"/><g class="lid"><g transform="rotate(-10 112 160)"><rect x="180" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="302" y="58" width="30" height="64" rx="10" fill="#e0952e"/><rect x="112" y="112" width="288" height="48" rx="16" fill="#ffc24d"/></g></g></svg><span aria-hidden="true">nplug</span></span>
-      <div class="actions"><button class="icbtn" id="editBtn" aria-label="עריכת המסך - סדר, גודל ומועדפים"></button><button class="icbtn" id="addBtn" aria-label="הוספת מכשיר"></button><button class="icbtn" id="refBtn" aria-label="רענון"></button></div></div>
-    <button class="homeBtn" id="homeBtn" aria-haspopup="dialog"></button><h1 id="title" aria-live="polite">הבית</h1><div class="pills" id="sub" aria-live="polite"></div>
+    <div class="brandRow"><button class="homeBtn" id="homeBtn" aria-haspopup="dialog"></button>
+      <div class="actions"><button class="icbtn" id="offBtn" aria-label="לכבות הכול"></button><button class="icbtn" id="editBtn" aria-label="עריכת המסך - סדר, גודל ומועדפים"></button><button class="icbtn" id="addBtn" aria-label="הוספת מכשיר"></button><button class="icbtn" id="refBtn" aria-label="רענון"></button></div></div>
+    <h1 class="sr" id="title" aria-live="polite">הבית</h1><p class="statusLine" id="sub" aria-live="polite"></p>
   </header>
   <main id="view"></main>
 </div>
@@ -533,7 +573,7 @@ async function loadPhotos(){
 const dIcon=(k,w=1.7)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(DI[k]||DI.dev)[1]}</svg>`;
 const svg=(n,w=2)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]||P.dev}</svg>`;
 document.querySelectorAll('[data-ic]').forEach(e=>e.outerHTML=svg(e.dataset.ic));
-$('addBtn').innerHTML=svg('plus',2.4);$('editBtn').innerHTML=svg('edit',2.2);$('refBtn').innerHTML=svg('ref');
+$('addBtn').innerHTML=svg('plus',2.4);$('editBtn').innerHTML=svg('edit',2.2);$('offBtn').innerHTML=svg('power',2.2);$('refBtn').innerHTML=svg('ref');
 
 /* ---------- Tuya vocabulary (Hebrew) ---------- */
 const CAT={kg:['מתג','toggle'],tdq:['מתג','toggle'],cz:['שקע חכם','plug'],pc:['מפצל','strip'],dj:['תאורה','bulb'],dd:['פס לד','bulb'],xdd:['תאורת תקרה','bulb'],fwd:['תאורה','bulb'],dc:['תאורה','bulb'],
@@ -580,10 +620,10 @@ function setKey(k){CFG.key=k;LSset('unplug_key',k||null)}
 function toast(t){document.querySelector('.toast')?.remove();const e=document.createElement('div');e.className='toast';e.setAttribute('role','status');e.textContent=t;document.body.append(e);$('live').textContent=t;setTimeout(()=>e.remove(),2600)}
 
 async function loadDevices(){
-  if(!CFG.key||busy)return;busy=true;$('refBtn').setAttribute('aria-busy','true');document.querySelector('.brand').classList.add('busy');
+  if(!CFG.key||busy)return;busy=true;$('refBtn').setAttribute('aria-busy','true');
   try{const j=await api('/devices');DEVS=j.devices||[];LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300);setTimeout(()=>typeof syncShabbat==='function'&&syncShabbat(false),1500);if(!META.tuyaAt||Date.now()-META.tuyaAt>6*3600e3)setTimeout(()=>importTuya(false),800)}
   catch(e){if(CFG.key)toast(e.message)}
-  finally{busy=false;$('refBtn').removeAttribute('aria-busy');document.querySelector('.brand').classList.remove('busy')}
+  finally{busy=false;$('refBtn').removeAttribute('aria-busy')}
 }
 async function loadSched(){if(!CFG.key)return;try{const j=await api('/schedules');SCHED=j.schedules||[]}catch(e){}}
 async function send(d,cmds){
@@ -597,10 +637,11 @@ async function refreshOne(id){try{const j=await api('/device',{id});if(!j.device
 function render(){
   window.DEVS_ALL=DEVS;
   const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d)).length, off=HD.filter(d=>!d.online).length;
-  $('homeBtn').innerHTML=`${svg('house',2)}<span>${esc(curHome().name)}</span>${svg('chev',2.4)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
+  $('homeBtn').innerHTML=`<span>${esc(curHome().name)}</span>${svg('chev',2.6)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
   const W=HD.reduce((t,d)=>t+watts(d),0),hasW=HD.some(d=>d.status.cur_power!=null);
   $('title').textContent=!CFG.key||!HD.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
-  $('sub').innerHTML=!CFG.key?'<span class="pill">לא מחובר</span>':DEVS.length?`<span class="pill">${HD.length} מכשירים</span>${hasW?`<span class="pill${W>5?' hot':''}">${svg('bolt')}${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}</span>`:''}${off?`<span class="pill bad">${off} מנותקים</span>`:''}`:'';
+  $('sub').innerHTML=!CFG.key?'לא מחובר':HD.length?[on?`<b>${on===1?'מכשיר אחד פועל':on+' פועלים'}</b>`:'הכול כבוי',`${HD.length} מכשירים`,hasW&&W>0?`${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קוט״ש'}`:'',off?`<span class="bad">${off} מנותקים</span>`:''].filter(Boolean).join('<span aria-hidden="true"> · </span>'):'';
+  {const ob=$('offBtn');ob.disabled=!on;ob.onclick=async()=>{const ds=HD.filter(d=>d.online&&isOn(d));if(!ds.length||!confirm(`לכבות ${ds.length} מכשירים?`))return;for(const d of ds)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')}}
   const tabs=[...document.querySelectorAll('nav.bar button')];tabs.forEach(b=>b.dataset.tab===TAB?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelector('nav.bar').style.setProperty('--tab',tabs.findIndex(b=>b.dataset.tab===TAB));
   const v=$('view');
   if(!CFG.key&&TAB!=='settings'){v.innerHTML=`<div class="empty"><b>עוד לא מחובר</b>מתחברים פעם אחת לחשבון Smart Life, ומכאן הכול כאן.</div><p></p><button class="btn pri wide" id="cn">התחברות</button>`;$('cn').onclick=openConnect;return}
@@ -620,9 +661,9 @@ function viewDevices(v){
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
   const chips=[['all','הכול'],...(hasFav?[['fav','מועדפים']]:[]),...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
   v.innerHTML=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
-      (DEVS.length?`<div class="quick"><button class="btn" id="allOff" ${onDevs.length?'':'disabled'}>${svg('power')}לכבות הכול${onDevs.length?` (${onDevs.length})`:''}</button>${SCENES.slice(0,1).map(sc=>`<button class="btn pri" id="sc0">${svg('play')}${esc(sc.name)}</button>`).join('')}</div>`:'')+
+      (SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
-   `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="reOn" aria-label="עריכת המסך - גודל, סדר והסתרה">${svg('edit',2.2)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים">${svg('edit',2)}</button></div>`+
+   `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים"><span style="display:inline-grid;transform:rotate(-90deg)">${svg('chev',2.4)}</span></button></div>`+
    (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
   $('roomAdd').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=META.home;saveMeta();manageRooms(n)};
@@ -655,7 +696,7 @@ function card(d){
    <button class="open" aria-label="${nm}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
    <div class="ic${photoOf(d)?' photo':''}">${devArt(d)}</div>
    ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${nm} פועל" ${d.online?'':'aria-disabled="true"'}>${svg('power',2.6)}</button>`:''}
-   <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${esc(stateText(d))}</div>${META.fav[d.id]?`<span class="fav" aria-hidden="true">${svg('star',2)}</span>`:''}</div>`;
+   <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${esc(stateText(d))}</div>${META.fav[d.id]?`<span class="fav" aria-hidden="true">${svg('star',2)}</span>`:''}</div>`;
 }
 
 /* ---------- sheets ---------- */
