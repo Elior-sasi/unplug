@@ -43,3 +43,19 @@
     else if(dy){s.style.transition='transform .22s cubic-bezier(.2,.8,.2,1)';s.style.transform='';setTimeout(()=>s.style.transition='',240)}dy=0};
   document.addEventListener('touchend',end);document.addEventListener('touchcancel',end);
 })();
+/* tab bar: slide a finger along it and the glass pill follows, like Unbox */
+(function(){
+  const nav=document.querySelector('nav.bar');if(!nav)return;
+  let drag=false,moved=false,x0=0;
+  const btns=()=>[...nav.querySelectorAll('button')];
+  const posOf=x=>{const r=nav.getBoundingClientRect(),n=btns().length;return Math.min(n-1,Math.max(0,(r.right-x)/(r.width/n)-.5))};
+  nav.addEventListener('touchstart',e=>{drag=true;moved=false;x0=e.touches[0].clientX},{passive:true});
+  nav.addEventListener('touchmove',e=>{if(!drag)return;const x=e.touches[0].clientX;if(!moved&&Math.abs(x-x0)<6)return;
+    if(e.cancelable)e.preventDefault();moved=true;nav.classList.add('dragging');
+    const p=posOf(x),i=Math.round(p),b=btns()[i];
+    if(b&&b.dataset.tab!==TAB)b.click();
+    nav.style.setProperty('--tab',p)},{passive:false});
+  const end=()=>{if(!drag)return;drag=false;nav.classList.remove('dragging');
+    if(moved){const i=btns().findIndex(b=>b.dataset.tab===TAB);nav.style.setProperty('--tab',i)}};
+  nav.addEventListener('touchend',end);nav.addEventListener('touchcancel',end);
+})();
