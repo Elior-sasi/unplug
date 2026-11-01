@@ -603,7 +603,7 @@ let SCENES=LSj('unplug_scenes',[]),LOG=LSj('unplug_log',[]),Q='',FILTER='';
 META.fav=META.fav||{};
 const addLog=(name,text)=>{LOG.unshift({t:Date.now(),name,text});LOG=LOG.slice(0,150);LSset('unplug_log',JSON.stringify(LOG))};
 let metaT=0,metaPulled=false;
-const saveMeta=()=>{LSset('unplug_meta',JSON.stringify(META));clearTimeout(metaT);metaT=setTimeout(()=>{if(CFG.key)api('/meta/save',{meta:META}).catch(()=>{})},1500)};
+const saveMeta=()=>{LSset('unplug_meta',JSON.stringify(META));if(typeof gbQueue==='function')gbQueue();clearTimeout(metaT);metaT=setTimeout(()=>{if(CFG.key)api('/meta/save',{meta:META}).catch(()=>{})},1500)};
 /* names, rooms, icons and order are also kept on the server, so deleting and re-adding the app keeps them */
 async function pullMeta(){if(metaPulled||!CFG.key)return;metaPulled=true;
   try{const m=(await api('/meta')).meta;if(!m||typeof m!=='object'){api('/meta/save',{meta:META}).catch(()=>{});return}
@@ -612,7 +612,7 @@ async function pullMeta(){if(metaPulled||!CFG.key)return;metaPulled=true;
       else if(typeof v==='object'&&v&&!Array.isArray(v)&&typeof cur==='object'&&!Array.isArray(cur)){for(const j of Object.keys(v))if(!(j in cur)){cur[j]=v[j];changed=true}}}
     if(changed){LSset('unplug_meta',JSON.stringify(META));render()}
   }catch(e){metaPulled=false}}
-const saveScenes=()=>LSset('unplug_scenes',JSON.stringify(SCENES));
+const saveScenes=()=>{LSset('unplug_scenes',JSON.stringify(SCENES));if(typeof gbQueue==='function')gbQueue()};
 
 /* ---------- icons ---------- */
 const P={
@@ -1181,7 +1181,7 @@ function viewSettings(v){
   <div class="sec-h"><h2>מכשירים</h2></div><div class="list">
     <button class="row row-btn" id="ad"><span class="grow"><span class="t">הוספת מכשיר חדש</span><br><span class="s">צימוד דרך Smart Life</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="lg"><span class="grow"><span class="t">היסטוריית פעולות</span><br><span class="s">${LOG.length?'אחרונה: '+esc(LOG[0].name):'ריקה'}</span></span>${svg('chev')}</button>
-    <button class="row row-btn" id="bk"><span class="grow"><span class="t">גיבוי ושחזור</span><br><span class="s">שמירה ל-Google Drive או קוד גיבוי</span></span>${svg('chev')}</button>
+    <button class="row row-btn" id="bk"><span class="grow"><span class="t">גיבוי ושחזור</span><br><span class="s">גיבוי אוטומטי בחשבון Google</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="rr"><span class="grow"><span class="t">ניהול חדרים</span><br><span class="s">${roomsOf(META.home).length} חדרים ב${esc(curHome().name)}</span></span>${svg('chev')}</button>
   </div>
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
@@ -1228,24 +1228,13 @@ function openBackup(){
   const code=()=>'UNPLUG1:'+b64url({meta:META,scenes:SCENES.map(({schedIds,...x})=>x)});
   const restore=o=>{if(!o||!o.meta)throw 0;Object.assign(META,{names:{},rooms:{},roomList:[],fav:{}},o.meta);saveMeta();SCENES=o.scenes||[];saveScenes();
     for(const[k,ls]of[['wash','unplug_wash'],['acp','unplug_acp'],['shabbat','unplug_shabbat'],['presence','unplug_presence'],['widget','unplug_widget']])if(o[k]!=null)LSset(ls,JSON.stringify(o[k]))};
-  const last=LS('unplug_bk_at');
-  sheet('גיבוי ושחזור',`<p>שומר שמות, חדרים, סמלילים, מועדפים, סצנות, מכונת הכביסה, מצב שבת והווידג׳ט. השמות, החדרים והסמלילים נשמרים גם בשרת לבד.</p>
-    <div class="sec-h"><h2>Google Drive</h2></div>
-    <div class="list"><button class="row row-btn" id="bkD"><span class="grow"><span class="t">שמירת גיבוי לדרייב</span><br><span class="s">${last?'גיבוי אחרון: '+esc(new Date(+last).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):'עוד לא נשמר גיבוי'}</span></span>${svg('save')}</button>
-      <label class="row row-btn" for="bkF" style="cursor:pointer"><span class="grow"><span class="t">שחזור מקובץ</span><br><span class="s">בחירת קובץ HomeOn מהדרייב</span></span>${svg('chev')}</label>
-      <input type="file" id="bkF" accept=".json,application/json" class="sr"></div>
-    <p class="s">בשמירה נפתח חלון השיתוף: בוחרים Drive (או "שמירה בקבצים" ← Google Drive).</p>
+  sheet('גיבוי ושחזור',`<p>שומר שמות, חדרים, סמלילים, מועדפים, סצנות, מכונת הכביסה, מצב שבת והווידג׳ט.</p>
+    ${typeof gbRowHtml==='function'?gbRowHtml():''}
     <div class="sec-h"><h2>קוד גיבוי</h2></div>
     <div class="code" id="bkC">${esc(code())}</div><button class="btn wide" id="bkCp">${svg('save')}העתקת הקוד</button>
     <div class="field"><label for="bkI">שחזור מקוד</label><textarea class="field-ta" id="bkI" placeholder="UNPLUG1:..."></textarea></div>
     <div class="err" id="bkE" role="alert"></div><button class="btn pri wide" id="bkR">שחזור</button>`,(el,close)=>{
-    el.querySelector('#bkD').onclick=async()=>{const d=new Date(),name=`HomeOn-גיבוי-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;
-      const f=new File([JSON.stringify(data(),null,1)],name,{type:'application/json'});
-      try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'גיבוי HomeOn'})}
-        else{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
-        LSset('unplug_bk_at',String(Date.now()));toast('הגיבוי מוכן לשמירה')}catch(e){if(e&&e.name!=='AbortError')toast('לא נשמר: '+(e.message||e))}};
-    el.querySelector('#bkF').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const o=JSON.parse(await f.text());if(o.app!=='HomeOn')throw 0;
-      if(!confirm('לשחזר מהגיבוי? ההגדרות הנוכחיות יוחלפו.'))return;restore(o);close();render();toast('שוחזר מהגיבוי')}catch(err){toast('זה לא קובץ גיבוי של HomeOn')}};
+    if(typeof gbBind==='function')gbBind(el,()=>openBackup());
     el.querySelector('#bkCp').onclick=()=>navigator.clipboard?.writeText(code()).then(()=>toast('הועתק'),()=>{});
     el.querySelector('#bkR').onclick=()=>{try{const t=el.querySelector('#bkI').value.trim().replace(/^UNPLUG1:/,'');restore(JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))))));close();render();toast('שוחזר. סצנות מתוזמנות צריך לשמור שוב')}catch(e){el.querySelector('#bkE').textContent='הקוד לא תקין'}}
   });
@@ -1403,6 +1392,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 <script src="washer.js?v=1"></script>
 <script src="acplug.js?v=1"></script>
 <script src="live.js?v=1"></script>
+<script src="gbackup.js?v=1"></script>
 <script>render();</script>
 </body>
 </html>
