@@ -594,7 +594,7 @@ let DEVS=LSj('unplug_devs',[]).map(d=>(d.online=true,d)), SCHED=[], TAB='devices
 const META=LSj('unplug_meta',{names:{},rooms:{},roomList:[]});   // local names, rooms & homes
 META.homes=META.homes&&META.homes.length?META.homes:[{id:'h1',name:'דירה'}];META.devHome=META.devHome||{};META.roomHome=META.roomHome||{};
 if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
-const homeOf=d=>META.homes.some(h=>h.id===META.devHome[d.id])?META.devHome[d.id]:META.homes[0].id;
+const homeOf=d=>META.homes.some(h=>h.id===META.devHome[d.id])?META.devHome[d.id]:d.virtual?META.home:META.homes[0].id;
 const inHome=d=>homeOf(d)===META.home;
 const roomHomeOf=r=>META.homes.some(h=>h.id===META.roomHome[r])?META.roomHome[r]:META.homes[0].id;
 const roomsOf=h=>META.roomList.filter(r=>roomHomeOf(r)===h);
