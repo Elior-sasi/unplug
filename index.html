@@ -505,6 +505,11 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .dragPh{background:transparent!important;outline:2px dashed #ff9a3d88!important;box-shadow:none!important;aspect-ratio:auto}
 .card.dragging{transform:scale(1.04) rotate(-1deg)!important;box-shadow:0 24px 48px #000c!important;animation:none!important;opacity:.96}
 .reordering .card:not(.dragging){animation:none}
+/* no scrollbar: the page scrolls inside .app, whose indicator can be hidden on iOS */
+html,body{height:100%;overflow:hidden}
+.app{height:100dvh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;scrollbar-width:none}
+.app::-webkit-scrollbar,.sheet::-webkit-scrollbar,.chips::-webkit-scrollbar,*::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}
+.sheet{scrollbar-width:none}
 </style>
 </head>
 <body>
@@ -738,7 +743,7 @@ function viewDevices(v){
   $('roomEdit').onclick=()=>manageRooms();
   v.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>{ROOM=b.dataset.room;render()});
   $('emAs')&&($('emAs').onclick=()=>manageRooms());
-  v.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ROOM=b.dataset.go;render();scrollTo(0,0)});
+  v.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ROOM=b.dataset.go;render();document.querySelector('.app').scrollTo(0,0)});
   v.querySelectorAll('[data-roff]').forEach(b=>b.onclick=async()=>{const r=b.dataset.roff,ds=DEVS.filter(d=>(r?roomOf(d)===r:!roomOf(d))&&d.online&&isOn(d));for(const d of ds)await send(d,[{code:powerCode(d),value:false}]);toast((r||'המכשירים בלי חדר')+' - כבוי')});
   $('allOff')&&($('allOff').onclick=async()=>{if(!confirm(`לכבות ${onDevs.length} מכשירים?`))return;for(const d of onDevs)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')});
   $('sc0')&&($('sc0').onclick=e=>runScene(SCENES[0],e.currentTarget));
@@ -1250,7 +1255,7 @@ function showQR(uc,j){
 
 /* ---------- boot ---------- */
 function applyPrefs(){document.documentElement.style.setProperty('--ts',(LS('unplug_ts')||'100')+'%');document.documentElement.style.setProperty('--g',(+(LS('unplug_glass')??55))/100)}
-document.querySelectorAll('nav.bar button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();if(TAB==='sched')loadSched().then(render);window.scrollTo(0,0)});
+document.querySelectorAll('nav.bar button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();if(TAB==='sched')loadSched().then(render);window.document.querySelector('.app').scrollTo(0,0)});
 $('refBtn').onclick=()=>{loadDevices();loadSched()};
 $('homeBtn').onclick=openHomes;
 $('menuBtn').onclick=()=>{
@@ -1277,7 +1282,7 @@ if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConne
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active')&&!(typeof REORDER!=='undefined'&&REORDER))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
 </script>
-<script src="extras.js?v=7"></script>
+<script src="extras.js?v=8"></script>
 <script>render();</script>
 </body>
 </html>

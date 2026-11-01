@@ -139,7 +139,7 @@ function startDrag(e,c,grid,o){
     if((after&&best.nextElementSibling===ph)||(!after&&best.previousElementSibling===ph))return;
     flip(grid,()=>grid.insertBefore(ph,ref));
   };
-  const tick=()=>{if(scrollV){scrollBy(0,scrollV);if(!raf)raf=requestAnimationFrame(place)}if(c.isConnected&&c.classList.contains('dragging'))requestAnimationFrame(tick)};
+  const tick=()=>{if(scrollV){document.querySelector('.app').scrollBy(0,scrollV);if(!raf)raf=requestAnimationFrame(place)}if(c.isConnected&&c.classList.contains('dragging'))requestAnimationFrame(tick)};
   requestAnimationFrame(tick);
   const move=ev=>{lx=ev.clientX;ly=ev.clientY;scrollV=ly<90?-10:ly>innerHeight-130?10:0;if(!raf)raf=requestAnimationFrame(place)};
   const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);scrollV=0;
