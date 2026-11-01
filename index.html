@@ -1005,10 +1005,10 @@ function actionEditor(d,cur){
 }
 function openSchedEdit(s,d){
   if(!d)return toast('המכשיר לא נמצא');
-  const ed=actionEditor(d,s&&s.cmds&&s.cmds[0]);let days=new Set(s?s.days:[0,1,2,3,4,5,6]);
+  const ed=actionEditor(d,s&&s.cmds&&s.cmds[0]);let days=new Set(s?s.days:[]);
   sheet(s?'עריכת תזמון':'תזמון חדש',`<p>${esc(dname(d))}</p>
     <div class="field"><label for="sT">שעה</label><input id="sT" type="time" value="${esc(s?s.time:'07:00')}" style="font-size:1.6rem;direction:ltr;text-align:center"></div>
-    <div class="field"><span style="font-weight:600" id="dL">ימים</span><div class="days" role="group" aria-labelledby="dL">${DAYS.map((x,i)=>`<button data-d="${i}" aria-pressed="${days.has(i)}" aria-label="${DAYSL[i]}">${x}</button>`).join('')}</div></div>
+    <div class="field"><span style="font-weight:600" id="dL">ימים</span><div class="days" role="group" aria-labelledby="dL">${DAYS.map((x,i)=>`<button data-d="${i}" aria-pressed="${days.has(i)}" aria-label="${DAYSL[i]}">${x}</button>`).join('')}</div><div class="seg" role="group" aria-label="בחירה מהירה" style="margin-top:8px"><button data-dp="0,1,2,3,4,5,6">כל יום</button><button data-dp="0,1,2,3,4">א׳-ה׳</button><button data-dp="5,6">סופ״ש</button></div></div>
     <label class="row" style="background:var(--surface);border-radius:14px"><span class="grow t">פעם אחת בלבד</span><input type="checkbox" id="sO" ${s&&s.once?'checked':''} style="width:28px;height:28px;accent-color:var(--accent)"></label>
     ${ed.html}
     <div class="field"><label for="sL">תיאור (לא חובה)</label><input id="sL" value="${esc(s&&s.label!=='טיימר'?s.label||'':'')}"></div>
@@ -1017,6 +1017,7 @@ function openSchedEdit(s,d){
   (el,close)=>{
     const get=ed.bind(el);
     el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const i=+b.dataset.d;days.has(i)?days.delete(i):days.add(i);b.setAttribute('aria-pressed',days.has(i))});
+    el.querySelectorAll('[data-dp]').forEach(b=>b.onclick=()=>{days=new Set(b.dataset.dp.split(',').map(Number));el.querySelectorAll('[data-d]').forEach(x=>x.setAttribute('aria-pressed',days.has(+x.dataset.d)))});
     el.querySelector('#sS').onclick=async()=>{const c=get(),t=el.querySelector('#sT').value,once=el.querySelector('#sO').checked;
       if(!t)return el.querySelector('#sE').textContent='בחר שעה';if(!c)return el.querySelector('#sE').textContent='ערך לא תקין';
       let ds=[...days];if(once){const now=new Date(),[h,m]=t.split(':').map(Number),at=new Date();at.setHours(h,m,0,0);if(at<=now)at.setDate(at.getDate()+1);ds=[at.getDay()]}
@@ -1060,14 +1061,14 @@ function openScene(i){
     <div class="sec-h" style="margin:6px 4px 0"><h2>הפעלה אוטומטית</h2></div>
     <div class="list"><label class="row"><span class="grow t">להפעיל בשעה קבועה</span><input type="checkbox" id="scT" ${s.at?'checked':''} style="width:28px;height:28px;accent-color:var(--acc)"></label>
      <div class="ctl" id="scTB" ${s.at?'':'hidden'}><div class="field"><label for="scTm">שעה</label><input id="scTm" type="time" value="${esc(s.at||'07:00')}" style="font-size:1.5rem;direction:ltr;text-align:center"></div>
-     <div class="days" role="group" aria-label="ימים">${DAYS.map((x,k)=>`<button data-sd="${k}" aria-pressed="${(s.days||[0,1,2,3,4,5,6]).includes(k)}" aria-label="${DAYSL[k]}">${x}</button>`).join('')}</div></div></div>
+     <div class="days" role="group" aria-label="ימים">${DAYS.map((x,k)=>`<button data-sd="${k}" aria-pressed="${(s.days||[]).includes(k)}" aria-label="${DAYSL[k]}">${x}</button>`).join('')}</div></div></div>
     <div class="err" id="scE" role="alert"></div>
     <div class="btns">${!isNew?`<button class="btn bad" id="scD">${svg('trash')}מחיקה</button>`:''}<button class="btn pri" id="scS">שמירה</button></div>`,(el,cl)=>{
     const draw=()=>{el.querySelector('#scA').innerHTML=s.acts.length?s.acts.map((a,k)=>{const d=DEVS.find(x=>x.id===a.device);
       return `<div class="row"><span class="grow"><span class="t">${esc(d?dname(d):'מכשיר שהוסר')}</span><br><span class="s">${esc(cmdsText({device:a.device,cmds:[a.cmd]}))}</span></span><button class="icbtn" data-rm="${k}" aria-label="הסרת פעולה">${svg('trash')}</button></div>`}).join(''):`<div class="row"><span class="s">עוד אין פעולות</span></div>`;
       el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{s.acts.splice(+b.dataset.rm,1);draw()})};
     draw();
-    const sd=new Set(s.days||[0,1,2,3,4,5,6]);
+    const sd=new Set(s.days||[]);
     el.querySelector('#scT').onchange=e=>{el.querySelector('#scTB').hidden=!e.target.checked};
     el.querySelectorAll('[data-sd]').forEach(b=>b.onclick=()=>{const k=+b.dataset.sd;sd.has(k)?sd.delete(k):sd.add(k);b.setAttribute('aria-pressed',sd.has(k))});
     const keepT=()=>{s._at=el.querySelector('#scT').checked?el.querySelector('#scTm').value:'';s._days=[...sd]};
