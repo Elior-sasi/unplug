@@ -483,6 +483,13 @@ body.reordering #menuBtn{display:none!important}
 body::after{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:#000;z-index:25;pointer-events:none}
 header.top,header.top::before,.icbtn,.reBar{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 .reBar{background:#1c1c1e!important}
+.dropMenu{position:fixed;z-index:40;min-width:220px;max-width:calc(100vw - 24px);background:#2c2c2e;border-radius:18px;padding:6px;box-shadow:0 18px 50px #000c,0 0 0 .5px #ffffff22;transform-origin:top left;animation:dmIn .16s ease-out}
+@keyframes dmIn{from{opacity:0;transform:scale(.92)}}
+.dropMenu button{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:0 14px;border-radius:12px;font-size:1.02rem;font-weight:500;text-align:start;color:#fff}
+.dropMenu button+button{box-shadow:0 -.5px 0 #ffffff14}
+.dropMenu button svg{width:20px;height:20px;color:var(--gold);flex:none}
+.dropMenu button:active,.dropMenu button:focus-visible{background:#ffffff12}
+.dropMenu button:disabled{opacity:.4}
 </style>
 </head>
 <body>
@@ -490,7 +497,7 @@ header.top,header.top::before,.icbtn,.reBar{-webkit-backdrop-filter:none!importa
 <div class="app">
   <header class="top">
     <div class="brandRow"><button class="homeBtn" id="homeBtn" aria-haspopup="dialog"></button>
-      <div class="actions"><button class="icbtn" id="menuBtn" aria-label="תפריט" aria-haspopup="dialog"></button><button class="icbtn" id="offBtn" aria-label="לכבות הכול" hidden></button><button class="icbtn" id="editBtn" aria-label="סיום עריכה" hidden></button><button class="icbtn" id="addBtn" aria-label="הוספת מכשיר" hidden></button><button class="icbtn" id="refBtn" aria-label="רענון" hidden></button></div></div>
+      <div class="actions"><button class="icbtn" id="menuBtn" aria-label="תפריט" aria-haspopup="menu" aria-expanded="false"></button><button class="icbtn" id="offBtn" aria-label="לכבות הכול" hidden></button><button class="icbtn" id="editBtn" aria-label="סיום עריכה" hidden></button><button class="icbtn" id="addBtn" aria-label="הוספת מכשיר" hidden></button><button class="icbtn" id="refBtn" aria-label="רענון" hidden></button></div></div>
     <h1 class="sr" id="title" aria-live="polite">הבית</h1><h1 class="tabTitle" id="tabTitle"></h1><p class="statusLine" id="sub" aria-live="polite"></p>
   </header>
   <main id="view"></main>
@@ -1199,19 +1206,22 @@ function applyPrefs(){document.documentElement.style.setProperty('--ts',(LS('unp
 document.querySelectorAll('nav.bar button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();if(TAB==='sched')loadSched().then(render);window.scrollTo(0,0)});
 $('refBtn').onclick=()=>{loadDevices();loadSched()};
 $('homeBtn').onclick=openHomes;
-$('menuBtn').onclick=()=>{const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d));
-  sheet('תפריט',`<div class="list">
-    <button class="row row-btn" id="mE">${svg('edit')}<span class="grow t">עריכת המסך</span><span class="s">סדר, גודל, מועדפים</span></button>
-    <button class="row row-btn" id="mO" ${on.length?'':'disabled'}>${svg('power')}<span class="grow t">לכבות הכול</span><span class="s">${on.length?on.length+' דולקים':'הכול כבוי'}</span></button>
-    <button class="row row-btn" id="mA">${svg('plus')}<span class="grow t">הוספת מכשיר</span></button>
-    <button class="row row-btn" id="mH">${svg('house')}<span class="grow t">בתים וחדרים</span></button>
-    <button class="row row-btn" id="mR">${svg('ref')}<span class="grow t">רענון</span></button></div>`,(el,cl)=>{
-    el.querySelector('#mE').onclick=()=>{cl();TAB='devices';setReorder(true)};
-    el.querySelector('#mO').onclick=()=>{cl();$('offBtn').onclick()};
-    el.querySelector('#mA').onclick=()=>{cl();openAdd()};
-    el.querySelector('#mH').onclick=()=>{cl();openHomes()};
-    el.querySelector('#mR').onclick=()=>{cl();loadDevices();loadSched()};
-  })};
+$('menuBtn').onclick=()=>{
+  const old=document.getElementById('dropMenu');if(old){old.remove();$('menuBtn').setAttribute('aria-expanded','false');return}
+  const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d)).length,btn=$('menuBtn'),r=btn.getBoundingClientRect();
+  const m=document.createElement('div');m.id='dropMenu';m.className='dropMenu';m.setAttribute('role','menu');m.setAttribute('aria-label','תפריט');
+  m.style.top=(r.bottom+8)+'px';m.style.left=Math.max(12,r.left)+'px';
+  const items=[['edit','עריכת המסך',()=>{TAB='devices';setReorder(true)}],['power',on?`לכבות הכול (${on})`:'לכבות הכול',()=>$('offBtn').onclick(),!on],['plus','הוספת מכשיר',openAdd],['house','בתים וחדרים',openHomes],['ref','רענון',()=>{loadDevices();loadSched()}]];
+  m.innerHTML=items.map(([ic,t,,dis],i)=>`<button role="menuitem" data-mi="${i}" ${dis?'disabled':''}>${svg(ic)}<span>${t}</span></button>`).join('');
+  document.body.append(m);btn.setAttribute('aria-expanded','true');
+  const close=()=>{m.remove();btn.setAttribute('aria-expanded','false');removeEventListener('pointerdown',out,true);removeEventListener('keydown',key,true)};
+  const out=e=>{if(!m.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))close()};
+  const key=e=>{const bs=[...m.querySelectorAll('button:not(:disabled)')],i=bs.indexOf(document.activeElement);
+    if(e.key==='Escape'){close();btn.focus()}else if(e.key==='ArrowDown'){e.preventDefault();bs[(i+1)%bs.length].focus()}else if(e.key==='ArrowUp'){e.preventDefault();bs[(i-1+bs.length)%bs.length].focus()}};
+  addEventListener('pointerdown',out,true);addEventListener('keydown',key,true);
+  m.querySelectorAll('[data-mi]').forEach(b=>b.onclick=()=>{close();items[+b.dataset.mi][2]()});
+  m.querySelector('button:not(:disabled)').focus();
+};
 $('editBtn').onclick=()=>{if(TAB!=='devices'){TAB='devices'}typeof setReorder==='function'&&setReorder(!REORDER)};
 $('addBtn').onclick=openAdd;
 setTimeout(()=>{const sp=$('splash');if(!sp)return;sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
