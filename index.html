@@ -643,7 +643,7 @@ document.querySelectorAll('[data-ic]').forEach(e=>e.outerHTML=svg(e.dataset.ic))
 $('addBtn').innerHTML=svg('plus',2.4);$('editBtn').innerHTML=svg('edit',2.2);$('offBtn').innerHTML=svg('power',2.2);$('menuBtn').innerHTML='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>';$('refBtn').innerHTML=svg('ref');
 
 /* ---------- Tuya vocabulary (Hebrew) ---------- */
-const CAT={kg:['מתג','toggle'],tdq:['מתג','toggle'],cz:['שקע חכם','plug'],pc:['מפצל','strip'],dj:['תאורה','bulb'],dd:['פס לד','bulb'],xdd:['תאורת תקרה','bulb'],fwd:['תאורה','bulb'],dc:['תאורה','bulb'],
+const CAT={ember:['דוד חכם','heat'],kg:['מתג','toggle'],tdq:['מתג','toggle'],cz:['שקע חכם','plug'],pc:['מפצל','strip'],dj:['תאורה','bulb'],dd:['פס לד','bulb'],xdd:['תאורת תקרה','bulb'],fwd:['תאורה','bulb'],dc:['תאורה','bulb'],
  kt:['מזגן','ac'],ktkzq:['מזגן','ac'],kts:['מזגן','ac'],fs:['מאוורר','fan'],qn:['מחמם','heat'],rs:['דוד','heat'],wsdcg:['חיישן טמפ׳','sensor'],pir:['חיישן תנועה','sensor'],mcs:['חיישן דלת','sensor'],sp:['מצלמה','cam'],wnykq:['שלט IR','sensor'],infrared_ac:['מזגן IR','ac'],cl:['וילון','toggle'],clkg:['מתג וילון','toggle'],znrb:['מד צריכה','plug']};
 const catOf=d=>CAT[d.category]||['מכשיר','dev'];
 const CODE={switch:'הפעלה',switch_1:'שקע 1',switch_2:'שקע 2',switch_3:'שקע 3',switch_4:'שקע 4',switch_5:'שקע 5',switch_usb1:'USB',switch_led:'אור',power:'הפעלה',
@@ -718,7 +718,7 @@ function render(){
 function roomOf(d){return META.rooms[d.id]||''}
 function watts(d){const f=readOf(d,'cur_power');return d.online&&d.status.cur_power!=null?(+d.status.cur_power)/10**(+(f&&f.values&&f.values.scale)||0):0}
 function viewDevices(v){
-  const DEVS=window.DEVS_ALL.filter(inHome);
+  const DEVS=window.DEVS_ALL.filter(inHome).concat(META.ember===false?[]:[EMBER].filter(inHome));
   const rooms=roomsOf(META.home);
   if(ROOM!=='all'&&ROOM!=='fav'&&ROOM!=='off'&&!rooms.includes(ROOM))ROOM='all';
   const hasFav=DEVS.some(d=>META.fav[d.id]),offN=DEVS.filter(d=>!d.online).length,onDevs=DEVS.filter(d=>d.online&&isOn(d));
@@ -743,6 +743,7 @@ function viewDevices(v){
   $('allOff')&&($('allOff').onclick=async()=>{if(!confirm(`לכבות ${onDevs.length} מכשירים?`))return;for(const d of onDevs)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')});
   $('sc0')&&($('sc0').onclick=e=>runScene(SCENES[0],e.currentTarget));
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
+    if(d&&d.virtual){c.querySelector('.open').onclick=()=>openEmber();const pb=c.querySelector('[data-ember]');if(pb)pb.onclick=()=>{LSset('unplug_ember_last',JSON.stringify({t:'הדלקה/כיבוי',at:hm(new Date())}));emberGo('toggle')};return}
     c.querySelector('.open').onclick=()=>openDevice(d);
     const pw=c.querySelector('.pw');if(pw)pw.onclick=()=>{if(!d.online)return toast('המכשיר מנותק');send(d,[{code:powerCode(d),value:!isOn(d)}])}});
   $('reOn')&&($('reOn').onclick=()=>typeof setReorder==='function'&&setReorder(!REORDER));
@@ -757,7 +758,37 @@ function groupedRooms(list,rooms){
       ${on.length?`<button class="roomOff" data-roff="${esc(r)}" aria-label="לכבות את כל ${r?'החדר '+esc(r):'המכשירים בלי חדר'}">${svg('power',2.2)}</button>`:''}</div>
       <div class="grid" role="list">${ds.map(card).join('')}</div></section>`}).join('');
 }
+/* Switcher water heater - controlled by the Ember app on the phone (home WiFi), via ember:// links */
+const EMBER={id:'ember',name:'דוד',category:'ember',online:true,virtual:true,status:{},functions:[],statusRange:[]};
+const emberGo=(path)=>{const t=Date.now();location.href='ember://'+path;
+  setTimeout(()=>{if(document.visibilityState==='visible'&&Date.now()-t<2600)toast('Ember לא נפתח - צריך את הגרסה החדשה של Ember על הטלפון')},1800)};
+function openEmber(){
+  const L=JSON.parse(LS('unplug_ember_last')||'null');
+  sheet(esc(dname(EMBER)),`<div class="big-pw" aria-hidden="true" style="pointer-events:none">${devArt(EMBER,1.5)}</div>
+    <p style="text-align:center">${L?`פקודה אחרונה: ${esc(L.t)} ב-${esc(L.at)}`:'הדוד נשלט דרך Ember, בטלפון שמחובר ל-WiFi של הבית.'}</p>
+    <div class="list"><div class="ctl"><div class="ctl-h"><span class="t" id="emL">להדליק ל-</span></div>
+      <div class="seg" role="group" aria-labelledby="emL">${[15,30,45,60,90,120].map(m=>`<button data-em="${m}">${m<60?m+' דק׳':m===60?'שעה':m===90?'שעה וחצי':'שעתיים'}</button>`).join('')}<button data-em="0">ללא טיימר</button></div></div>
+      <div class="ctl"><div class="btns"><button class="btn" data-emp="add?m=15">${svg('plus')}עוד 15 דק׳</button><button class="btn bad" data-emp="off">${svg('power')}כיבוי</button></div></div></div>
+    <div class="list">
+      <button class="row row-btn" data-emp="open"><span class="grow"><span class="t">פתיחת Ember</span><br><span class="s">זמן שנשאר, תזמונים וסטטיסטיקה</span></span>${svg('chev')}</button>
+      <button class="row row-btn" id="emR"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(EMBER)||'בלי חדר')}</span></span>${svg('chev')}</button>
+      <button class="row row-btn" id="emH"><span class="grow"><span class="t">הסתרת הדוד מ-Unplug</span></span>${svg('close')}</button>
+    </div>
+    <p style="font-size:.9rem">כל כפתור פותח את Ember לרגע, והוא מבצע את הפקודה. זה עובד כשהטלפון מחובר ל-WiFi של הבית.</p>`,(el,close)=>{
+    const log=t=>{LSset('unplug_ember_last',JSON.stringify({t,at:hm(new Date())}));addLog(dname(EMBER),t)};
+    el.querySelectorAll('[data-em]').forEach(b=>b.onclick=()=>{const m=+b.dataset.em;log(m?`הדלקה ל-${m} דק׳`:'הדלקה ללא טיימר');close();emberGo('on?m='+m)});
+    el.querySelectorAll('[data-emp]').forEach(b=>b.onclick=()=>{const p=b.dataset.emp;if(p!=='open')log(p==='off'?'כיבוי':'הוספת 15 דק׳');close();emberGo(p)});
+    el.querySelector('#emR').onclick=()=>pickRoom(EMBER,()=>{render()});
+    el.querySelector('#emH').onclick=()=>{META.ember=false;saveMeta();close();render();toast('הדוד הוסתר. מחזירים מהתפריט ⋯ ← הוספת מכשיר')};
+  });
+}
 function card(d){
+  if(d.virtual){const nm=esc(dname(d)),L=JSON.parse(LS('unplug_ember_last')||'null');
+    return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
+     <button class="open" aria-label="${nm}, דוד חכם דרך Ember${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
+     <div class="ic">${devArt(d)}</div>
+     <button class="pw" data-ember aria-label="${nm}: הדלקה או כיבוי דרך Ember">${svg('power',2.6)}</button>
+     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${L?esc(L.t):'דרך Ember'}</div></div>`}
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
   const c=(ART[iconOf(d)]||ART.dev).p.t,wide=AC.has(d.category)||iconOf(d)==='ac'&&!pc;
   return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
@@ -1171,6 +1202,7 @@ function openHomes(){
   });
 }
 function openAdd(){
+  if(META.ember===false&&confirm('להחזיר את הדוד (Ember) ל-Unplug?')){delete META.ember;saveMeta();render();return}
   sheet('הוספת מכשיר',`<p>אייפון לא מאפשר לאפליקציית רשת להעביר למכשיר את סיסמת ה-WiFi, אז את הצימוד עצמו עושים פעם אחת ב-Smart Life:</p>
     <ol><li>פתח את Smart Life ולחץ <b>+</b> למעלה</li><li><b>הוספת מכשיר</b> ובחר את המכשיר, או חכה שיזוהה לבד</li><li>הזן את סיסמת ה-WiFi של הבית וסיים</li><li>חזור לכאן ולחץ <b>רענון</b> - המכשיר יופיע</li></ol>
     <button class="btn pri wide" id="aR">${svg('ref')}כבר צימדתי, רענן</button>`,(el,close)=>el.querySelector('#aR').onclick=()=>{close();TAB='devices';loadDevices()});
