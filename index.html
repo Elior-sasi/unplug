@@ -315,14 +315,14 @@ header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,
 .homeBtn svg{width:18px;height:18px;transform:rotate(-90deg)}
 .chip.add{width:44px;padding:0;display:inline-grid;place-items:center;color:var(--mut)}.chip.add svg{width:20px;height:20px}
 .sheet>*{flex-shrink:0}
-.card .ic img.real{border-radius:18px;filter:none!important;box-shadow:0 6px 16px rgba(0,0,0,.45)}
-.card:not(.is-on) .ic img.real{filter:saturate(.55) brightness(.8)!important}
-.card.is-on .ic:has(img.real){filter:drop-shadow(0 0 14px #ff9a3d66)}
-.big-pw img.real{border-radius:38px}
+.card .ic img.real{object-fit:contain;filter:drop-shadow(0 8px 12px rgba(0,0,0,.5))!important}
+.card:not(.is-on) .ic img.real{filter:saturate(.5) brightness(.78) drop-shadow(0 8px 12px rgba(0,0,0,.5))!important}
+.card.is-on .ic:has(img.real){filter:drop-shadow(0 0 18px #ff9a3d55)}
+.big-pw img.real{object-fit:contain;filter:drop-shadow(0 14px 22px rgba(0,0,0,.55))}
 .big-pw:not([aria-checked="true"]) img.real{filter:saturate(.55) brightness(.8)}
-.mini img.real{border-radius:10px}
-.icgrid button img.real{width:60px;height:60px;border-radius:14px}
-.card.wide .ic:has(img.real){width:96px;height:96px}
+.mini img.real{object-fit:contain}
+.icgrid button img.real{width:60px;height:60px;object-fit:contain}
+.card.wide .ic:has(img.real){width:140px;height:100px}
 .homeBtn{min-height:40px;padding:0 14px;border-radius:999px;background:#ff9a3d18;border:1px solid #ff9a3d40}
 .homeBtn svg:first-child{width:18px;height:18px;transform:none}
 .roomSec{margin-top:20px}.roomSec:first-of-type{margin-top:4px}
@@ -352,6 +352,10 @@ header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,
 .reBtns{position:absolute;top:10px;left:10px;z-index:3;display:flex;gap:6px}
 .reBtns button{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;color:#fff}
 .reBtns button svg{width:18px;height:18px}.reBtns button[data-mv="-1"] svg{transform:scaleX(-1)}
+.card .ic:has(img.real),.card.is-on .ic:has(img.real){background:none!important;border:0!important;box-shadow:none!important;padding:0}
+.big-pw:has(img.real){background:none!important;border:0!important;box-shadow:none!important;padding:0}
+.big-pw[aria-checked="true"]:has(img.real){filter:drop-shadow(0 0 30px #ff9a3d77)}
+body.scrolled header.top::before{background:rgba(12,15,22,.94);-webkit-mask:none;mask:none;inset:0}
 </style>
 </head>
 <body>
@@ -462,14 +466,15 @@ const DI={
  plant:['צמח','<path class="d" d="M7 15h10l-1.2 6H8.2z"/><path d="M12 15V9M12 11c-3 0-5-2-5-5 3 0 5 2 5 5zM12 9c0-3 2-5 5-5 0 3-2 5-5 5z"/>'],
  dev:['מכשיר','<rect class="d" x="6" y="3" width="12" height="18" rx="3"/><path d="M11 17h2"/>']
 };
-const NAMEKEY=[[/מזגן|מיזוג|air ?con/i,'ac'],[/טוסטר|toast/i,'toaster'],[/קומקום|kettle/i,'kettle'],[/קפה|coffee|נספרסו/i,'coffee'],[/מיקרו/i,'microwave'],[/תנור חימום|רדיאטור|מפזר חום|heater/i,'heater'],[/תנור|אופה|oven/i,'oven'],[/מקרר|fridge/i,'fridge'],[/כביסה|washer/i,'washer'],[/מדיח|dish/i,'dish'],[/דוד|בויילר|boiler/i,'boiler'],[/מאוורר|fan/i,'fan'],[/פס לד|לד|led/i,'led'],[/תקרה|ceiling/i,'ceiling'],[/מנורה|מנורת|lamp/i,'lamp'],[/נורה|אור|תאורה|light|bulb/i,'bulb'],[/טלוויזיה|tv|מסך/i,'tv'],[/מחשב|לפטופ|pc|laptop/i,'laptop'],[/פלייסטיישן|קונסולה|xbox|ps5|playstation/i,'game'],[/רמקול|speaker/i,'speaker'],[/ראוטר|נתב|router|wifi/i,'router'],[/מטען|charger/i,'charger'],[/וילון|תריס|curtain/i,'curtain'],[/מצלמה|camera/i,'camera'],[/צמח|עציץ|plant/i,'plant'],[/אייפון|iphone|טלפון|פלאפון|נייד|phone/i,'phone'],[/שלט|remote/i,'remote'],[/שואב|רובוט|vacuum|roborock/i,'vacuum']];
-const CATICON={kg:'switch',tdq:'switch',cz:'plug',pc:'strip',dj:'bulb',dd:'led',xdd:'ceiling',fwd:'bulb',dc:'led',kt:'ac',ktkzq:'ac',kts:'ac',infrared_ac:'ac',fs:'fan',qn:'heater',rs:'boiler',wsdcg:'sensor',pir:'sensor',mcs:'sensor',sp:'camera',cl:'curtain',clkg:'curtain',znrb:'plug',sd:'vacuum',wnykq:'remote',infrared_ac:'ac'};
-function iconOf(d){if(META.icons&&META.icons[d.id]&&ART[META.icons[d.id]])return META.icons[d.id];const n=dname(d)+' '+(d.name||'');for(const[r,k]of NAMEKEY)if(r.test(n))return k;return CATICON[d.category]||'dev'}
+const NAMEKEY=[[/מזגן נייד|portable/i,'portac'],[/מזגן|מיזוג|air ?con/i,'ac'],[/טוסטר אובן|toaster oven/i,'toasteroven'],[/טוסטר|toast/i,'toaster'],[/אייר ?פרייר|air ?fryer|נינג׳ה|ninja/i,'airfryer'],[/מיחם|urn/i,'urn'],[/קומקום|kettle/i,'kettle'],[/קפה|coffee|נספרסו/i,'coffee'],[/מיקרו/i,'microwave'],[/כיריים|cooktop|אינדוקציה/i,'cooktop'],[/קולט/i,'hood'],[/מפזר חום|fan ?heater/i,'fanheater'],[/רדיאטור|תנור חימום|radiator|heater/i,'heater'],[/שמיכה/i,'blanket'],[/תנור|אופה|oven/i,'oven'],[/מקרר|fridge/i,'fridge'],[/מייבש|dryer/i,'dryer'],[/כביסה|washer/i,'washer'],[/מדיח|dish/i,'dish'],[/בר מים|מים קרים|water bar|תמי/i,'water'],[/דוד|בויילר|boiler/i,'boiler'],[/מאוורר תקרה|ceiling fan/i,'ceilfan'],[/מאוורר מגדל|tower/i,'towerfan'],[/מאוורר|fan/i,'fan'],[/מטהר|purifier/i,'purifier'],[/סופח|dehumid/i,'dehumid'],[/אדים|humidif/i,'humidifier'],[/פס לד|לד|led/i,'led'],[/תאורת גינה|גינה|garden/i,'gardenlight'],[/תאורת קיר|מנורת קיר|wall/i,'walllight'],[/תקרה|ceiling/i,'ceiling'],[/מנורה|מנורת|lamp/i,'lamp'],[/דימר|dimmer/i,'dimmer'],[/נורה|אור|תאורה|light|bulb/i,'bulb'],[/סאונד ?בר|soundbar/i,'soundbar'],[/מקרן|projector/i,'projector'],[/מסך הקרנה|screen/i,'screen'],[/סטרימר|אפל ?טי ?וי|apple ?tv|כרומקאסט|streamer/i,'streamer'],[/רסיבר|מגבר|receiver/i,'receiver'],[/טלוויזיה|tv|מסך/i,'tv'],[/מחשב|לפטופ|pc|laptop/i,'laptop'],[/פלייסטיישן|קונסולה|xbox|ps5|playstation/i,'game'],[/רמקול|speaker/i,'speaker'],[/ראוטר|נתב|router|wifi/i,'router'],[/רכזת|hub|gateway/i,'hub'],[/מטען|charger/i,'charger'],[/מפסק תריס/i,'blindsw'],[/וילון|תריס|curtain|blind/i,'curtain'],[/דלת מוסך|מוסך|garage/i,'garage'],[/שער|gate/i,'gate'],[/מנעול|lock/i,'lock'],[/פעמון|doorbell/i,'doorbell'],[/אינטרקום|intercom/i,'intercom'],[/מצלמה|camera/i,'camera'],[/עשן|smoke/i,'smoke'],[/גז|gas/i,'gas'],[/נזילה|הצפה|leak|water sensor/i,'leak'],[/סירנה|אזעקה|siren|alarm/i,'siren'],[/חיישן דלת|חיישן חלון|door sensor/i,'doorsensor'],[/נוכחות|presence/i,'presence'],[/תנועה|motion|pir/i,'sensor'],[/לחות|טמפ|thermo.?hygro|humidity/i,'thermo_h'],[/תרמוסטט|thermostat/i,'thermostat'],[/ברז|valve/i,'valve'],[/השקיה|irrigation|sprinkler/i,'irrigation'],[/צמח|עציץ|plant/i,'plant'],[/מאכיל|האכלה|feeder|כלב|חתול/i,'petfeeder'],[/שוטף|mop/i,'mop'],[/שואב רובוטי|רובוט|roborock|robot/i,'vacuum'],[/שואב|vacuum/i,'stickvac'],[/אייפון|iphone|טלפון|פלאפון|נייד|phone/i,'phone'],[/שלט|remote/i,'remote'],[/מתאם|adapter/i,'adapter'],[/מפצל|strip/i,'strip'],[/מפסק|מתג|switch/i,'switch']];
+const CATICON={kg:'switch',tdq:'switch',cz:'plug',pc:'strip',dj:'bulb',dd:'led',xdd:'ceiling',fwd:'bulb',dc:'led',kt:'ac',ktkzq:'ac',kts:'ac',infrared_ac:'ac',fs:'fan',qn:'heater',rs:'boiler',wsdcg:'sensor',pir:'sensor',mcs:'sensor',sp:'camera',cl:'curtain',clkg:'blindsw',znrb:'plug',sd:'vacuum',wnykq:'remote',infrared_ac:'ac',ms:'lock',ywbj:'smoke',rqbj:'gas',sj:'leak',cwwsq:'petfeeder',kj:'purifier',jsq:'humidifier',cs:'dehumid',ckmkzq:'garage',sgbj:'siren',wk:'thermostat',sfkzq:'valve',ggq:'irrigation',tgkg:'dimmer',tgq:'dimmer',wg2:'hub',wfcon:'hub',hps:'presence',lyqwg:'hub',bh:'kettle',kfj:'coffee',kg:'switch',mal:'siren',dlq:'switch',jtmspro:'lock',sgj:'doorbell',videolock:'lock',qn:'heater',rs:'boiler',fs:'fan',fsd:'ceilfan',kt:'ac'};
+function iconOf(d){if(META.icons&&META.icons[d.id]&&(ART[META.icons[d.id]]||REALN[META.icons[d.id]]))return META.icons[d.id];const n=dname(d)+' '+(d.name||'');for(const[r,k]of NAMEKEY)if(r.test(n))return k;return CATICON[d.category]||'dev'}
 /* product photos - the same images Smart Life shows, read once per device and cached */
 META.img=META.img||{};
 const STYLE=()=>LS('unplug_style')||'real';
-const REAL=new Set(['washer','fridge','oven','microwave','coffee','kettle','toaster','ac','led','ceiling','bulb','lamp','fan','heater','boiler','dish','plug','phone','charger','router','speaker','game','laptop','tv','remote','plant','sensor','camera','curtain','switch','strip','vacuum']);
-const realImg=k=>`<img class="real" src="real/${REAL.has(k)?k:'plug'}.png" alt="" loading="lazy" decoding="async">`;
+const REALN={"washer": "מכונת כביסה", "fridge": "מקרר", "oven": "תנור אפייה", "microwave": "מיקרוגל", "coffee": "מכונת קפה", "kettle": "קומקום", "toaster": "טוסטר", "ac": "מזגן", "led": "פס לד", "ceiling": "מנורת תקרה", "bulb": "נורה", "lamp": "מנורת שולחן", "fan": "מאוורר", "heater": "רדיאטור", "boiler": "דוד חשמל", "dish": "מדיח כלים", "plug": "שקע בקיר", "phone": "טלפון", "charger": "מטען USB", "router": "ראוטר", "speaker": "רמקול", "game": "קונסולה", "laptop": "מחשב נייד", "tv": "טלוויזיה", "remote": "שלט רחוק", "plant": "עציץ", "sensor": "חיישן תנועה", "camera": "מצלמת אבטחה", "curtain": "תריס חשמלי", "switch": "מפסק תאורה", "strip": "מפצל חשמל", "vacuum": "שואב רובוטי", "dryer": "מייבש כביסה", "stickvac": "שואב אבק", "fanheater": "מפזר חום", "water": "בר מים", "ceilfan": "מאוורר תקרה", "lock": "מנעול חכם", "doorsensor": "חיישן דלת וחלון", "purifier": "מטהר אוויר", "humidifier": "מכשיר אדים", "dehumid": "סופח לחות", "projector": "מקרן", "streamer": "סטרימר", "receiver": "רסיבר", "doorbell": "פעמון דלת", "smoke": "גלאי עשן", "leak": "חיישן נזילה", "thermo_h": "מד טמפ׳ ולחות", "gate": "שער חשמלי", "irrigation": "מערכת השקיה", "adapter": "מתאם שקע", "portac": "מזגן נייד", "hood": "קולט אדים", "cooktop": "כיריים", "toasteroven": "טוסטר אובן", "airfryer": "אייר פרייר", "urn": "מיחם", "blanket": "שמיכה חשמלית", "towerfan": "מאוורר מגדל", "soundbar": "סאונדבר", "screen": "מסך הקרנה", "garage": "דלת מוסך", "hub": "רכזת בית חכם", "blindsw": "מפסק תריס", "dimmer": "דימר", "thermostat": "תרמוסטט", "presence": "חיישן נוכחות", "gas": "גלאי גז", "valve": "ברז ראשי חשמלי", "intercom": "אינטרקום", "siren": "סירנה", "gardenlight": "תאורת גינה", "walllight": "תאורת קיר", "mop": "שואב שוטף", "petfeeder": "מאכיל חיות"};
+const REAL=new Set(Object.keys(REALN));
+const realImg=k=>`<img class="real" src="real/${REAL.has(k)?k:'plug'}.png?v=2" alt="" loading="lazy" decoding="async">`;
 const artFor=(k,st)=>st==='real'||st==='photo'?(REAL.has(k)?realImg(k):artSvg(k,'clay')):artSvg(k,st);
 const photoOf=d=>STYLE()==='photo'&&(!META.icons||META.icons[d.id]==null||META.icons[d.id]==='photo')&&META.img[d.id]?META.img[d.id]:'';
 const drawn=d=>artFor(iconOf(d),STYLE());
@@ -662,7 +667,7 @@ function openDevice(d,generic){
         <div class="sec-h"><h2>פרטים</h2></div>
         <div class="list">
           <button class="row row-btn" id="fav" role="switch" aria-checked="${!!META.fav[d.id]}"><span class="grow"><span class="t">מועדף</span><br><span class="s">${META.fav[d.id]?'מופיע ראשון בבית':'לא'}</span></span>${svg('star')}</button>
-          <button class="row row-btn" id="icn"><span class="grow"><span class="t">סמליל</span><br><span class="s">${photoOf(d)?'תמונת המוצר':esc(ART[iconOf(d)].n)}</span></span><span class="mini${photoOf(d)?' photo':''}">${devArt(d)}</span></button>
+          <button class="row row-btn" id="icn"><span class="grow"><span class="t">סמליל</span><br><span class="s">${photoOf(d)?'תמונת המוצר':esc(REALN[iconOf(d)]||(ART[iconOf(d)]||ART.dev).n)}</span></span><span class="mini${photoOf(d)?' photo':''}">${devArt(d)}</span></button>
           <button class="row row-btn" id="ren"><span class="grow"><span class="t">שם</span><br><span class="s">${esc(dname(d))}</span></span>${svg('edit')}</button>
           <button class="row row-btn" id="room"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(d)||'ללא')}</span></span>${svg('edit')}</button>
           <div class="row"><span class="grow"><span class="t">סוג</span><br><span class="s">${esc(cat)} (${esc(d.category)})</span></span></div>
@@ -959,7 +964,7 @@ function openBackup(){
 }
 function pickIcon(d,cb){
   const cur=photoOf(d)?'photo':iconOf(d);
-  sheet('סמליל ל'+esc(dname(d)),`<div class="icgrid" role="group" aria-label="בחירת סמליל">${META.img[d.id]?`<button data-ic2="photo" aria-pressed="${cur==='photo'}"><img src="${esc(META.img[d.id])}" alt="" style="width:52px;height:52px;object-fit:contain;border-radius:12px;background:#f4f6f9"><span>תמונת המוצר</span></button>`:''}${Object.entries(ART).map(([k,a])=>`<button data-ic2="${k}" aria-pressed="${k===cur}">${artFor(k,STYLE())}<span>${esc(a.n)}</span></button>`).join('')}</div>
+  sheet('סמליל ל'+esc(dname(d)),`<div class="icgrid" role="group" aria-label="בחירת סמליל">${META.img[d.id]?`<button data-ic2="photo" aria-pressed="${cur==='photo'}"><img src="${esc(META.img[d.id])}" alt="" style="width:52px;height:52px;object-fit:contain;border-radius:12px;background:#f4f6f9"><span>תמונת המוצר</span></button>`:''}${(STYLE()==='real'||STYLE()==='photo'?Object.entries(REALN):Object.entries(ART).map(([k,a])=>[k,a.n])).map(([k,n])=>`<button data-ic2="${k}" aria-pressed="${k===cur}">${artFor(k,STYLE())}<span>${esc(n)}</span></button>`).join('')}</div>
    ${META.icons&&META.icons[d.id]?'<button class="btn wide" id="icA">חזרה לבחירה אוטומטית</button>':''}`,(el,close)=>{
     const set=k=>{META.icons=META.icons||{};k&&k!=='photo'?META.icons[d.id]=k:delete META.icons[d.id];saveMeta();close();cb&&cb()};
     el.querySelectorAll('[data-ic2]').forEach(b=>b.onclick=()=>set(b.dataset.ic2));
