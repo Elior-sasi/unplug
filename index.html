@@ -438,6 +438,15 @@ header.top{margin:0 0 6px!important;padding:6px 2px 0!important}
 .sheet .list,.sheet .ro{background:#2c2c2e!important}
 nav.bar{background:rgba(28,28,30,.88)!important;border:0;box-shadow:0 0 0 .5px #ffffff1f,0 10px 30px #000c}
 nav.bar:before{background:#ffffff14;border:0;box-shadow:none}
+/* orange back as the accent */
+.chip[aria-pressed="true"]{color:var(--gold)!important;position:relative}
+.chip[aria-pressed="true"]::after{display:block!important;content:"";position:absolute;inset:auto 0 2px;height:4px;border-radius:2px;background:var(--gold)}
+.homeBtn svg{color:var(--gold)!important}
+.card.is-on,.roomSec .card.is-on{background:linear-gradient(160deg,#3d2512 0%,#1c1c1e 80%)!important;box-shadow:inset 0 0 0 1.5px #ff9a3d66,0 10px 26px -14px #ff9a3d88!important}
+.card.is-on .nm{color:#fff}
+.grp.is-on{background:linear-gradient(160deg,#3d2512 0%,#1c1c1e 80%);box-shadow:inset 0 0 0 1.5px #ff9a3d66}
+#offBtn:not(:disabled){color:var(--gold)}
+nav.bar:before{background:#ff9a3d24!important;box-shadow:inset 0 0 0 1px #ff9a3d44!important}
 </style>
 </head>
 <body>
