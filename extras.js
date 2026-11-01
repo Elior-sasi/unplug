@@ -59,7 +59,7 @@ function quickActions(d){
     <div class="list">
       <button class="row row-btn" id="qaR"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(d)||'בלי חדר')}</span></span>${svg('chev')}</button>
       <button class="row row-btn" id="qaF" role="switch" aria-checked="${!!META.fav[d.id]}"><span class="grow t">${META.fav[d.id]?'הסרה ממועדפים':'הוספה למועדפים'}</span>${svg('star')}</button>
-      <button class="row row-btn" id="qaO"><span class="grow t">סידור המכשירים</span>${svg('list')}</button>
+      <button class="row row-btn" id="qaO"><span class="grow t">עריכת המסך</span>${svg('list')}</button>
       <button class="row row-btn" id="qaD"><span class="grow t">כל ההגדרות של המכשיר</span>${svg('chev')}</button>
     </div>`,(el,close)=>{
     el.querySelector('#qaP')&&(el.querySelector('#qaP').onclick=()=>{close();if(!d.online)return toast('המכשיר מנותק');send(d,[{code:pc,value:!isOn(d)}])});
@@ -82,18 +82,28 @@ function bindLongPress(v){
 }
 
 /* ---------- reorder (drag, plus arrow buttons for VoiceOver) ---------- */
-function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);render();if(on)toast('גרור מכשירים כדי לסדר. "סיום" כשגמרת')}
+function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);render();if(on)toast('גרור כדי להזיז, הפינה משנה גודל')}
 function saveOrderFrom(grid){[...grid.querySelectorAll('.card')].forEach((c,i)=>META.order[c.dataset.id]=i+(+grid.dataset.base||0));saveMeta()}
 function bindReorder(v){
   if(!REORDER)return;
-  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="status"><span>מצב סידור - גרור כרטיס למקום החדש</span><button class="btn pri" id="reDone">סיום</button></div>`);
+  META.size=META.size||{};META.hidden=META.hidden||{};
+  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="status"><span>עריכת המסך - גרור, שנה גודל או הסתר</span><button class="btn pri" id="reDone">סיום</button></div>`);
+  v.insertAdjacentHTML('beforeend',`<button class="btn wide addCard" id="addCard">${svg('plus')}הוספת כרטיס${Object.keys(META.hidden).length?' ('+Object.keys(META.hidden).length+' מוסתרים)':''}</button>`);
   v.querySelector('#reDone').onclick=()=>setReorder(false);
+  v.querySelector('#addCard').onclick=()=>{const hs=DEVS.filter(d=>META.hidden[d.id]);if(!hs.length)return toast('כל המכשירים כבר מוצגים');
+    sheet('הוספת כרטיס',`<div class="list">${hs.map(d=>`<button class="row row-btn" data-unh="${esc(d.id)}"><span class="mini">${devArt(d)}</span><span class="grow t">${esc(dname(d))}</span>${svg('plus')}</button>`).join('')}</div>`,(el,cl)=>el.querySelectorAll('[data-unh]').forEach(b=>b.onclick=()=>{delete META.hidden[b.dataset.unh];saveMeta();cl();render()}))};
   v.querySelectorAll('.grid').forEach((grid,gi)=>{grid.dataset.base=gi*100;
     grid.querySelectorAll('.card').forEach(c=>{
+      const id=c.dataset.id,nm=esc(c.querySelector('.nm').textContent),wide=META.size[id]==='w';
+      if(META.hidden[id])c.classList.add('hiddenCard');
+      c.insertAdjacentHTML('beforeend',`<button class="edCorner edDel" data-hide aria-label="${META.hidden[id]?'הצגת':'הסתרת'} ${nm}">${svg(META.hidden[id]?'plus':'close',2.6)}</button><button class="edCorner edSize" data-size aria-label="${wide?'כרטיס מרובע':'כרטיס מלבני'} - ${nm}">${svg(wide?'close':'plus',2.6)}</button>`);
+      c.querySelector('[data-hide]').onclick=e=>{e.stopPropagation();META.hidden[id]?delete META.hidden[id]:META.hidden[id]=true;saveMeta();render()};
+      c.querySelector('[data-size]').onclick=e=>{e.stopPropagation();wide?delete META.size[id]:META.size[id]='w';saveMeta();render()};
+      c.querySelector('[data-size]').innerHTML=wide?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
       c.insertAdjacentHTML('beforeend',`<div class="reBtns"><button data-mv="-1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} קדימה">${svg('chev',2.4)}</button><button data-mv="1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} אחורה">${svg('chev',2.4)}</button></div>`);
       c.querySelectorAll('[data-mv]').forEach(b=>b.onclick=e=>{e.stopPropagation();const sib=+b.dataset.mv<0?c.previousElementSibling:c.nextElementSibling;if(!sib)return;+b.dataset.mv<0?grid.insertBefore(c,sib):grid.insertBefore(sib,c);saveOrderFrom(grid);b.focus()});
       const o=c.querySelector('.open');
-      o.addEventListener('pointerdown',e=>{e.preventDefault();o.setPointerCapture(e.pointerId);c.classList.add('dragging');
+      o.addEventListener('pointerdown',e=>{if(e.target.closest('.edCorner,.reBtns'))return;e.preventDefault();o.setPointerCapture(e.pointerId);c.classList.add('dragging');
         const move=ev=>{const el=document.elementFromPoint(ev.clientX,ev.clientY),over=el&&el.closest('.card');
           if(over&&over!==c&&over.parentElement===grid){const r=over.getBoundingClientRect(),after=ev.clientX<r.left+r.width/2===(getComputedStyle(grid).direction==='rtl');grid.insertBefore(c,after?over.nextElementSibling:over)}};
         const up=()=>{c.classList.remove('dragging');o.removeEventListener('pointermove',move);o.removeEventListener('pointerup',up);o.removeEventListener('pointercancel',up);saveOrderFrom(grid)};

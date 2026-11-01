@@ -366,6 +366,28 @@ body.scrolled header.top::before{background:rgba(12,15,22,.94);-webkit-mask:none
 .roomSec .roomOff{width:40px;height:40px}
 .roomSec .roomT::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--gold);align-self:center}
 .card.wide .fav{left:auto;right:18px;top:18px;bottom:auto}
+.grid{grid-template-columns:repeat(2,1fr)}
+.card,.roomSec .card{min-height:0;aspect-ratio:1/1;padding:12px;border-radius:26px}
+.card.wide{grid-column:span 2;aspect-ratio:auto;min-height:0;height:calc((min(100vw,640px) - 32px - 24px - 12px)/2)}
+.card .ic,.card .ic.photo,.card .ic:has(.art),.card .ic:has(img.real){width:52px;height:52px}
+.card.wide .ic,.card.wide .ic.photo,.card.wide .ic:has(.art),.card.wide .ic:has(img.real){position:absolute;left:auto;right:auto;inset-inline-end:16px;top:50%;bottom:auto;transform:translateY(-50%);width:104px;height:84px;margin:0}
+.card.wide .nm,.card.wide .st{max-width:58%}
+.card .nm{font-size:1rem;margin-top:auto}.card .st{font-size:.85rem}
+.card .pw{top:6px;left:4px}
+.card.hiddenCard{opacity:.4}
+.edCorner{position:absolute;z-index:4;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:0;box-shadow:0 2px 8px #0008}
+.edCorner svg{width:16px;height:16px}
+.edDel{top:-8px;right:-8px;background:#3a3f4b;color:#fff}
+.edSize{bottom:-8px;left:-8px;background:#e9edf3;color:#111}
+.reordering .card .reBtns{top:10px;left:10px;bottom:auto;transform:none}
+.reordering .card .reBtns button{width:36px;height:36px}
+.addCard{margin-top:14px}
+/* no scroll-driven header changes - they made the page jump */
+header.top{position:static!important;margin:0 0 12px!important;padding:10px 4px 0!important}
+header.top::before{display:none!important}
+body.scrolled header.top h1{font-size:2.15rem}
+body.scrolled .hello,body.scrolled .pills{display:flex}
+.reBar{top:calc(env(safe-area-inset-top) + 8px)}
 </style>
 </head>
 <body>
@@ -581,7 +603,7 @@ function viewDevices(v){
   if(ROOM!=='all'&&ROOM!=='fav'&&ROOM!=='off'&&!rooms.includes(ROOM))ROOM='all';
   const hasFav=DEVS.some(d=>META.fav[d.id]),offN=DEVS.filter(d=>!d.online).length,onDevs=DEVS.filter(d=>d.online&&isOn(d));
   const q=Q.trim().toLowerCase();
-  let list=DEVS.filter(d=>ROOM==='all'||(ROOM==='fav'?META.fav[d.id]:ROOM==='off'?!d.online:roomOf(d)===ROOM));
+  let list=DEVS.filter(d=>(REORDER||!(META.hidden||{})[d.id])&&(ROOM==='all'||(ROOM==='fav'?META.fav[d.id]:ROOM==='off'?!d.online:roomOf(d)===ROOM)));
   if(q)list=list.filter(d=>(dname(d)+' '+catOf(d)[0]+' '+roomOf(d)).toLowerCase().includes(q));
   list=list.slice().sort((x,y)=>(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0)||(META.order?.[x.id]??999)-(META.order?.[y.id]??999));
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
@@ -589,7 +611,7 @@ function viewDevices(v){
   v.innerHTML=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
       (DEVS.length?`<div class="quick"><button class="btn" id="allOff" ${onDevs.length?'':'disabled'}>${svg('power')}לכבות הכול${onDevs.length?` (${onDevs.length})`:''}</button>${SCENES.slice(0,1).map(sc=>`<button class="btn pri" id="sc0">${svg('play')}${esc(sc.name)}</button>`).join('')}</div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
-   `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="reOn" aria-label="סידור המכשירים">${svg('list',2.2)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים">${svg('edit',2)}</button></div>`+
+   `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="reOn" aria-label="עריכת המסך - גודל, סדר והסתרה">${svg('edit',2.2)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים">${svg('edit',2)}</button></div>`+
    (list.length?(ROOM==='all'&&!q&&rooms.length?groupedRooms(list,rooms):`<div class="grid" role="list">${list.map(card).join('')}</div>`):`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
   $('roomAdd').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=META.home;saveMeta();manageRooms(n)};
@@ -618,7 +640,7 @@ function groupedRooms(list,rooms){
 function card(d){
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
   const c=(ART[iconOf(d)]||ART.dev).p.t,wide=AC.has(d.category)||iconOf(d)==='ac'&&!pc;
-  return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${AC.has(d.category)?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
+  return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
    <button class="open" aria-label="${nm}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
    <div class="ic${photoOf(d)?' photo':''}">${devArt(d)}</div>
    ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${nm} פועל" ${d.online?'':'aria-disabled="true"'}></button>`:''}
@@ -1089,7 +1111,7 @@ if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConne
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active'))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
 </script>
-<script src="extras.js?v=2"></script>
+<script src="extras.js?v=3"></script>
 <script>render();</script>
 </body>
 </html>
