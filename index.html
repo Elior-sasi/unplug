@@ -792,7 +792,7 @@ function render(){
 function roomOf(d){return META.rooms[d.id]||''}
 function watts(d){const f=readOf(d,'cur_power');return d.online&&d.status.cur_power!=null?(+d.status.cur_power)/10**(+(f&&f.values&&f.values.scale)||0):0}
 function viewDevices(v){
-  const DEVS=window.DEVS_ALL.filter(inHome).concat(META.ember===false?[]:[EMBER].filter(inHome)).concat(META.router===false?[]:[ROUTER].filter(inHome));
+  const DEVS=window.DEVS_ALL.filter(inHome).concat(META.ember===false?[]:[EMBER].filter(inHome)).concat(META.router===false?[]:[ROUTER].filter(inHome)).concat(typeof GTV!=='undefined'&&META.tv?[GTV].filter(inHome):[]);
   const rooms=roomsOf(META.home);
   if(ROOM!=='all'&&ROOM!=='fav'&&ROOM!=='off'&&!rooms.includes(ROOM))ROOM='all';
   const hasFav=DEVS.some(d=>META.fav[d.id]),offN=DEVS.filter(d=>!d.online).length,onDevs=DEVS.filter(d=>d.online&&isOn(d));
@@ -824,6 +824,7 @@ function viewDevices(v){
   $('allOff')&&($('allOff').onclick=async()=>{if(!confirm(`לכבות ${onDevs.length} מכשירים?`))return;for(const d of onDevs)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')});
   $('sc0')&&($('sc0').onclick=e=>runScene(SCENES[0],e.currentTarget));
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
+    if(d&&d.id==='gtv'){c.querySelector('.open').onclick=()=>openTV();const p=c.querySelector('.pw');if(p)p.onclick=()=>tvKey('power');return}
     if(d&&d.id==='router'){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openRouter'}):openRouter();return}
     if(d&&d.virtual){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openHeater'}):openEmber();const pb=c.querySelector('[data-ember]');if(pb)pb.onclick=()=>{LSset('unplug_ember_last',JSON.stringify({t:'הדלקה/כיבוי',at:hm(new Date())}));emberGo('toggle')};return}
     c.querySelector('.open').onclick=()=>openDevice(d);
@@ -884,6 +885,12 @@ function openEmber(){
   });
 }
 function card(d){
+  if(d.id==='gtv'){const nm=esc(dname(d));
+    return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="gtv">
+     <button class="open" aria-label="${nm}, שלט לטלוויזיה${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
+     <div class="ic">${devArt(d)}</div>
+     <button class="pw" aria-label="${nm}: הדלקה או כיבוי">${svg('power',2.6)}</button>
+     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}שלט</div></div>`}
   if(d.id==='router'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="router">
      <button class="open" aria-label="${nm}, ראוטר${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
@@ -1344,7 +1351,9 @@ function openAdd(){
   sheet('הוספת מכשיר',`<p>את הצימוד עצמו עושים פעם אחת ב-Smart Life, כי אייפון לא מאפשר לאפליקציית רשת להעביר למכשיר את סיסמת ה-WiFi.</p>
     <button class="btn pri wide" id="aO">${svg('plus')}פתיחת Smart Life להוספה</button>
     <ol><li>ב-Smart Life לחץ <b>+</b> למעלה ← <b>הוספת מכשיר</b></li><li>בחר את המכשיר, או חכה שיזוהה לבד</li><li>הזן את סיסמת ה-WiFi של הבית וסיים</li><li>חזור לכאן - HomeOn יחפש את המכשיר החדש לבד</li></ol>
-    <button class="btn wide" id="aR">${svg('ref')}כבר צימדתי, רענן</button>`,(el,close)=>{
+    <button class="btn wide" id="aR">${svg('ref')}כבר צימדתי, רענן</button>
+    ${IN_APP&&!META.tv?`<div class="sec-h"><h2>לא מ-Smart Life</h2></div><button class="btn wide" id="aTV">${svg('plus')}Google TV</button>`:''}`,(el,close)=>{
+    el.querySelector('#aTV')&&(el.querySelector('#aTV').onclick=()=>{close();tvSetup()});
     const check=async()=>{await loadDevices();const n=DEVS.filter(d=>!before.has(d.id));
       if(n.length){close();TAB='devices';render();toast(n.length===1?`נוסף: ${dname(n[0])}`:`נוספו ${n.length} מכשירים`)}else toast('עוד לא רואה מכשיר חדש')};
     let away=false;const onVis=()=>{if(document.visibilityState==='hidden')away=true;else if(away&&document.body.contains(el)){away=false;check()}};
@@ -1435,6 +1444,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 <script src="live.js?v=1"></script>
 <script src="gbackup.js?v=1"></script>
 <script src="home.js?v=1"></script>
+<script src="tv.js?v=1"></script>
 <script>render();</script>
 </body>
 </html>
