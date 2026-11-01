@@ -447,6 +447,19 @@ nav.bar:before{background:#ffffff14;border:0;box-shadow:none}
 .grp.is-on{background:linear-gradient(160deg,#3d2512 0%,#1c1c1e 80%);box-shadow:inset 0 0 0 1.5px #ff9a3d66}
 #offBtn:not(:disabled){color:var(--gold)}
 nav.bar:before{background:#ff9a3d24!important;box-shadow:inset 0 0 0 1px #ff9a3d44!important}
+
+/* Device settings: the same quiet cards as the new home screen. */
+.device-settings{border-radius:22px;overflow:hidden}
+.device-settings .ctl{padding:18px 16px;gap:14px}
+.device-settings .ctl-h{flex-wrap:wrap}
+.device-settings .ctl-h .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.device-settings .ctl-h .sw{flex:none}
+.device-settings .step{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;gap:8px}
+.device-settings .step button{width:48px;height:48px;font-size:1.5rem;background:#3a3a3c}
+.device-settings .step input[type=range]{min-width:0;width:100%;margin:0}
+.device-options{display:grid;grid-template-columns:repeat(var(--options),minmax(0,1fr));gap:4px;border-radius:16px}
+.device-options button{min-width:0;min-height:48px;padding:10px 4px;border-radius:12px;overflow-wrap:anywhere;line-height:1.35}
+@media(max-width:380px){.device-options{grid-template-columns:repeat(auto-fit,minmax(84px,1fr))}}
 </style>
 </head>
 <body>
@@ -753,7 +766,7 @@ function openDevice(d,generic){
         ${pc?`<button class="big-pw" id="bigPw" role="switch" aria-checked="${on}" aria-label="${esc(dname(d))} פועל"${photoOf(d)?' data-photo="1"':''}>${devArt(d,1.5)}</button><div class="state-line" aria-hidden="true">${on?'פועל':'כבוי'}</div>`:''}
         ${ros.length?`<div class="readouts">${ros.map(f=>`<div class="ro"><div class="k">${esc(nameOf(f))}</div><div class="n">${esc(roVal(d,f))}</div></div>`).join('')}</div>`:''}
         ${colF(d)?colHtml(d):''}
-        ${ctrls.length?`<div class="list" id="ctrls">${ctrls.map(f=>ctrlHtml(d,f)).join('')}</div>`:''}
+        ${ctrls.length?`<div class="sec-h"><h2>הגדרות המכשיר</h2></div><div class="list device-settings" id="ctrls">${ctrls.map(f=>ctrlHtml(d,f)).join('')}</div>`:''}
         ${pc?`<div class="sec-h"><h2>טיימר</h2></div><div class="list" id="tmr"></div>`:''}
         <div class="sec-h"><h2>תזמונים</h2><button class="btn" id="addS">${svg('plus')}הוספה</button></div>
         <div class="list">${mySched.length?mySched.map(s=>schedRow(s,false)).join(''):`<div class="row"><span class="s">אין תזמונים למכשיר הזה</span></div>`}</div>
@@ -802,7 +815,7 @@ function ctrlHtml(d,f){
   if(f.type==='Boolean')return `<div class="ctl"><div class="ctl-h"><span class="t" id="${id}_l">${nm}</span><button class="sw" id="${id}" role="switch" aria-checked="${v===true}" aria-labelledby="${id}_l"></button></div></div>`;
   if(f.type==='Enum'){const r=(f.values&&f.values.range)||[];
     if(r.length>6)return `<div class="ctl"><div class="field"><label for="${id}">${nm}</label><select id="${id}">${r.map(o=>`<option value="${esc(o)}"${o===v?' selected':''}>${esc(vname(o))}</option>`).join('')}</select></div></div>`;
-    return `<div class="ctl"><div class="ctl-h"><span class="t" id="${id}_l">${nm}</span></div><div class="seg" role="group" aria-labelledby="${id}_l">${r.map(o=>`<button data-c="${esc(f.code)}" data-v="${esc(o)}" aria-pressed="${o===v}">${esc(vname(o))}</button>`).join('')}</div></div>`}
+    return `<div class="ctl"><div class="ctl-h"><span class="t" id="${id}_l">${nm}</span></div><div class="seg device-options" style="--options:${r.length}" role="group" aria-labelledby="${id}_l">${r.map(o=>`<button data-c="${esc(f.code)}" data-v="${esc(o)}" aria-pressed="${o===v}">${esc(vname(o))}</button>`).join('')}</div></div>`}
   const x=f.values||{},sc=+x.scale||0,mn=+x.min||0,mx=+x.max||100,st=+x.step||1;
   const cur=v??mn;
   return `<div class="ctl"><div class="ctl-h"><label class="t" for="${id}">${nm}</label><span class="v" id="${id}_v" aria-hidden="true">${esc(fmtCtl(f,cur))}</span></div>
