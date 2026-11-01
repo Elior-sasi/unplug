@@ -397,6 +397,7 @@ body.scrolled .hello,body.scrolled .pills{display:flex}
 .card .pw,.grp .pw{top:8px;left:8px;width:44px;height:44px;border:0!important;box-shadow:none!important;background:radial-gradient(circle,#ffffff17 0 16px,transparent 16.5px)!important}
 .card .pw svg,.grp .pw svg{width:16px!important;height:16px!important}
 .card .pw[aria-checked="true"],.grp .pw[aria-checked="true"]{background:radial-gradient(circle,var(--gold) 0 16px,transparent 16.5px)!important;filter:drop-shadow(0 3px 8px #ff9a3d55)}
+.grid{grid-auto-flow:row dense}
 </style>
 </head>
 <body>
@@ -622,7 +623,7 @@ function viewDevices(v){
       (DEVS.length?`<div class="quick"><button class="btn" id="allOff" ${onDevs.length?'':'disabled'}>${svg('power')}לכבות הכול${onDevs.length?` (${onDevs.length})`:''}</button>${SCENES.slice(0,1).map(sc=>`<button class="btn pri" id="sc0">${svg('play')}${esc(sc.name)}</button>`).join('')}</div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
    `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="reOn" aria-label="עריכת המסך - גודל, סדר והסתרה">${svg('edit',2.2)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים">${svg('edit',2)}</button></div>`+
-   (list.length?(ROOM==='all'&&!q&&rooms.length?groupedRooms(list,rooms):`<div class="grid" role="list">${list.map(card).join('')}</div>`):`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
+   (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
   $('roomAdd').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=META.home;saveMeta();manageRooms(n)};
   $('roomEdit').onclick=()=>manageRooms();
