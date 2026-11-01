@@ -795,13 +795,14 @@ function viewDevices(v){
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
   const chips=[['all','הכול'],...(hasFav?[['fav','מועדפים']]:[]),...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
   v.innerHTML=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
-      (typeof cmdBarHtml==='function'?cmdBarHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
+      (typeof cmdBarHtml==='function'?cmdBarHtml():'')+(typeof liveStripHtml==='function'?liveStripHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
    `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים"><span style="display:inline-grid;transform:rotate(-90deg)">${svg('chev',2.4)}</span></button></div>`+
    (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
   $('roomAdd').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=META.home;saveMeta();manageRooms(n)};
   $('roomEdit').onclick=()=>manageRooms();
+  if(typeof bindLive==='function')bindLive(v);
   v.querySelectorAll('[data-room]').forEach(b=>{b.onclick=()=>{if(b._lp){b._lp=0;return}ROOM=b.dataset.room;render()};
     const r=b.dataset.room;if(['all','fav','off'].includes(r))return;b.setAttribute('aria-description','לחיצה ארוכה לשינוי שם');let t;
     b.addEventListener('pointerdown',()=>{t=setTimeout(()=>{b._lp=1;try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}renameRoom(r)},500)});
@@ -1165,6 +1166,7 @@ function viewSettings(v){
     <div class="row"><span class="grow"><span class="t">התראות לטלפון</span><br><span class="s" id="pushS">${pushStatus()}</span></span>${LS('unplug_push')?`<button class="btn" id="pushT">בדיקה</button>`:`<button class="btn pri" id="pushOn">${svg('bell')}הפעלה</button>`}</div>
   </div>
   <div class="sec-h"><h2>קיצורים</h2></div><div class="list">
+    <button class="row row-btn" id="wdg"><span class="grow"><span class="t">ווידג׳ט למסך הבית</span><br><span class="s">הדלקה וכיבוי בלי לפתוח את האפליקציה</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="siri"><span class="grow"><span class="t">Siri וקיצורי דרך</span><br><span class="s">"היי סירי, תדליק את הטוסטר"</span></span>${svg('chev')}</button>
   </div>
   <div class="sec-h"><h2>מכשירים</h2></div><div class="list">
@@ -1176,7 +1178,7 @@ function viewSettings(v){
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
   v.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{LSset('unplug_ts',b.dataset.ts);applyPrefs();render()});
   {const g=$('glS'),gv=$('glV'),sh=()=>{const t=+g.value<25?'שקוף מאוד':+g.value<70?'רגיל':'כהה';gv.textContent=t;g.setAttribute('aria-valuetext',t)};sh();g.oninput=()=>{LSset('unplug_glass',g.value);applyPrefs();sh()}}
-  $('cn')&&($('cn').onclick=openConnect);$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('shb').onclick=()=>openShabbat();$('gdr').onclick=()=>openGuard();$('prs').onclick=()=>openPresence();$('grp').onclick=()=>META.groups&&META.groups.length?sheet('קבוצות',`<div class="list">${META.groups.map(g=>`<button class="row row-btn" data-eg="${g.id}"><span class="grow t">${esc(g.name)}</span>${svg('chev')}</button>`).join('')}</div><button class="btn wide" id="ngr">${svg('plus')}קבוצה חדשה</button>`,(el,cl)=>{el.querySelectorAll('[data-eg]').forEach(b=>b.onclick=()=>editGroup(META.groups.find(g=>g.id===b.dataset.eg)));el.querySelector('#ngr').onclick=()=>editGroup(null)}):editGroup(null);$('bk').onclick=openBackup;$('siri').onclick=openSiri;
+  $('cn')&&($('cn').onclick=openConnect);$('wdg').onclick=()=>openWidget();$('ad').onclick=openAdd;$('rr').onclick=manageRooms;$('lg').onclick=openLog;$('shb').onclick=()=>openShabbat();$('gdr').onclick=()=>openGuard();$('prs').onclick=()=>openPresence();$('grp').onclick=()=>META.groups&&META.groups.length?sheet('קבוצות',`<div class="list">${META.groups.map(g=>`<button class="row row-btn" data-eg="${g.id}"><span class="grow t">${esc(g.name)}</span>${svg('chev')}</button>`).join('')}</div><button class="btn wide" id="ngr">${svg('plus')}קבוצה חדשה</button>`,(el,cl)=>{el.querySelectorAll('[data-eg]').forEach(b=>b.onclick=()=>editGroup(META.groups.find(g=>g.id===b.dataset.eg)));el.querySelector('#ngr').onclick=()=>editGroup(null)}):editGroup(null);$('bk').onclick=openBackup;$('siri').onclick=openSiri;
   $('pushOn')&&($('pushOn').onclick=enablePush);$('pushT')&&($('pushT').onclick=async()=>{try{await api('/push/at',{at:Date.now()/1000+3,title:'HomeOn',body:'ככה ייראו ההתראות'});toast('ההתראה תגיע תוך דקה')}catch(e){toast(e.message)}});
   $('rc')&&($('rc').onclick=async()=>{try{const j=await api('/recover/create',{});sheet('קוד שחזור',`<p>שמור את הקוד. איתו מתחברים מחדש בכל מכשיר, וגם ב-Breeze.</p><div class="ro" style="text-align:center"><div class="n" style="direction:ltr;letter-spacing:.08em;font-size:1.8rem;user-select:all">${esc(j.code)}</div></div><button class="btn wide" id="cp">העתקה</button>`,el=>el.querySelector('#cp').onclick=()=>{navigator.clipboard?.writeText(j.code).then(()=>toast('הועתק'),()=>{})})}catch(e){toast(e.message)}});
   $('lo')&&($('lo').onclick=()=>{if(!confirm('להתנתק רק מהאפליקציה הזו? Breeze ושאר האפליקציות ימשיכו לעבוד.'))return;setKey('');DEVS=[];LSset('unplug_devs',null);render()});
@@ -1375,6 +1377,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 <script src="motion.js?v=3"></script>
 <script src="washer.js?v=1"></script>
 <script src="acplug.js?v=1"></script>
+<script src="live.js?v=1"></script>
 <script>render();</script>
 </body>
 </html>
