@@ -356,6 +356,7 @@ header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,
 .big-pw:has(img.real){background:none!important;border:0!important;box-shadow:none!important;padding:0}
 .big-pw[aria-checked="true"]:has(img.real){filter:drop-shadow(0 0 30px #ff9a3d77)}
 body.scrolled header.top::before{background:rgba(12,15,22,.94);-webkit-mask:none;mask:none;inset:0}
+.breeze{background:#000}.breeze iframe{position:absolute;inset:0;width:100%;height:100%}
 </style>
 </head>
 <body>
@@ -633,11 +634,11 @@ function openBreeze(d){
   if(!LS('kor_key'))LSset('kor_key',CFG.key);
   LSset('kor_dev',d.id);
   const w=document.createElement('div');w.className='breeze';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label',dname(d));
-  w.innerHTML=`<div class="breeze-bar"><button class="bk" id="bzB">${svg('chev')}חזרה</button><span class="nm">${esc(dname(d))}</span><button class="icbtn" id="bzM" aria-label="תזמונים, חדר ופרטים">${svg('clock')}</button></div><iframe src="/kor/?in=unplug" title="Breeze - שליטה במזגן" allow="clipboard-write"></iframe>`;
+  w.innerHTML=`<iframe src="/kor/?in=unplug" title="Breeze - שליטה ב${esc(dname(d))}" allow="clipboard-write"></iframe>`;
   const close=()=>{w.remove();document.querySelector('.app').removeAttribute('aria-hidden');refreshOne(d.id);loadSched()};
-  w.querySelector('#bzB').onclick=close;w.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
-  w.querySelector('#bzM').onclick=()=>{close();openDevice(d,true)};
-  document.body.append(w);document.querySelector('.app').setAttribute('aria-hidden','true');w.querySelector('#bzB').focus();
+  const onMsg=e=>{if(e.data==='unplug-close'){removeEventListener('message',onMsg);close()}};addEventListener('message',onMsg);
+  w.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+  document.body.append(w);document.querySelector('.app').setAttribute('aria-hidden','true');w.querySelector('iframe').focus();
 }
 /* ---------- device sheet ---------- */
 let OPEN=null;
