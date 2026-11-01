@@ -62,7 +62,7 @@ function openWasher(d){
     function draw(){const s=wNow(d),info=wInfo(d),pc=powerCode(d);
       const big=s.running?(s.left!=null?`<div class="n" style="font-size:2.6rem;font-weight:700">${hm(new Date(Date.now()+s.left*60e3))}</div><div class="s">מסתיימת בערך · עוד ${s.left} דק׳</div>`:`<div class="n" style="font-size:2rem;font-weight:700">עובדת</div>`)
         :s.end&&Date.now()-s.end<4*3600e3?`<div class="n" style="font-size:2rem;font-weight:700">סיימה ב-${hm(new Date(s.end))}</div><div class="s">${Date.now()-s.end<30*60e3?'אפשר לפרוק':'הכביסה מחכה'}</div>`
-        :`<div class="n" style="font-size:2rem;font-weight:700">${s.on?'מוכנה':'השקע כבוי'}</div><div class="s">${s.on?'מתחילים במכונה, ו-Unplug יזהה לבד':'צריך להדליק את השקע כדי שהמכונה תעבוד'}</div>`;
+        :`<div class="n" style="font-size:2rem;font-weight:700">${s.on?'מוכנה':'השקע כבוי'}</div><div class="s">${s.on?'מתחילים במכונה, ו-Smartly יזהה לבד':'צריך להדליק את השקע כדי שהמכונה תעבוד'}</div>`;
       const runs=(info.runs||[]).slice(-4).reverse();
       body.innerHTML=`<div class="big-pw" aria-hidden="true" style="pointer-events:none">${devArt(d,1.5)}</div>
         <div role="status" style="text-align:center">${big}${s.running&&s.phase?`<div class="s" style="margin-top:4px">${esc(s.phase)} · ${Math.round(s.w)} וואט</div>`:''}</div>
@@ -78,7 +78,7 @@ function openWasher(d){
           ${LS('unplug_push')?'':`<div class="row"><span class="s">צריך להפעיל התראות לטלפון בהגדרות.</span></div>`}</div>
         ${runs.length?`<div class="sec-h"><h2>כביסות אחרונות</h2></div><div class="list">${runs.map(r=>`<div class="row"><span class="grow"><span class="t">${esc(wProg(r.p)[1])}</span><br><span class="s">${new Date(r.at).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})} · ${r.m} דק׳</span></span></div>`).join('')}</div>`:''}
         <div class="list"><button class="row row-btn" id="wGen"><span class="grow"><span class="t">הגדרות השקע</span><br><span class="s">טיימר, תזמונים, שם, חדר וסמליל</span></span>${svg('chev')}</button></div>
-        <p class="s" style="font-size:.9rem">אל תכבה את השקע באמצע חימום או סחיטה. Unplug ישאל לפני כיבוי כשהמכונה עובדת.</p>`;
+        <p class="s" style="font-size:.9rem">אל תכבה את השקע באמצע חימום או סחיטה. Smartly ישאל לפני כיבוי כשהמכונה עובדת.</p>`;
       body.querySelectorAll('[data-wp]').forEach(b=>b.onclick=()=>{const i=wInfo(d);i.prog=b.dataset.wp;wSave(d,i);draw();render();wEnsureRule(d,i)});
       const on=body.querySelector('#wOn');if(on)on.onclick=()=>send(d,[{code:pc,value:true}]);
       const al=body.querySelector('#wAl');if(al)al.onclick=()=>{const i=wInfo(d);i.alerts=i.alerts===false;wSave(d,i);draw();wEnsureRule(d,i)};

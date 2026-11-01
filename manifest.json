@@ -1,22 +1,22 @@
 {
-  "name": "Unplug",
-  "short_name": "Unplug",
+  "name": "Smartly",
+  "short_name": "Smartly",
   "lang": "he",
   "dir": "rtl",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0a0f14",
-  "theme_color": "#0a0f14",
+  "background_color": "#0d1018",
+  "theme_color": "#0d1018",
   "icons": [
     {
-      "src": "apple-touch-icon.png?v=3",
+      "src": "apple-touch-icon.png?v=4",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon.png?v=3",
+      "src": "icon.png?v=4",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
