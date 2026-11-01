@@ -1309,9 +1309,19 @@ function openHomes(){
 }
 function openAdd(){
   if(META.ember===false&&confirm('להחזיר את הדוד (Ember) ל-HomeOn?')){delete META.ember;saveMeta();render();return}
-  sheet('הוספת מכשיר',`<p>אייפון לא מאפשר לאפליקציית רשת להעביר למכשיר את סיסמת ה-WiFi, אז את הצימוד עצמו עושים פעם אחת ב-Smart Life:</p>
-    <ol><li>פתח את Smart Life ולחץ <b>+</b> למעלה</li><li><b>הוספת מכשיר</b> ובחר את המכשיר, או חכה שיזוהה לבד</li><li>הזן את סיסמת ה-WiFi של הבית וסיים</li><li>חזור לכאן ולחץ <b>רענון</b> - המכשיר יופיע</li></ol>
-    <button class="btn pri wide" id="aR">${svg('ref')}כבר צימדתי, רענן</button>`,(el,close)=>el.querySelector('#aR').onclick=()=>{close();TAB='devices';loadDevices()});
+  const before=new Set(DEVS.map(d=>d.id));
+  sheet('הוספת מכשיר',`<p>את הצימוד עצמו עושים פעם אחת ב-Smart Life, כי אייפון לא מאפשר לאפליקציית רשת להעביר למכשיר את סיסמת ה-WiFi.</p>
+    <button class="btn pri wide" id="aO">${svg('plus')}פתיחת Smart Life להוספה</button>
+    <ol><li>ב-Smart Life לחץ <b>+</b> למעלה ← <b>הוספת מכשיר</b></li><li>בחר את המכשיר, או חכה שיזוהה לבד</li><li>הזן את סיסמת ה-WiFi של הבית וסיים</li><li>חזור לכאן - HomeOn יחפש את המכשיר החדש לבד</li></ol>
+    <button class="btn wide" id="aR">${svg('ref')}כבר צימדתי, רענן</button>`,(el,close)=>{
+    const check=async()=>{await loadDevices();const n=DEVS.filter(d=>!before.has(d.id));
+      if(n.length){close();TAB='devices';render();toast(n.length===1?`נוסף: ${dname(n[0])}`:`נוספו ${n.length} מכשירים`)}else toast('עוד לא רואה מכשיר חדש')};
+    let away=false;const onVis=()=>{if(document.visibilityState==='hidden')away=true;else if(away&&document.body.contains(el)){away=false;check()}};
+    document.addEventListener('visibilitychange',onVis);
+    el.querySelector('#aO').onclick=()=>{const t=Date.now();location.href='smartlife://';
+      setTimeout(()=>{if(document.visibilityState==='visible'&&Date.now()-t<2600)location.href='https://apps.apple.com/app/id1115101477'},1600)};
+    el.querySelector('#aR').onclick=()=>{close();TAB='devices';loadDevices()};
+  });
 }
 
 /* ---------- connect ---------- */
