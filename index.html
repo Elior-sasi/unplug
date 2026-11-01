@@ -687,7 +687,7 @@ META.img=META.img||{};
 const STYLE=()=>'real';
 const REALN={"washer": "מכונת כביסה", "fridge": "מקרר", "oven": "תנור אפייה", "microwave": "מיקרוגל", "coffee": "מכונת קפה", "kettle": "קומקום", "toaster": "טוסטר", "ac": "מזגן", "led": "פס לד", "ceiling": "מנורת תקרה", "bulb": "נורה", "lamp": "מנורת שולחן", "fan": "מאוורר", "heater": "רדיאטור", "boiler": "דוד חשמל", "dish": "מדיח כלים", "plug": "שקע בקיר", "phone": "טלפון", "charger": "מטען USB", "router": "ראוטר", "speaker": "רמקול", "game": "קונסולה", "laptop": "מחשב נייד", "tv": "טלוויזיה", "remote": "שלט רחוק", "plant": "עציץ", "sensor": "חיישן תנועה", "camera": "מצלמת אבטחה", "curtain": "תריס חשמלי", "switch": "מפסק תאורה", "strip": "מפצל חשמל", "vacuum": "שואב רובוטי", "dryer": "מייבש כביסה", "stickvac": "שואב אבק", "fanheater": "מפזר חום", "water": "בר מים", "ceilfan": "מאוורר תקרה", "lock": "מנעול חכם", "doorsensor": "חיישן דלת וחלון", "purifier": "מטהר אוויר", "humidifier": "מכשיר אדים", "dehumid": "סופח לחות", "projector": "מקרן", "streamer": "סטרימר", "receiver": "רסיבר", "doorbell": "פעמון דלת", "smoke": "גלאי עשן", "leak": "חיישן נזילה", "thermo_h": "מד טמפ׳ ולחות", "gate": "שער חשמלי", "irrigation": "מערכת השקיה", "adapter": "מתאם שקע", "portac": "מזגן נייד", "hood": "קולט אדים", "cooktop": "כיריים", "toasteroven": "טוסטר אובן", "airfryer": "אייר פרייר", "urn": "מיחם", "blanket": "שמיכה חשמלית", "towerfan": "מאוורר מגדל", "soundbar": "סאונדבר", "screen": "מסך הקרנה", "garage": "דלת מוסך", "hub": "רכזת בית חכם", "blindsw": "מפסק תריס", "dimmer": "דימר", "thermostat": "תרמוסטט", "presence": "חיישן נוכחות", "gas": "גלאי גז", "valve": "ברז ראשי חשמלי", "intercom": "אינטרקום", "siren": "סירנה", "gardenlight": "תאורת גינה", "walllight": "תאורת קיר", "mop": "שואב שוטף", "petfeeder": "מאכיל חיות"};
 const REAL=new Set(Object.keys(REALN));
-const realImg=k=>`<img class="real" src="real/${REAL.has(k)?k:'plug'}.png?v=2" alt="" loading="lazy" decoding="async">`;
+const realImg=k=>`<img class="real" src="real/${REAL.has(k)?k:'plug'}.png?v=2" alt="" decoding="sync">`;
 const artFor=(k,st)=>realImg(k);
 const photoOf=d=>STYLE()==='photo'&&(!META.icons||META.icons[d.id]==null||META.icons[d.id]==='photo')&&META.img[d.id]?META.img[d.id]:'';
 const drawn=d=>artFor(iconOf(d),STYLE());
@@ -785,6 +785,7 @@ function render(){
   const tabs=[...document.querySelectorAll('nav.bar button')];tabs.forEach(b=>b.dataset.tab===TAB?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelector('nav.bar').style.setProperty('--tab',tabs.findIndex(b=>b.dataset.tab===TAB));
   const v=$('view');
   if(!CFG.key&&TAB!=='settings'){v.innerHTML=`<div class="empty"><b>עוד לא מחובר</b>מתחברים פעם אחת לחשבון Smart Life, ומכאן הכול כאן.</div><p></p><button class="btn pri wide" id="cn">התחברות</button>`;$('cn').onclick=openConnect;return}
+  if(TAB!=='devices'||!CFG.key)v._h=null;
   ({devices:viewDevices,scenes:viewScenes,sched:viewSched,settings:viewSettings})[TAB](v);
 }
 function roomOf(d){return META.rooms[d.id]||''}
@@ -800,11 +801,13 @@ function viewDevices(v){
   list=list.slice().sort((x,y)=>(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0)||(META.order?.[x.id]??999)-(META.order?.[y.id]??999));
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
   const chips=[['all','הכול'],...(hasFav?[['fav','מועדפים']]:[]),...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
-  v.innerHTML=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
+  const H=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
       (typeof cmdBarHtml==='function'?cmdBarHtml():'')+(typeof liveStripHtml==='function'?liveStripHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
    `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים"><span style="display:inline-grid;transform:rotate(-90deg)">${svg('chev',2.4)}</span></button></div>`+
    (list.length?`<div class="grid" role="list">${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
+  /* same screen as before: keep the existing cards, so pictures don't blink on every refresh */
+  const HK=H+'|'+(typeof REORDER!=='undefined'&&REORDER?1:0)+'|'+ROOM;if(v._h===HK&&v.firstElementChild)return;v._h=HK;v.innerHTML=H;
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
   $('roomAdd').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=META.home;saveMeta();manageRooms(n)};
   $('roomEdit').onclick=()=>manageRooms();
@@ -1178,7 +1181,7 @@ function viewSettings(v){
   <div class="sec-h"><h2>מכשירים</h2></div><div class="list">
     <button class="row row-btn" id="ad"><span class="grow"><span class="t">הוספת מכשיר חדש</span><br><span class="s">צימוד דרך Smart Life</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="lg"><span class="grow"><span class="t">היסטוריית פעולות</span><br><span class="s">${LOG.length?'אחרונה: '+esc(LOG[0].name):'ריקה'}</span></span>${svg('chev')}</button>
-    <button class="row row-btn" id="bk"><span class="grow"><span class="t">גיבוי ושחזור</span><br><span class="s">שמות, חדרים, מועדפים וסצנות</span></span>${svg('chev')}</button>
+    <button class="row row-btn" id="bk"><span class="grow"><span class="t">גיבוי ושחזור</span><br><span class="s">שמירה ל-Google Drive או קוד גיבוי</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="rr"><span class="grow"><span class="t">ניהול חדרים</span><br><span class="s">${roomsOf(META.home).length} חדרים ב${esc(curHome().name)}</span></span>${svg('chev')}</button>
   </div>
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
@@ -1221,14 +1224,30 @@ function openLog(){
   sheet('היסטוריית פעולות',`<div class="list">${LOG.length?LOG.map(l=>`<div class="row"><span class="grow"><span class="t">${esc(l.name)}</span><br><span class="s">${esc(l.text)}</span></span><span class="s" style="direction:ltr">${f(l.t)}</span></div>`).join(''):'<div class="row"><span class="s">עוד לא בוצעו פעולות מהאפליקציה</span></div>'}</div>${LOG.length?'<button class="btn bad wide" id="lgC">ניקוי</button>':''}`,(el,close)=>{el.querySelector('#lgC')&&(el.querySelector('#lgC').onclick=()=>{LOG=[];LSset('unplug_log',null);close();render()})});
 }
 function openBackup(){
-  const code='UNPLUG1:'+b64url({meta:META,scenes:SCENES.map(({schedIds,...x})=>x)});
-  sheet('גיבוי ושחזור',`<p>הקוד שומר שמות, חדרים, מועדפים וסצנות. כדאי להעביר אותו כשעוברים מ-Safari לאפליקציה במסך הבית.</p>
-    <div class="code" id="bkC">${esc(code)}</div><button class="btn wide" id="bkCp">${svg('save')}העתקת הקוד</button>
+  const data=()=>({app:'HomeOn',v:1,at:new Date().toISOString(),meta:META,scenes:SCENES.map(({schedIds,...x})=>x),wash:LSj('unplug_wash',{}),acp:LSj('unplug_acp',{}),shabbat:LSj('unplug_shabbat',null),presence:LSj('unplug_presence',null),widget:LSj('unplug_widget',null)});
+  const code=()=>'UNPLUG1:'+b64url({meta:META,scenes:SCENES.map(({schedIds,...x})=>x)});
+  const restore=o=>{if(!o||!o.meta)throw 0;Object.assign(META,{names:{},rooms:{},roomList:[],fav:{}},o.meta);saveMeta();SCENES=o.scenes||[];saveScenes();
+    for(const[k,ls]of[['wash','unplug_wash'],['acp','unplug_acp'],['shabbat','unplug_shabbat'],['presence','unplug_presence'],['widget','unplug_widget']])if(o[k]!=null)LSset(ls,JSON.stringify(o[k]))};
+  const last=LS('unplug_bk_at');
+  sheet('גיבוי ושחזור',`<p>שומר שמות, חדרים, סמלילים, מועדפים, סצנות, מכונת הכביסה, מצב שבת והווידג׳ט. השמות, החדרים והסמלילים נשמרים גם בשרת לבד.</p>
+    <div class="sec-h"><h2>Google Drive</h2></div>
+    <div class="list"><button class="row row-btn" id="bkD"><span class="grow"><span class="t">שמירת גיבוי לדרייב</span><br><span class="s">${last?'גיבוי אחרון: '+esc(new Date(+last).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):'עוד לא נשמר גיבוי'}</span></span>${svg('save')}</button>
+      <label class="row row-btn" for="bkF" style="cursor:pointer"><span class="grow"><span class="t">שחזור מקובץ</span><br><span class="s">בחירת קובץ HomeOn מהדרייב</span></span>${svg('chev')}</label>
+      <input type="file" id="bkF" accept=".json,application/json" class="sr"></div>
+    <p class="s">בשמירה נפתח חלון השיתוף: בוחרים Drive (או "שמירה בקבצים" ← Google Drive).</p>
+    <div class="sec-h"><h2>קוד גיבוי</h2></div>
+    <div class="code" id="bkC">${esc(code())}</div><button class="btn wide" id="bkCp">${svg('save')}העתקת הקוד</button>
     <div class="field"><label for="bkI">שחזור מקוד</label><textarea class="field-ta" id="bkI" placeholder="UNPLUG1:..."></textarea></div>
     <div class="err" id="bkE" role="alert"></div><button class="btn pri wide" id="bkR">שחזור</button>`,(el,close)=>{
-    el.querySelector('#bkCp').onclick=()=>navigator.clipboard?.writeText(code).then(()=>toast('הועתק'),()=>{});
-    el.querySelector('#bkR').onclick=()=>{try{const t=el.querySelector('#bkI').value.trim().replace(/^UNPLUG1:/,'');const o=JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/')))));
-      if(!o.meta)throw 0;Object.assign(META,{names:{},rooms:{},roomList:[],fav:{}},o.meta);saveMeta();SCENES=o.scenes||[];saveScenes();close();render();toast('שוחזר. סצנות מתוזמנות צריך לשמור שוב')}catch(e){el.querySelector('#bkE').textContent='הקוד לא תקין'}};
+    el.querySelector('#bkD').onclick=async()=>{const d=new Date(),name=`HomeOn-גיבוי-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;
+      const f=new File([JSON.stringify(data(),null,1)],name,{type:'application/json'});
+      try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'גיבוי HomeOn'})}
+        else{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+        LSset('unplug_bk_at',String(Date.now()));toast('הגיבוי מוכן לשמירה')}catch(e){if(e&&e.name!=='AbortError')toast('לא נשמר: '+(e.message||e))}};
+    el.querySelector('#bkF').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const o=JSON.parse(await f.text());if(o.app!=='HomeOn')throw 0;
+      if(!confirm('לשחזר מהגיבוי? ההגדרות הנוכחיות יוחלפו.'))return;restore(o);close();render();toast('שוחזר מהגיבוי')}catch(err){toast('זה לא קובץ גיבוי של HomeOn')}};
+    el.querySelector('#bkCp').onclick=()=>navigator.clipboard?.writeText(code()).then(()=>toast('הועתק'),()=>{});
+    el.querySelector('#bkR').onclick=()=>{try{const t=el.querySelector('#bkI').value.trim().replace(/^UNPLUG1:/,'');restore(JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))))));close();render();toast('שוחזר. סצנות מתוזמנות צריך לשמור שוב')}catch(e){el.querySelector('#bkE').textContent='הקוד לא תקין'}}
   });
 }
 function pickIcon(d,cb){
