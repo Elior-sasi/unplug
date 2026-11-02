@@ -957,7 +957,7 @@ function openBreeze(d){
 function openToaster(d){LSset('toaster_key',CFG.key);LSset('toaster_dev',d.id);openFrame(d,'/unplug/toaster/?in=unplug','טוסטר')}
 function openFrame(d,src,what){
   const w=document.createElement('div');w.className='breeze';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label',dname(d));
-  w.innerHTML=`<iframe src="${src}" title="${esc(what)} - שליטה ב${esc(dname(d))}" allow="clipboard-write"></iframe>`;
+  w.innerHTML=`<iframe src="${src}${src.includes('?')?'&':'?'}v=${Math.floor(Date.now()/60000)}" title="${esc(what)} - שליטה ב${esc(dname(d))}" allow="clipboard-write"></iframe>`;
   const close=()=>{w.remove();document.querySelector('.app').removeAttribute('aria-hidden');refreshOne(d.id);loadSched()};
   const onMsg=e=>{if(e.data==='unplug-close'){removeEventListener('message',onMsg);close()}};addEventListener('message',onMsg);
   w.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
