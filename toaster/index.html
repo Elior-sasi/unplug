@@ -376,6 +376,7 @@ document.documentElement.classList.add('in-unplug');
 addEventListener('DOMContentLoaded',()=>{const h=document.querySelector('header.top');if(!h)return;const b=document.createElement('button');b.className='menu-btn';b.id='unplugBack';b.setAttribute('aria-label','חזרה ל-HomeOn');
 b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
 b.onclick=()=>{try{parent.postMessage('unplug-close','*')}catch(e){}};h.insertBefore(b,h.firstChild);
+const h1=h.querySelector('h1');if(h1){const w=document.createElement('div');w.style.cssText='flex:1;min-width:0';h1.before(w);w.append(h1);const sb=document.createElement('div');sb.className='hoSub';sb.textContent='קלייה בשקע חכם';w.append(sb)}
 const hero=document.getElementById('hero');if(hero){const im=document.createElement('img');im.className='hoImg';im.src='/unplug/real/toaster.png';im.alt='';
   const tm=document.createElement('div');tm.className='hoTime';tm.setAttribute('aria-hidden','true');hero.prepend(tm);hero.prepend(im);
   const src=document.getElementById('time');setInterval(()=>{if(src&&tm.textContent!==src.textContent)tm.textContent=src.textContent},250)}
@@ -409,6 +410,8 @@ addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];i
 .in-unplug .prof b{font-size:.95rem!important;white-space:nowrap}
 .in-unplug .prof>span:last-child{font-size:.8rem!important;white-space:nowrap;opacity:.7}
 .in-unplug .prof[aria-pressed="true"]{background:#3d8bff26!important}
+.in-unplug .sec h2{font-size:1.25rem!important;font-weight:700!important;color:#fff!important}
+.in-unplug .hoSub{font-size:.95rem;color:rgba(235,235,245,.6);margin-top:2px}
 </style>
 </head>
 <body>

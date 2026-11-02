@@ -182,7 +182,7 @@ function openShabbat(){
   const c=SHB(),{inT,outT}=nextShabbat(c.city),cands=DEVS.filter(powerCode);
   const actRow=(a,i)=>{const d=DEVS.find(x=>x.id===a.device);return `<div class="row"><span class="grow"><span class="t">${esc(d?dname(d):'מכשיר שהוסר')}: ${a.to==='on'?'הדלקה':'כיבוי'}</span><br><span class="s">${a.when==='in'?'בכניסת שבת':'ביציאת שבת'}${+a.off?` · ${Math.abs(a.off)} דק׳ ${a.off<0?'לפני':'אחרי'}`:''}</span></span><button class="icbtn" data-rmA="${i}" aria-label="הסרת פעולה">${svg('trash')}</button></div>`};
   sheet('מצב שבת',`<div class="ro"><div class="k">השבת הקרובה ב${esc(CITIES[c.city][0])}</div><div class="n" style="font-size:1.1rem">כניסה ${esc(fmtDay(inT))}<br>יציאה ${esc(fmtDay(outT))}</div></div>
-    <label class="row list" style="border-radius:22px"><span class="grow t">מצב שבת פעיל</span><input type="checkbox" id="shOn" ${c.on?'checked':''} style="width:30px;height:30px;accent-color:var(--gold)"></label>
+    <label class="row list" style="border-radius:22px"><span class="grow t">מצב שבת פעיל</span><input type="checkbox" class="tgl" id="shOn" ${c.on?'checked':''}></label>
     <div class="field"><label for="shC">עיר (לזמני השבת)</label><select id="shC">${Object.entries(CITIES).map(([k,[n]])=>`<option value="${k}"${k===c.city?' selected':''}>${n}</option>`).join('')}</select></div>
     <div class="sec-h" style="margin:4px 4px 0"><h2>מה קורה בשבת</h2></div>
     <div class="list" id="shL">${c.acts.length?c.acts.map(actRow).join(''):'<div class="row"><span class="s">עוד אין פעולות. למשל: להדליק את המזגן 10 דק׳ לפני כניסת שבת</span></div>'}</div>

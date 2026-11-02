@@ -133,6 +133,10 @@ nav.bar button[aria-current="page"]{color:var(--acc-txt)}
 .dpw{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:62px;border-radius:999px;border:0;background:#ff9a3d;color:#1a0c04;font:inherit;font-size:1.3rem;font-weight:700}
 .dpw svg{width:26px;height:26px}
 .dpw[aria-pressed="true"]{background:#3d8bff;color:#fff}
+input.tgl{appearance:none;-webkit-appearance:none;flex:none;width:52px;height:32px;border-radius:999px;background:#3a3a3c;position:relative;cursor:pointer;transition:background .2s;margin:0}
+input.tgl::after{content:"";position:absolute;top:3px;right:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:right .2s}
+input.tgl:checked{background:#3d8bff}input.tgl:checked::after{right:23px}
+input.tgl:focus-visible{outline:3px solid #6fa8ff;outline-offset:2px}
 .big-pw[aria-checked="true"]+.state-line{color:var(--acc-txt)}
 .ctl{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
 .ctl:last-child{border-bottom:0}
@@ -691,7 +695,7 @@ const DI={
  dev:['מכשיר','<rect class="d" x="6" y="3" width="12" height="18" rx="3"/><path d="M11 17h2"/>']
 };
 const NAMEKEY=[[/מזגן נייד|portable/i,'portac'],[/מזגן|מיזוג|air ?con/i,'ac'],[/טוסטר אובן|toaster oven/i,'toasteroven'],[/טוסטר|toast/i,'toaster'],[/אייר ?פרייר|air ?fryer|נינג׳ה|ninja/i,'airfryer'],[/מיחם|urn/i,'urn'],[/קומקום|kettle/i,'kettle'],[/קפה|coffee|נספרסו/i,'coffee'],[/מיקרו/i,'microwave'],[/כיריים|cooktop|אינדוקציה/i,'cooktop'],[/קולט/i,'hood'],[/מפזר חום|fan ?heater/i,'fanheater'],[/רדיאטור|תנור חימום|radiator|heater/i,'heater'],[/שמיכה/i,'blanket'],[/תנור|אופה|oven/i,'oven'],[/מקרר|fridge/i,'fridge'],[/מייבש|dryer/i,'dryer'],[/כביסה|washer/i,'washer'],[/מדיח|dish/i,'dish'],[/בר מים|מים קרים|water bar|תמי/i,'water'],[/דוד|בויילר|boiler/i,'boiler'],[/מאוורר תקרה|ceiling fan/i,'ceilfan'],[/מאוורר מגדל|tower/i,'towerfan'],[/מאוורר|fan/i,'fan'],[/מטהר|purifier/i,'purifier'],[/סופח|dehumid/i,'dehumid'],[/אדים|humidif/i,'humidifier'],[/פס לד|לד|led/i,'led'],[/תאורת גינה|גינה|garden/i,'gardenlight'],[/תאורת קיר|מנורת קיר|wall/i,'walllight'],[/תקרה|ceiling/i,'ceiling'],[/מנורה|מנורת|lamp/i,'lamp'],[/דימר|dimmer/i,'dimmer'],[/נורה|אור|תאורה|light|bulb/i,'bulb'],[/סאונד ?בר|soundbar/i,'soundbar'],[/מקרן|projector/i,'projector'],[/מסך הקרנה|screen/i,'screen'],[/סטרימר|אפל ?טי ?וי|apple ?tv|כרומקאסט|streamer/i,'streamer'],[/רסיבר|מגבר|receiver/i,'receiver'],[/טלוויזיה|tv|מסך/i,'tv'],[/מחשב|לפטופ|pc|laptop/i,'laptop'],[/פלייסטיישן|קונסולה|xbox|ps5|playstation/i,'game'],[/רמקול|speaker/i,'speaker'],[/ראוטר|נתב|router|wifi/i,'router'],[/רכזת|hub|gateway/i,'hub'],[/מטען|charger/i,'charger'],[/מפסק תריס/i,'blindsw'],[/וילון|תריס|curtain|blind/i,'curtain'],[/דלת מוסך|מוסך|garage/i,'garage'],[/שער|gate/i,'gate'],[/מנעול|lock/i,'lock'],[/פעמון|doorbell/i,'doorbell'],[/אינטרקום|intercom/i,'intercom'],[/מצלמה|camera/i,'camera'],[/עשן|smoke/i,'smoke'],[/גז|gas/i,'gas'],[/נזילה|הצפה|leak|water sensor/i,'leak'],[/סירנה|אזעקה|siren|alarm/i,'siren'],[/חיישן דלת|חיישן חלון|door sensor/i,'doorsensor'],[/נוכחות|presence/i,'presence'],[/תנועה|motion|pir/i,'sensor'],[/לחות|טמפ|thermo.?hygro|humidity/i,'thermo_h'],[/תרמוסטט|thermostat/i,'thermostat'],[/ברז|valve/i,'valve'],[/השקיה|irrigation|sprinkler/i,'irrigation'],[/צמח|עציץ|plant/i,'plant'],[/מאכיל|האכלה|feeder|כלב|חתול/i,'petfeeder'],[/שוטף|mop/i,'mop'],[/שואב רובוטי|רובוט|roborock|robot/i,'vacuum'],[/שואב|vacuum/i,'stickvac'],[/אייפון|iphone|טלפון|פלאפון|נייד|phone/i,'phone'],[/שלט|remote/i,'remote'],[/מתאם|adapter/i,'adapter'],[/מפצל|strip/i,'strip'],[/מפסק|מתג|switch/i,'switch']];
-const CATICON={kg:'switch',tdq:'switch',cz:'plug',pc:'strip',dj:'bulb',dd:'led',xdd:'ceiling',fwd:'bulb',dc:'led',kt:'ac',ktkzq:'ac',kts:'ac',infrared_ac:'ac',fs:'fan',qn:'heater',rs:'boiler',wsdcg:'sensor',pir:'sensor',mcs:'sensor',sp:'camera',cl:'curtain',clkg:'blindsw',znrb:'plug',sd:'vacuum',wnykq:'remote',infrared_ac:'ac',ms:'lock',ywbj:'smoke',rqbj:'gas',sj:'leak',cwwsq:'petfeeder',kj:'purifier',jsq:'humidifier',cs:'dehumid',ckmkzq:'garage',sgbj:'siren',wk:'thermostat',sfkzq:'valve',ggq:'irrigation',tgkg:'dimmer',tgq:'dimmer',wg2:'hub',wfcon:'hub',hps:'presence',lyqwg:'hub',bh:'kettle',kfj:'coffee',kg:'switch',mal:'siren',dlq:'switch',jtmspro:'lock',sgj:'doorbell',videolock:'lock',qn:'heater',rs:'boiler',fs:'fan',fsd:'ceilfan',kt:'ac'};
+const CATICON={kg:'switch',tdq:'switch',cz:'plug',pc:'strip',dj:'bulb',dd:'led',xdd:'ceiling',fwd:'bulb',dc:'led',kt:'ac',ktkzq:'ac',kts:'ac',infrared_ac:'ac',fs:'fan',qn:'heater',rs:'boiler',wsdcg:'thermo_h',pir:'sensor',mcs:'sensor',sp:'camera',cl:'curtain',clkg:'blindsw',znrb:'plug',sd:'vacuum',wnykq:'remote',infrared_ac:'ac',ms:'lock',ywbj:'smoke',rqbj:'gas',sj:'leak',cwwsq:'petfeeder',kj:'purifier',jsq:'humidifier',cs:'dehumid',ckmkzq:'garage',sgbj:'siren',wk:'thermostat',sfkzq:'valve',ggq:'irrigation',tgkg:'dimmer',tgq:'dimmer',wg2:'hub',wfcon:'hub',hps:'presence',lyqwg:'hub',bh:'kettle',kfj:'coffee',kg:'switch',mal:'siren',dlq:'switch',jtmspro:'lock',sgj:'doorbell',videolock:'lock',qn:'heater',rs:'boiler',fs:'fan',fsd:'ceilfan',kt:'ac'};
 function iconOf(d){if(META.icons&&META.icons[d.id]&&(ART[META.icons[d.id]]||REALN[META.icons[d.id]]))return META.icons[d.id];const n=dname(d)+' '+(d.name||'');for(const[r,k]of NAMEKEY)if(r.test(n))return k;return CATICON[d.category]||'dev'}
 /* product photos - the same images Smart Life shows, read once per device and cached */
 META.img=META.img||{};
@@ -876,22 +880,31 @@ const emberGo=(path)=>{
   setTimeout(()=>{if(document.visibilityState==='visible'&&Date.now()-t<2600)toast('Ember לא נפתח - צריך את הגרסה החדשה של Ember על הטלפון')},1800)};
 function openEmber(){
   const L=JSON.parse(LS('unplug_ember_last')||'null');
-  sheet(esc(dname(EMBER)),`<div class="big-pw" aria-hidden="true" style="pointer-events:none">${devArt(EMBER,1.5)}</div>
-    <p style="text-align:center">${L?`פקודה אחרונה: ${esc(L.t)} ב-${esc(L.at)}`:'הדוד נשלט דרך Ember, בטלפון שמחובר ל-WiFi של הבית.'}</p>
-    <div class="list"><div class="ctl"><div class="ctl-h"><span class="t" id="emL">להדליק ל-</span></div>
-      <div class="seg" role="group" aria-labelledby="emL">${[15,30,45,60,90,120].map(m=>`<button data-em="${m}">${m<60?m+' דק׳':m===60?'שעה':m===90?'שעה וחצי':'שעתיים'}</button>`).join('')}<button data-em="0">ללא טיימר</button></div></div>
-      <div class="ctl"><div class="btns"><button class="btn" data-emp="add?m=15">${svg('plus')}עוד 15 דק׳</button><button class="btn bad" data-emp="off">${svg('power')}כיבוי</button></div></div></div>
-    <div class="list">
-      <button class="row row-btn" data-emp="open"><span class="grow"><span class="t">פתיחת Ember</span><br><span class="s">זמן שנשאר, תזמונים וסטטיסטיקה</span></span>${svg('chev')}</button>
-      <button class="row row-btn" id="emR"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(EMBER)||'בלי חדר')}</span></span>${svg('chev')}</button>
-      <button class="row row-btn" id="emH"><span class="grow"><span class="t">הסתרת הדוד מ-HomeOn</span></span>${svg('close')}</button>
-    </div>
-    <p style="font-size:.9rem">כל כפתור פותח את Ember לרגע, והוא מבצע את הפקודה. זה עובד כשהטלפון מחובר ל-WiFi של הבית.</p>`,(el,close)=>{
+  const mins=m=>m<60?m+' דק׳':m===60?'שעה':m===90?'שעה וחצי':'שעתיים';
+  sheet(esc(dname(EMBER)),`<div id="emB" style="display:flex;flex-direction:column;gap:14px"></div>`,(el,close)=>{
+    const body=el.querySelector('#emB');let st=null;
     const log=t=>{LSset('unplug_ember_last',JSON.stringify({t,at:hm(new Date())}));addLog(dname(EMBER),t)};
-    el.querySelectorAll('[data-em]').forEach(b=>b.onclick=()=>{const m=+b.dataset.em;log(m?`הדלקה ל-${m} דק׳`:'הדלקה ללא טיימר');close();emberGo('on?m='+m)});
-    el.querySelectorAll('[data-emp]').forEach(b=>b.onclick=()=>{const p=b.dataset.emp;if(p!=='open')log(p==='off'?'כיבוי':'הוספת 15 דק׳');close();emberGo(p)});
-    el.querySelector('#emR').onclick=()=>pickRoom(EMBER,()=>{render()});
-    el.querySelector('#emH').onclick=()=>{META.ember=false;saveMeta();close();render();toast('הדוד הוסתר. מחזירים מהתפריט ⋯ ← הוספת מכשיר')};
+    const draw=()=>{const on=st?st.on:null,left=st&&st.left?Math.round(st.left/60):0;
+      const state=on==null?'דוד':on?'דולק':'כבוי',sub=on?(left?`עוד ${left} דק׳`:'בלי טיימר'):(on==null?(L?`פקודה אחרונה: ${L.t} ב-${L.at}`:''):(L?`פקודה אחרונה: ${L.t}`:''));
+      body.innerHTML=`<div class="dhero${on?' on':''}"><div class="dh-art" aria-hidden="true">${devArt(EMBER,1.5)}</div><div class="dh-state" role="status">${esc(state)}</div>${sub?`<div class="dh-sub">${esc(sub)}</div>`:''}</div>
+        <button class="dpw" id="emPw" aria-pressed="${!!on}">${svg('power')}<span>${on?'כבה':'הדלק'}</span></button>
+        ${on?`<button class="btn wide" data-emp="add?m=15">${svg('plus')}עוד 15 דק׳</button>`:''}
+        <div class="list"><div class="ctl"><div class="ctl-h"><span class="t" id="emL">להדליק ל-</span></div>
+          <div class="seg" role="group" aria-labelledby="emL">${[15,30,45,60,90,120].map(m=>`<button data-em="${m}">${mins(m)}</button>`).join('')}<button data-em="0">ללא טיימר</button></div></div></div>
+        <div class="list">
+          <button class="row row-btn" data-emp="open"><span class="grow"><span class="t">${IN_APP?'מסך הדוד המלא':'פתיחת Ember'}</span><br><span class="s">זמן שנשאר, תזמונים וסטטיסטיקה</span></span>${svg('chev')}</button>
+          <button class="row row-btn" id="emR"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(EMBER)||'בלי חדר')}</span></span>${svg('chev')}</button>
+          <button class="row row-btn" id="emH"><span class="grow"><span class="t">הסתרת הדוד מ-HomeOn</span></span>${svg('close')}</button>
+        </div>
+        <p class="s" style="font-size:.9rem">${IN_APP?'הדוד נשלט ישירות כשהטלפון מחובר ל-WiFi של הבית.':'כל כפתור פותח את Ember לרגע, והוא מבצע את הפקודה. זה עובד כשהטלפון מחובר ל-WiFi של הבית.'}</p>`;
+      body.querySelector('#emPw').onclick=()=>{if(on){log('כיבוי');go('off')}else{log('הדלקה ל-30 דק׳');go('on?m=30')}};
+      body.querySelectorAll('[data-em]').forEach(b=>b.onclick=()=>{const m=+b.dataset.em;log(m?`הדלקה ל-${mins(m)}`:'הדלקה ללא טיימר');go('on?m='+m)});
+      body.querySelectorAll('[data-emp]').forEach(b=>b.onclick=()=>{const p=b.dataset.emp;if(p!=='open')log('הוספת 15 דק׳');go(p)});
+      body.querySelector('#emR').onclick=()=>pickRoom(EMBER,()=>{render()});
+      body.querySelector('#emH').onclick=()=>{META.ember=false;saveMeta();close();render();toast('הדוד הוסתר. מחזירים מהתפריט ⋯ ← הוספת מכשיר')}};
+    const refresh=()=>IN_APP?nativeCall({action:'heater',cmd:'state'}).then(r=>{try{st=JSON.parse(r)}catch(e){}draw()}).catch(()=>{}):null;
+    const go=p=>{if(!IN_APP||p==='open'){close();return emberGo(p)}emberGo(p);setTimeout(refresh,1500)};
+    draw();refresh();
   });
 }
 function card(d){
@@ -956,7 +969,8 @@ function refreshOpen(d){if(OPEN&&OPEN.id===d.id)OPEN.draw(d)}
 const SKIP=new Set(['colour_data','colour_data_v2','scene_data','scene_data_v2','music_data','control_data','fault','countdown_left']);
 const AC=new Set(['kt','ktkzq','kts']);
 /* the same look as the AC page: a card with the product and its state, then a wide power button */
-function devHero(d,state,sub){const on=isOn(d),w=d.status&&d.status.cur_power!=null&&on?watts(d):null;
+function devHero(d,state,sub){if(!state&&!powerCode(d)){const ro=(d.statusRange||[]).find(f=>d.status[f.code]!=null&&f.type==='Integer');state=!d.online?'מנותק':ro?roVal(d,ro):'מחובר';if(sub==null)sub=ro?nameOf(ro):(roomOf(d)||'')}
+  const on=isOn(d),w=d.status&&d.status.cur_power!=null&&on?watts(d):null;
   state=state||(!d.online?'מנותק':on?'דולק':'כבוי');
   sub=sub!=null?sub:(w!=null?Math.round(w)+' וואט':(roomOf(d)||''));
   return `<div class="dhero${on?' on':''}"><div class="dh-art" aria-hidden="true">${devArt(d,1.5)}</div><div class="dh-state" role="status">${esc(state)}</div>${sub?`<div class="dh-sub">${esc(sub)}</div>`:''}</div>`}
@@ -1459,7 +1473,7 @@ if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConne
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active')&&!(typeof REORDER!=='undefined'&&REORDER))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
 </script>
-<script src="extras.js?v=9"></script>
+<script src="extras.js?v=10"></script>
 <script src="smart.js?v=2"></script>
 <script src="motion.js?v=3"></script>
 <script src="washer.js?v=2"></script>
