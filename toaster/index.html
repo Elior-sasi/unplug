@@ -550,6 +550,8 @@ if((S.pv||1)<2){const have=new Set(S.profiles.map(p=>p.ic+'|'+p.n));const out=[]
 if((S.pv||1)<3||!S.pita3){S.profiles.forEach(p=>{if(p.ic==='pita'&&(p.n==='הפשרת פיתה'||p.n==='פיתה קפואה')&&p.m<=1.5){p.n='פיתה קפואה';p.m=4;p.r=2}});S.pv=3;S.pita3=1;save()}
 // live run state (from the plug when connected, simulated in demo)
 const R={on:false,endAt:0,total:S.min*60,busy:false};
+const NATIVE=()=>window.IN_HOMEON&&window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.homeon;
+const nativeCancel=()=>{if(NATIVE())NATIVE().postMessage({action:'notify',cmd:'cancel',id:'toast'}).catch(()=>{})};
 const CFG={key:(window.IN_HOMEON&&LS('unplug_key'))||LS('toaster_key')||LS('kor_key')||'',dev:LS('toaster_dev')||''};
 let linked=!!CFG.key, DEV=null, CAP=null, online=true;
 
@@ -685,7 +687,7 @@ async function turnOn(name,rounds){
 }
 async function turnOff(msg){
   if(live()&&!(await send([{code:CAP.power,value:false}])))return;
-  R.on=false;R.endAt=0;render();if(msg)toast(msg);
+  R.on=false;R.endAt=0;render();if(msg)toast(msg);nativeCancel();
   if(live()&&S.push)api('/push/cancel').catch(()=>{});
 }
 async function extend(){
@@ -698,7 +700,7 @@ function finished(fromPlug){
   if(!R.on&&fromPlug==='dup')return;
   R.justDone=true;clearTimeout(R.jd);R.jd=setTimeout(()=>{R.justDone=false;render()},60000);
   const br=$('breads');br.classList.remove('pop');void br.getBBox();br.classList.add('pop');setTimeout(()=>br.classList.remove('pop'),1000);
-  R.on=false;R.endAt=0;render();buzz([120,80,120]);beep();clearBadge();
+  R.on=false;R.endAt=0;render();buzz([120,80,120]);beep();clearBadge();nativeCancel();
   if(S.notify)showDone();else toast('הזמן נגמר - החשמל נותק');
 }
 
@@ -739,6 +741,7 @@ function beep(kind){
 }
 function armPush(name){
   lastName=name||lastName||'';
+  if(NATIVE()){if(S.notify&&R.endAt)NATIVE().postMessage({action:'notify',cmd:'at',id:'toast',at:R.endAt,title:'הטוסט מוכן',body:(lastName?lastName+' - ':'')+'החשמל נותק, אפשר להוציא'}).catch(()=>{});return}
   if(!live()||!S.notify||!S.push||!R.endAt)return;
   api('/push/at',{at:R.endAt/1000,title:'הטוסט מוכן',body:(lastName?lastName+' - ':'')+'החשמל נותק, אפשר להוציא'}).catch(()=>{});
 }
@@ -757,6 +760,13 @@ async function subscribePush(){
 }
 function soundPicker(){return `<p>צליל בסיום:</p><div class="opts" id="nSnd">${Object.entries(SOUNDS).map(([k,n])=>`<button class="opt" data-k="${k}" aria-pressed="${(SOUNDS[S.sound]?S.sound:'ding')===k}"><span>${n}</span><span>▶ השמע</span></button>`).join('')}</div>`}
 function openNotify(){
+  if(window.IN_HOMEON){
+    const body=NATIVE()?`<p>כשהזמן נגמר תקבל התראה לטלפון, גם כשהאפליקציה סגורה. כשהיא פתוחה יש גם צפצוף וחלון "הטוסט מוכן".</p>`
+      :`<p>כשהאפליקציה פתוחה יש צפצוף וחלון "הטוסט מוכן".</p>`;
+    return sheet(`<h3>התראה בסוף</h3>${body}<div class="row"><button class="btn" id="nOff">${S.notify?'השתקה':'הפעלה'}</button><button class="btn pri" id="nClose">סגור</button></div>`,(el,close)=>{
+      el.querySelector('#nClose').onclick=close;
+      el.querySelector('#nOff').onclick=()=>{S.notify=!S.notify;save();if(!S.notify)nativeCancel();else armPush();render();close();toast(S.notify?'ההתראות פעילות':'ההתראות הושתקו')}});
+  }
   const phone=S.push&&pushOK()&&Notification.permission==='granted';
   const ios=/iP(hone|ad|od)/.test(navigator.userAgent);
   let body;
@@ -919,7 +929,7 @@ function render(){
   $('times').innerHTML=TIMES.map(m=>`<button class="shade" data-m="${m}" aria-pressed="${S.min===m&&S.prof<0}">${sw(m)}<b>${m}′</b><span>${SHADE_NAME[m]}</span></button>`).join('')+
     `<button class="shade custom" data-m="custom" aria-pressed="${isCustom}">${isCustom?sw(S.min):sw(3,true)}<b>${isCustom?fmtMin(S.min)+'′':'...'}</b><span>אחר</span></button>`;
   $('profiles').innerHTML=S.profiles.map((p,i)=>`<button class="prof" data-p="${i}" style="--h:${HUE[p.ic]||HUE.star}" aria-pressed="${R.on&&i===S.prof}"><span class="chip">${svg(ICONS[p.ic]||ICONS.star)}</span><b>${esc(p.n)}</b><span>${fmtMin(p.m)} דק׳${p.r>1?' · 2 סיבובים':''}</span></button>`).join('');
-  $('tNotify').setAttribute('aria-pressed',S.notify);$('sNotify').textContent=!S.notify?'מושתק':(S.push&&pushOK()&&Notification.permission==='granted')?'צליל, רטט וסימן':'רק באפליקציה';
+  $('tNotify').setAttribute('aria-pressed',S.notify);$('sNotify').textContent=!S.notify?'מושתק':window.IN_HOMEON?(NATIVE()?'התראה לטלפון':'צפצוף באפליקציה'):(S.push&&pushOK()&&Notification.permission==='granted')?'צליל, רטט וסימן':'רק באפליקציה';
   $('sSiri').textContent=S.profiles[S.siri]?'"טוסט" - '+S.profiles[S.siri].n:'לא הוגדר';
   renderStats();
   const isC=!TIMES.includes(S.min);

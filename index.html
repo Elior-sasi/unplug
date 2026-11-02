@@ -1244,9 +1244,9 @@ function viewSettings(v){
     <button class="row row-btn" id="shb"><span class="grow"><span class="t">מצב שבת</span><br><span class="s">${(()=>{try{const c=SHB();return c.on?'פעיל · '+c.acts.length+' פעולות':'כבוי'}catch(e){return ''}})()}</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="grp"><span class="grow"><span class="t">קבוצות מכשירים</span><br><span class="s">${(META.groups||[]).length} קבוצות</span></span>${svg('chev')}</button>
   </div>
-  <div class="sec-h"><h2>התראות</h2></div><div class="list">
+${IN_APP?'':`  <div class="sec-h"><h2>התראות</h2></div><div class="list">
     <div class="row"><span class="grow"><span class="t">התראות לטלפון</span><br><span class="s" id="pushS">${pushStatus()}</span></span>${LS('unplug_push')?`<button class="btn" id="pushT">בדיקה</button>`:`<button class="btn pri" id="pushOn">${svg('bell')}הפעלה</button>`}</div>
-  </div>
+  </div>`}
   <div class="sec-h"><h2>קיצורים</h2></div><div class="list">
     <button class="row row-btn" id="wdg"><span class="grow"><span class="t">ווידג׳ט למסך הבית</span><br><span class="s">הדלקה וכיבוי בלי לפתוח את האפליקציה</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="siri"><span class="grow"><span class="t">Siri וקיצורי דרך</span><br><span class="s">"היי סירי, תדליק את הטוסטר"</span></span>${svg('chev')}</button>
@@ -1254,7 +1254,7 @@ function viewSettings(v){
   <div class="sec-h"><h2>מכשירים</h2></div><div class="list">
     <button class="row row-btn" id="ad"><span class="grow"><span class="t">הוספת מכשיר חדש</span><br><span class="s">צימוד דרך Smart Life</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="lg"><span class="grow"><span class="t">היסטוריית פעולות</span><br><span class="s">${LOG.length?'אחרונה: '+esc(LOG[0].name):'ריקה'}</span></span>${svg('chev')}</button>
-    <button class="row row-btn" id="bk"><span class="grow"><span class="t">גיבוי ושחזור</span><br><span class="s">גיבוי אוטומטי בחשבון Google</span></span>${svg('chev')}</button>
+    <button class="row row-btn" id="bk"><span class="grow"><span class="t">גיבוי ושחזור</span><br><span class="s">${IN_APP?"גיבוי אוטומטי בשרת, וקוד גיבוי":"גיבוי אוטומטי בחשבון Google"}</span></span>${svg('chev')}</button>
     <button class="row row-btn" id="rr"><span class="grow"><span class="t">ניהול חדרים</span><br><span class="s">${roomsOf(META.home).length} חדרים ב${esc(curHome().name)}</span></span>${svg('chev')}</button>
   </div>
   ${CFG.key?`<p></p><button class="btn bad wide" id="lo">התנתקות מהאפליקציה הזו</button>`:''}`;
@@ -1479,7 +1479,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 <script src="washer.js?v=2"></script>
 <script src="acplug.js?v=2"></script>
 <script src="live.js?v=1"></script>
-<script src="gbackup.js?v=1"></script>
+<script src="gbackup.js?v=2"></script>
 <script src="home.js?v=2"></script>
 <script src="tv.js?v=2"></script>
 <script src="native.js?v=1"></script>
