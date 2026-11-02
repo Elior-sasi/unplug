@@ -409,7 +409,7 @@ const hero=document.getElementById('hero'),T=window.TST;if(hero&&T){const R=T.R,
   /* scroll only when there is really more than one screen (e.g. "more settings" open) */
   const app=document.getElementById('app');const fit=()=>{if(!app)return;const bar=document.querySelector('.bottom-bar');if(bar)app.style.setProperty('padding-bottom',Math.ceil(innerHeight-bar.getBoundingClientRect().top+16)+'px','important');app.style.overflowY='hidden';
     const dl=document.querySelector('.hoDial'),more=document.getElementById('moreDet');
-    if(dl&&!(more&&more.open)){let w=Math.min(300,hero.clientWidth-24);dl.style.width=w+'px';while(w>190&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
+    if(dl&&!(more&&more.open)){let w=Math.min(300,hero.clientWidth-96);dl.style.width=w+'px';while(w>190&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
     app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'};
   addEventListener('resize',fit);document.getElementById('moreDet')?.addEventListener('toggle',()=>setTimeout(fit,50));setTimeout(fit,300);setInterval(fit,1500);
   /* when the page fits, an up/down drag must not move it (iOS bounces frames even with nothing to scroll); sideways rows still scroll */
@@ -443,7 +443,8 @@ html.in-unplug,html.in-unplug body{overscroll-behavior:none}
 .in-unplug .hoDial.on .hoState{color:#ff9a3d}
 .in-unplug .hoShade{font-size:1.05rem;font-weight:700;color:#fff;margin-top:4px}
 .in-unplug .hero .status,.in-unplug .hero .hoImg{display:none!important}
-.in-unplug .hoSteps{display:flex;justify-content:space-between;margin-top:-4px;direction:ltr}
+.in-unplug .hoSteps{display:flex;justify-content:space-between;direction:ltr;position:relative;z-index:2;margin-top:-74px;margin-bottom:12px;padding:0 12px;pointer-events:none}
+.in-unplug .hoSteps .hoStep{pointer-events:auto;background:#2c2c2e!important}
 .in-unplug .hoStep{width:48px;height:48px;border-radius:50%;background:#1c1c1e;color:#fff;font-size:26px;font-weight:700;display:grid;place-items:center;border:0}
 .in-unplug .hoStep:disabled{opacity:.35}
 .in-unplug .ext{display:none!important}
