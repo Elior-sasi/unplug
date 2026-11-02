@@ -377,12 +377,37 @@ addEventListener('DOMContentLoaded',()=>{const h=document.querySelector('header.
 b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
 b.onclick=()=>{try{parent.postMessage('unplug-close','*')}catch(e){}};h.insertBefore(b,h.firstChild);
 const h1=h.querySelector('h1');if(h1){const w=document.createElement('div');w.style.cssText='flex:1;min-width:0';h1.before(w);w.append(h1);const sb=document.createElement('div');sb.className='hoSub';sb.textContent='קלייה בשקע חכם';w.append(sb)}
-const hero=document.getElementById('hero');if(hero){const im=document.createElement('img');im.className='hoImg';im.src='/unplug/real/toaster.png';im.alt='';
-  const tm=document.createElement('div');tm.className='hoTime';tm.setAttribute('aria-hidden','true');hero.prepend(tm);hero.prepend(im);
+const hero=document.getElementById('hero'),T=window.TST;if(hero&&T){const R=T.R,S=T.S,save=T.save,render=T.render,extend=T.extend,buzz=T.buzz,SHADE_NAME=T.SHADE_NAME;
+  /* like the AC: a dial in the card - the time in the middle, the arc shows how long (or how much is left) */
+  const C=150,Rr=133,A0=135,SPAN=270,pt=(d)=>{const a=d*Math.PI/180;return[C+Rr*Math.cos(a),C+Rr*Math.sin(a)]};
+  const arc=(a1,a2)=>{const[x1,y1]=pt(a1),[x2,y2]=pt(a2);return`M${x1} ${y1}A${Rr} ${Rr} 0 ${a2-a1>180?1:0} 1 ${x2} ${y2}`};
+  const dial=document.createElement('div');dial.className='hoDial';
+  dial.innerHTML=`<svg viewBox="0 0 300 300" aria-hidden="true"><path class="hoTrack" d="${arc(A0,A0+SPAN)}"/><path class="hoVal" id="hoVal"/><circle class="hoKnob" id="hoKnob" r="13"/></svg>
+    <div class="hoCenter"><div class="hoTime" aria-hidden="true"></div><div class="hoState"></div><div class="hoShade"></div></div>`;
+  hero.prepend(dial);
+  const tm=dial.querySelector('.hoTime'),stl=dial.querySelector('.hoState'),shl=dial.querySelector('.hoShade');
+  /* minus / plus under the card, like the temperature buttons */
+  const steps=document.createElement('div');steps.className='hoSteps';
+  steps.innerHTML='<button class="hoStep" id="hoMinus" aria-label="פחות 30 שניות">−</button><button class="hoStep" id="hoPlus" aria-label="עוד 30 שניות">+</button>';
+  hero.after(steps);
+  const MAXM=8;
+  const step=d=>{if(R.on){if(d>0)extend();return}S.min=Math.max(.5,Math.min(MAXM,(S.min||3)+d*.5));S.prof=-1;save();render();buzz&&buzz()};
+  steps.querySelector('#hoMinus').onclick=()=>step(-1);steps.querySelector('#hoPlus').onclick=()=>step(1);
+  const src=document.getElementById('time'),st=document.getElementById('state');
+  const tick=()=>{
+    if(src&&tm.textContent!==src.textContent)tm.textContent=src.textContent;
+    const timed=R.on&&R.endAt,left=timed?Math.max(0,R.endAt-Date.now()):0;
+    const frac=timed?left/Math.max(1,R.total*1000):Math.min(1,(S.min||0)/MAXM);
+    const a=A0+SPAN*Math.max(.001,frac);document.getElementById('hoVal').setAttribute('d',arc(A0,a));
+    const[kx,ky]=pt(a);const k=document.getElementById('hoKnob');k.setAttribute('cx',kx);k.setAttribute('cy',ky);
+    dial.classList.toggle('on',!!R.on);
+    const sTxt=st?st.textContent:'';if(stl.textContent!==sTxt)stl.textContent=sTxt;
+    const sh=(typeof SHADE_NAME!=='undefined'&&SHADE_NAME[S.min])||'מותאם';const t='שחום '+sh;if(shl.textContent!==t)shl.textContent=t;
+    const m=document.getElementById('hoMinus');m.disabled=!!R.on;};
+  setInterval(tick,250);tick();
   /* scroll only when there is really more than one screen (e.g. "more settings" open) */
   const app=document.getElementById('app');const fit=()=>{if(!app)return;app.style.overflowY='hidden';app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'};
-  addEventListener('resize',fit);document.getElementById('moreDet')?.addEventListener('toggle',()=>setTimeout(fit,50));setTimeout(fit,300);setInterval(fit,1500);
-  const src=document.getElementById('time');setInterval(()=>{if(src&&tm.textContent!==src.textContent)tm.textContent=src.textContent},250)}
+  addEventListener('resize',fit);document.getElementById('moreDet')?.addEventListener('toggle',()=>setTimeout(fit,50));setTimeout(fit,300);setInterval(fit,1500)}
 let x0=null,y0=0;addEventListener('touchstart',e=>{const t=e.touches[0];x0=t.clientX>innerWidth-28||t.clientX<28?t.clientX:null;y0=t.clientY},{passive:true});
 addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];if(Math.abs(t.clientX-x0)>90&&Math.abs(t.clientY-y0)<60)b.onclick();x0=null},{passive:true})})})();</script>
 <style>
@@ -395,6 +420,23 @@ addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];i
 .in-unplug .prof[aria-pressed="true"] svg,.in-unplug .prof[aria-pressed="true"] b{color:#6fa8ff!important}
 .in-unplug .bb-t b,.in-unplug .bb-ic{color:#6fa8ff!important}
 html.in-unplug,html.in-unplug body{overscroll-behavior:none}
+.in-unplug .hoDial{position:relative;width:min(100%,290px,31vh);aspect-ratio:1;margin:0 auto}
+.in-unplug .hoDial svg{width:100%;height:100%;display:block}
+.in-unplug .hoTrack{stroke:#3a3a3c;stroke-width:14;fill:none;stroke-linecap:round}
+.in-unplug .hoVal{stroke:#8e8e93;stroke-width:14;fill:none;stroke-linecap:round;transition:stroke .4s}
+.in-unplug .hoDial.on .hoVal{stroke:#ff9a3d}
+.in-unplug .hoKnob{fill:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
+.in-unplug .hoCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding-top:6%}
+.in-unplug .hoCenter .hoTime{font-size:min(4.2rem,9vh)!important}
+.in-unplug .hoState{font-size:1rem;font-weight:600;color:#aeaeb2}
+.in-unplug .hoDial.on .hoState{color:#ff9a3d}
+.in-unplug .hoShade{font-size:1.05rem;font-weight:700;color:#fff;margin-top:4px}
+.in-unplug .hero .status,.in-unplug .hero .hoImg{display:none!important}
+.in-unplug .hoSteps{display:flex;justify-content:space-between;margin-top:-4px;direction:ltr}
+.in-unplug .hoStep{width:56px;height:56px;border-radius:50%;background:#1c1c1e;color:#fff;font-size:28px;font-weight:300;display:grid;place-items:center;border:0}
+.in-unplug .hoStep:disabled{opacity:.35}
+.in-unplug .ext{display:none!important}
+
 /* HomeOn look: product photo in a card with a big countdown, orange "on" button, profiles as a row */
 .in-unplug .hero{background:#1c1c1e!important;border:0!important;border-radius:28px;padding:18px 16px 16px!important;gap:4px!important}
 .in-unplug .hero svg.toaster{display:none!important}
@@ -984,6 +1026,7 @@ setInterval(()=>{if(R.on&&R.endAt&&R.rounds>1&&!R.midDone&&R.endAt-Date.now()<=R
 
 render();setConn();
 if(linked)loadDevices();else setTimeout(openConnect,400);
+window.TST={get R(){return R},get S(){return S},save:()=>save(),render:()=>render(),extend:()=>extend(),buzz:n=>buzz(n),SHADE_NAME};
 })();
 </script>
 </body>
