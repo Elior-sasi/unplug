@@ -376,6 +376,9 @@ document.documentElement.classList.add('in-unplug');
 addEventListener('DOMContentLoaded',()=>{const h=document.querySelector('header.top');if(!h)return;const b=document.createElement('button');b.className='menu-btn';b.id='unplugBack';b.setAttribute('aria-label','חזרה ל-HomeOn');
 b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
 b.onclick=()=>{try{parent.postMessage('unplug-close','*')}catch(e){}};h.insertBefore(b,h.firstChild);
+const hero=document.getElementById('hero');if(hero){const im=document.createElement('img');im.className='hoImg';im.src='/unplug/real/toaster.png';im.alt='';
+  const tm=document.createElement('div');tm.className='hoTime';tm.setAttribute('aria-hidden','true');hero.prepend(tm);hero.prepend(im);
+  const src=document.getElementById('time');setInterval(()=>{if(src&&tm.textContent!==src.textContent)tm.textContent=src.textContent},250)}
 let x0=null,y0=0;addEventListener('touchstart',e=>{const t=e.touches[0];x0=t.clientX>innerWidth-28||t.clientX<28?t.clientX:null;y0=t.clientY},{passive:true});
 addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];if(Math.abs(t.clientX-x0)>90&&Math.abs(t.clientY-y0)<60)b.onclick();x0=null},{passive:true})})})();</script>
 <style>
@@ -387,6 +390,25 @@ addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];i
 .in-unplug .power[aria-pressed="true"]{background:#3d8bff!important;color:#fff!important}
 .in-unplug .prof[aria-pressed="true"] svg,.in-unplug .prof[aria-pressed="true"] b{color:#6fa8ff!important}
 .in-unplug .bb-t b,.in-unplug .bb-ic{color:#6fa8ff!important}
+/* HomeOn look: product photo in a card with a big countdown, orange "on" button, profiles as a row */
+.in-unplug .hero{background:#1c1c1e!important;border:1px solid rgba(255,255,255,.08);border-radius:28px;padding:18px 16px 16px!important;gap:4px!important}
+.in-unplug .hero svg.toaster{display:none!important}
+.in-unplug .hoImg{width:150px;height:150px;object-fit:contain;filter:saturate(.45) brightness(.85);transition:filter .4s}
+.in-unplug .app.is-on .hoImg{filter:drop-shadow(0 10px 26px #ff9a3d88)}
+.in-unplug .hoTime{font-size:3.6rem;font-weight:700;line-height:1;letter-spacing:-.02em;direction:ltr;font-variant-numeric:tabular-nums;color:#fff}
+.in-unplug .status .state{font-size:1.15rem!important}
+.in-unplug .power{background:#ff9a3d!important;color:#1a0c04!important;border:0!important;border-radius:999px!important;min-height:62px;font-size:1.3rem!important;font-weight:700!important}
+.in-unplug .app.is-on .power{background:#3d8bff!important;color:#fff!important;box-shadow:none!important}
+.in-unplug .ext{background:#1c1c1e!important;border:0!important;border-radius:999px!important;color:#fff!important}
+.in-unplug .ext:disabled{opacity:.45}
+.in-unplug .profiles{display:flex!important;gap:8px!important;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.in-unplug .profiles::-webkit-scrollbar{display:none}
+.in-unplug .prof{flex:0 0 auto!important;flex-direction:row!important;align-items:center!important;gap:8px!important;padding:10px 16px!important;min-height:46px;border-radius:999px!important;background:#1c1c1e!important;border:0!important}
+.in-unplug .prof .chip{width:auto!important;height:auto!important;background:none!important}
+.in-unplug .prof .chip svg{width:19px;height:19px}
+.in-unplug .prof b{font-size:.95rem!important;white-space:nowrap}
+.in-unplug .prof>span:last-child{font-size:.8rem!important;white-space:nowrap;opacity:.7}
+.in-unplug .prof[aria-pressed="true"]{background:#3d8bff26!important}
 </style>
 </head>
 <body>
