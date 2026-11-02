@@ -396,7 +396,7 @@ addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];i
 .in-unplug .bb-t b,.in-unplug .bb-ic{color:#6fa8ff!important}
 html.in-unplug,html.in-unplug body{overscroll-behavior:none}
 /* HomeOn look: product photo in a card with a big countdown, orange "on" button, profiles as a row */
-.in-unplug .hero{background:#1c1c1e!important;border:1px solid rgba(255,255,255,.08);border-radius:28px;padding:18px 16px 16px!important;gap:4px!important}
+.in-unplug .hero{background:#1c1c1e!important;border:0!important;border-radius:28px;padding:18px 16px 16px!important;gap:4px!important}
 .in-unplug .hero svg.toaster{display:none!important}
 .in-unplug .hoImg{width:min(118px,13vh);height:min(118px,13vh);object-fit:contain;filter:saturate(.45) brightness(.85);transition:filter .4s}
 .in-unplug .app.is-on .hoImg{filter:drop-shadow(0 10px 26px #ff9a3d88)}
@@ -941,7 +941,7 @@ function render(){
   renderStats();
   const isC=!TIMES.includes(S.min);
   $('bbShadeIc').innerHTML=SHADE_ICON(S.min);
-  $('bbShadeTxt').textContent=(isC?'מותאם':SHADE_NAME[S.min])+' · '+fmtMin(S.min)+'′';
+  $('bbShadeTxt').textContent=(isC?'מותאם':SHADE_NAME[S.min])+(window.IN_HOMEON?'':' · '+fmtMin(S.min)+'′');
   $('bbSoundTxt').textContent=SOUNDS[S.sound]||SOUNDS.ding;
 }
 function openShade(){
