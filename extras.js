@@ -178,11 +178,12 @@ async function syncShabbat(force){
       try{const j=await api('/schedules/save',{device:d.id,time:hm(t),days:[t.getDay()],cmds:[{code:pc,value:a.to==='on'}],label:'שבת',enabled:true,once:true});c.ids.push(j.id)}catch(e){}}}
   c.week=c.on?wk:'';LSset('unplug_shabbat',JSON.stringify(c));loadSched();
 }
+function shTimes(city){const {inT,outT}=nextShabbat(city);return `<div class="k">השבת הקרובה ב${esc((CITIES[city]||CITIES.ta)[0])}</div><div class="n" style="font-size:1.1rem">כניסה ${esc(fmtDay(inT))}<br>יציאה ${esc(fmtDay(outT))}</div>`}
 function openShabbat(){
   const c=SHB(),{inT,outT}=nextShabbat(c.city),cands=DEVS.filter(powerCode);
   const actRow=(a,i)=>{const d=DEVS.find(x=>x.id===a.device);return `<div class="row"><span class="grow"><span class="t">${esc(d?dname(d):'מכשיר שהוסר')}: ${a.to==='on'?'הדלקה':'כיבוי'}</span><br><span class="s">${a.when==='in'?'בכניסת שבת':'ביציאת שבת'}${+a.off?` · ${Math.abs(a.off)} דק׳ ${a.off<0?'לפני':'אחרי'}`:''}</span></span><button class="icbtn" data-rmA="${i}" aria-label="הסרת פעולה">${svg('trash')}</button></div>`};
-  sheet('מצב שבת',`<div class="ro"><div class="k">השבת הקרובה ב${esc(CITIES[c.city][0])}</div><div class="n" style="font-size:1.1rem">כניסה ${esc(fmtDay(inT))}<br>יציאה ${esc(fmtDay(outT))}</div></div>
-    <label class="row list" style="border-radius:22px"><span class="grow t">מצב שבת פעיל</span><input type="checkbox" class="tgl" id="shOn" ${c.on?'checked':''}></label>
+  sheet('מצב שבת',`<div class="ro" id="shT">${shTimes(c.city)}</div>
+    <div class="list"><div class="ctl"><div class="ctl-h"><span class="t" id="shOnL">מצב שבת פעיל</span><button class="sw" id="shOn" role="switch" aria-checked="${!!c.on}" aria-labelledby="shOnL"></button></div></div></div>
     <div class="field"><label for="shC">עיר (לזמני השבת)</label><select id="shC">${Object.entries(CITIES).map(([k,[n]])=>`<option value="${k}"${k===c.city?' selected':''}>${n}</option>`).join('')}</select></div>
     <div class="sec-h" style="margin:4px 4px 0"><h2>מה קורה בשבת</h2></div>
     <div class="list" id="shL">${c.acts.length?c.acts.map(actRow).join(''):'<div class="row"><span class="s">עוד אין פעולות. למשל: להדליק את המזגן 10 דק׳ לפני כניסת שבת</span></div>'}</div>
@@ -197,14 +198,19 @@ function openShabbat(){
     let to='on',wh='in';
     el.querySelectorAll('[data-to]').forEach(b=>b.onclick=()=>{to=b.dataset.to;el.querySelectorAll('[data-to]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     el.querySelectorAll('[data-wh]').forEach(b=>b.onclick=()=>{wh=b.dataset.wh;el.querySelectorAll('[data-wh]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
-    const drawL=()=>{el.querySelector('#shL').innerHTML=c.acts.length?c.acts.map(actRow).join(''):'<div class="row"><span class="s">עוד אין פעולות</span></div>';el.querySelectorAll('[data-rmA]').forEach(b=>b.onclick=()=>{c.acts.splice(+b.dataset.rma,1);drawL()})};drawL();
-    el.querySelector('#shA').onclick=()=>{const dv=el.querySelector('#shD').value;if(!dv)return;c.acts.push({device:dv,to,when:wh,off:Math.round(+el.querySelector('#shO').value||0)});drawL();toast('נוסף')};
-    el.querySelector('#shS').onclick=async()=>{c.on=el.querySelector('#shOn').checked;c.city=el.querySelector('#shC').value;
-      const b=el.querySelector('#shS');b.disabled=true;b.textContent='שומר...';
+    const drawL=()=>{el.querySelector('#shL').innerHTML=c.acts.length?c.acts.map(actRow).join(''):'<div class="row"><span class="s">עוד אין פעולות</span></div>';el.querySelectorAll('[data-rmA]').forEach(b=>b.onclick=()=>{c.acts.splice(+b.dataset.rma,1);drawL();doSave(false)})};drawL();
+    el.querySelector('#shA').onclick=()=>{const dv=el.querySelector('#shD').value;if(!dv)return;c.acts.push({device:dv,to,when:wh,off:Math.round(+el.querySelector('#shO').value||0)});drawL();doSave(false)};
+    /* saved at once when the switch or the city changes, and with the button */
+    const doSave=async(closeAfter)=>{c.on=el.querySelector('#shOn').getAttribute('aria-checked')==='true';c.city=el.querySelector('#shC').value;
+      const b=el.querySelector('#shS');b.disabled=true;const bt=b.textContent;b.textContent='שומר...';
+      const done=()=>{b.disabled=false;b.textContent=bt;render();if(closeAfter)close();toast(c.on?(c.acts.length?'מצב שבת פעיל':'מצב שבת פעיל. עכשיו מוסיפים פעולות'):'מצב שבת כבוי')};
       /* the server runs Shabbat and holidays (Hebcal); the old way was one-off schedules from the phone */
       if(typeof homeLoad==='function'&&await homeLoad()){const [,lat,lng,candle]=CITIES[c.city]||CITIES.ta;
         HOME.shabbat={on:c.on,lat,lon:lng,candle,city:c.city,acts:c.acts.map(a=>{const d=DEVS.find(x=>x.id===a.device);return {...a,pcode:(d&&powerCode(d))||'switch'}})};
-        if(await homeSave()&&await homeLoad()&&HOME.shabbat){for(const id of c.ids||[])await api('/schedules/delete',{id}).catch(()=>{});c.ids=[];c.server=true;c.week='';LSset('unplug_shabbat',JSON.stringify(c));loadSched();close();render();toast(c.on?'מצב שבת פעיל':'מצב שבת כבוי');return}}
-      c.server=false;LSset('unplug_shabbat',JSON.stringify(c));await syncShabbat(true);close();render();toast(c.on?'מצב שבת פעיל':'מצב שבת כבוי')};
+        if(await homeSave()&&await homeLoad()&&HOME.shabbat){for(const id of c.ids||[])await api('/schedules/delete',{id}).catch(()=>{});c.ids=[];c.server=true;c.week='';LSset('unplug_shabbat',JSON.stringify(c));loadSched();return done()}}
+      c.server=false;LSset('unplug_shabbat',JSON.stringify(c));await syncShabbat(true);done()};
+    el.querySelector('#shOn').onclick=()=>{const b=el.querySelector('#shOn');b.setAttribute('aria-checked',b.getAttribute('aria-checked')!=='true');doSave(false)};
+    el.querySelector('#shC').onchange=()=>{el.querySelector('#shT').innerHTML=shTimes(el.querySelector('#shC').value);doSave(false)};
+    el.querySelector('#shS').onclick=()=>doSave(true);
   });
 }
