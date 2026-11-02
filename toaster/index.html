@@ -379,6 +379,9 @@ b.onclick=()=>{try{parent.postMessage('unplug-close','*')}catch(e){}};h.insertBe
 const h1=h.querySelector('h1');if(h1){const w=document.createElement('div');w.style.cssText='flex:1;min-width:0';h1.before(w);w.append(h1);const sb=document.createElement('div');sb.className='hoSub';sb.textContent='קלייה בשקע חכם';w.append(sb)}
 const hero=document.getElementById('hero');if(hero){const im=document.createElement('img');im.className='hoImg';im.src='/unplug/real/toaster.png';im.alt='';
   const tm=document.createElement('div');tm.className='hoTime';tm.setAttribute('aria-hidden','true');hero.prepend(tm);hero.prepend(im);
+  /* scroll only when there is really more than one screen (e.g. "more settings" open) */
+  const app=document.getElementById('app');const fit=()=>{if(!app)return;app.style.overflowY='hidden';app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'};
+  addEventListener('resize',fit);document.getElementById('moreDet')?.addEventListener('toggle',()=>setTimeout(fit,50));setTimeout(fit,300);setInterval(fit,1500);
   const src=document.getElementById('time');setInterval(()=>{if(src&&tm.textContent!==src.textContent)tm.textContent=src.textContent},250)}
 let x0=null,y0=0;addEventListener('touchstart',e=>{const t=e.touches[0];x0=t.clientX>innerWidth-28||t.clientX<28?t.clientX:null;y0=t.clientY},{passive:true});
 addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];if(Math.abs(t.clientX-x0)>90&&Math.abs(t.clientY-y0)<60)b.onclick();x0=null},{passive:true})})})();</script>
@@ -395,9 +398,9 @@ html.in-unplug,html.in-unplug body{overscroll-behavior:none}
 /* HomeOn look: product photo in a card with a big countdown, orange "on" button, profiles as a row */
 .in-unplug .hero{background:#1c1c1e!important;border:1px solid rgba(255,255,255,.08);border-radius:28px;padding:18px 16px 16px!important;gap:4px!important}
 .in-unplug .hero svg.toaster{display:none!important}
-.in-unplug .hoImg{width:118px;height:118px;object-fit:contain;filter:saturate(.45) brightness(.85);transition:filter .4s}
+.in-unplug .hoImg{width:min(118px,13vh);height:min(118px,13vh);object-fit:contain;filter:saturate(.45) brightness(.85);transition:filter .4s}
 .in-unplug .app.is-on .hoImg{filter:drop-shadow(0 10px 26px #ff9a3d88)}
-.in-unplug .hoTime{font-size:3rem;font-weight:700;line-height:1;letter-spacing:-.02em;direction:ltr;font-variant-numeric:tabular-nums;color:#fff}
+.in-unplug .hoTime{font-size:min(3rem,7vh);font-weight:700;line-height:1;letter-spacing:-.02em;direction:ltr;font-variant-numeric:tabular-nums;color:#fff}
 .in-unplug .status .state{font-size:1.15rem!important}
 .in-unplug .power{background:#ff9a3d!important;color:#1a0c04!important;border:0!important;border-radius:999px!important;min-height:62px;font-size:1.3rem!important;font-weight:700!important}
 .in-unplug .app.is-on .power{background:#3d8bff!important;color:#fff!important;box-shadow:none!important}
