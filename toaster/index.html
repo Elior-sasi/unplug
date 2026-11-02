@@ -382,7 +382,8 @@ const hero=document.getElementById('hero'),T=window.TST;if(hero&&T){const R=T.R,
   const C=150,Rr=133,A0=135,SPAN=270,pt=(d)=>{const a=d*Math.PI/180;return[C+Rr*Math.cos(a),C+Rr*Math.sin(a)]};
   const arc=(a1,a2)=>{const[x1,y1]=pt(a1),[x2,y2]=pt(a2);return`M${x1} ${y1}A${Rr} ${Rr} 0 ${a2-a1>180?1:0} 1 ${x2} ${y2}`};
   const dial=document.createElement('div');dial.className='hoDial';
-  dial.innerHTML=`<svg viewBox="0 0 300 300" aria-hidden="true"><path class="hoTrack" d="${arc(A0,A0+SPAN)}"/><path class="hoVal" id="hoVal"/><circle class="hoKnob" id="hoKnob" r="13"/></svg>
+  const ticks=Array.from({length:9},(_,i)=>{const d=A0+SPAN*i/8,[x1,y1]=(()=>{const a=d*Math.PI/180;return[C+108*Math.cos(a),C+108*Math.sin(a)]})(),[x2,y2]=(()=>{const a=d*Math.PI/180;return[C+116*Math.cos(a),C+116*Math.sin(a)]})();return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="hoTick"/>`}).join('');
+  dial.innerHTML=`<svg viewBox="0 0 300 300" aria-hidden="true">${ticks}<path class="hoTrack" d="${arc(A0,A0+SPAN)}"/><path class="hoVal" id="hoVal"/><circle class="hoKnob" id="hoKnob" r="13"/></svg>
     <div class="hoCenter"><div class="hoTime" aria-hidden="true"></div><div class="hoState"></div><div class="hoShade"></div></div>`;
   hero.prepend(dial);
   const tm=dial.querySelector('.hoTime'),stl=dial.querySelector('.hoState'),shl=dial.querySelector('.hoShade');
@@ -406,7 +407,10 @@ const hero=document.getElementById('hero'),T=window.TST;if(hero&&T){const R=T.R,
     const m=document.getElementById('hoMinus');m.disabled=!!R.on;};
   setInterval(tick,250);tick();
   /* scroll only when there is really more than one screen (e.g. "more settings" open) */
-  const app=document.getElementById('app');const fit=()=>{if(!app)return;app.style.overflowY='hidden';app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'};
+  const app=document.getElementById('app');const fit=()=>{if(!app)return;const bar=document.querySelector('.bottom-bar');if(bar)app.style.setProperty('padding-bottom',Math.ceil(innerHeight-bar.getBoundingClientRect().top+16)+'px','important');app.style.overflowY='hidden';
+    const dl=document.querySelector('.hoDial'),more=document.getElementById('moreDet');
+    if(dl&&!(more&&more.open)){let w=Math.min(300,hero.clientWidth-24);dl.style.width=w+'px';while(w>190&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
+    app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'};
   addEventListener('resize',fit);document.getElementById('moreDet')?.addEventListener('toggle',()=>setTimeout(fit,50));setTimeout(fit,300);setInterval(fit,1500)}
 let x0=null,y0=0;addEventListener('touchstart',e=>{const t=e.touches[0];x0=t.clientX>innerWidth-28||t.clientX<28?t.clientX:null;y0=t.clientY},{passive:true});
 addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];if(Math.abs(t.clientX-x0)>90&&Math.abs(t.clientY-y0)<60)b.onclick();x0=null},{passive:true})})})();</script>
@@ -420,20 +424,23 @@ addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];i
 .in-unplug .prof[aria-pressed="true"] svg,.in-unplug .prof[aria-pressed="true"] b{color:#6fa8ff!important}
 .in-unplug .bb-t b,.in-unplug .bb-ic{color:#6fa8ff!important}
 html.in-unplug,html.in-unplug body{overscroll-behavior:none}
-.in-unplug .hoDial{position:relative;width:min(100%,290px,31vh);aspect-ratio:1;margin:0 auto}
+.in-unplug .app{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 128px)!important}
+.in-unplug .hoDial{position:relative;width:240px;aspect-ratio:1;margin:0 auto -11%}
 .in-unplug .hoDial svg{width:100%;height:100%;display:block}
 .in-unplug .hoTrack{stroke:#3a3a3c;stroke-width:14;fill:none;stroke-linecap:round}
 .in-unplug .hoVal{stroke:#8e8e93;stroke-width:14;fill:none;stroke-linecap:round;transition:stroke .4s}
 .in-unplug .hoDial.on .hoVal{stroke:#ff9a3d}
+.in-unplug .hoTick{stroke:#5a5a5e;stroke-width:3;stroke-linecap:round}
 .in-unplug .hoKnob{fill:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
 .in-unplug .hoCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding-top:6%}
-.in-unplug .hoCenter .hoTime{font-size:min(4.2rem,9vh)!important}
+.in-unplug .hoDial{container-type:inline-size}
+.in-unplug .hoCenter .hoTime{font-size:23cqw!important}
 .in-unplug .hoState{font-size:1rem;font-weight:600;color:#aeaeb2}
 .in-unplug .hoDial.on .hoState{color:#ff9a3d}
 .in-unplug .hoShade{font-size:1.05rem;font-weight:700;color:#fff;margin-top:4px}
 .in-unplug .hero .status,.in-unplug .hero .hoImg{display:none!important}
 .in-unplug .hoSteps{display:flex;justify-content:space-between;margin-top:-4px;direction:ltr}
-.in-unplug .hoStep{width:56px;height:56px;border-radius:50%;background:#1c1c1e;color:#fff;font-size:28px;font-weight:300;display:grid;place-items:center;border:0}
+.in-unplug .hoStep{width:48px;height:48px;border-radius:50%;background:#1c1c1e;color:#fff;font-size:26px;font-weight:700;display:grid;place-items:center;border:0}
 .in-unplug .hoStep:disabled{opacity:.35}
 .in-unplug .ext{display:none!important}
 
