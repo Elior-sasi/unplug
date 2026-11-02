@@ -60,7 +60,13 @@ function condOpts(d){const o=[];const pc=powerCode(d);
   if(pc)o.push({k:'turns_on',t:'נדלק',code:pc},{k:'turns_off',t:'נכבה',code:pc});
   if(d.status.cur_power!=null)o.push({k:'power_below',t:'הצריכה יורדת מתחת (וואט)',code:'cur_power',scale:scaleOf(d,'cur_power'),val:true},{k:'power_above',t:'הצריכה עולה מעל (וואט)',code:'cur_power',scale:scaleOf(d,'cur_power'),val:true});
   return o}
-function autoText(a){const dc=DEVS.find(d=>d.id===a.if.device),dt=DEVS.find(d=>d.id===a.then.device);
+/* outdoor weather as a condition (the server reads Open-Meteo at the home location) */
+const WXK=[{k:'out_above',t:'בחוץ עולה מעל (מעלות)',val:true},{k:'out_below',t:'בחוץ יורד מתחת (מעלות)',val:true},
+  {k:'fc_above',t:'התחזית להיום: מקסימום מעל',val:true,at:true},{k:'fc_below',t:'התחזית להיום: מינימום מתחת',val:true,at:true}];
+const isWx=k=>WXK.some(x=>x.k===k);
+function autoText(a){if(isWx(a.if.kind)){const o=WXK.find(x=>x.k===a.if.kind),dt=DEVS.find(d=>d.id===a.then.device),on=a.then.cmds[0]&&a.then.cmds[0].value===true;
+    return `אם ${o.t.replace(' (מעלות)','')} ${a.if.value}°${o.at?' (נבדק מ-'+(a.if.at||'07:00')+')':''} ← ${on?'להדליק':'לכבות'} את ${dt?dname(dt):'מכשיר'}`}
+  const dc=DEVS.find(d=>d.id===a.if.device),dt=DEVS.find(d=>d.id===a.then.device);
   const c=(condOpts(dc||{status:{}}).find(o=>o.k===a.if.kind)||{t:a.if.kind}).t;const on=a.then.cmds[0]&&a.then.cmds[0].value===true;
   return `אם ${dc?dname(dc):'מכשיר'} ${c}${['temp_above','temp_below'].includes(a.if.kind)?' '+a.if.value+'°':a.if.kind.startsWith('power')?' '+a.if.value:''} ← ${on?'להדליק':'לכבות'} את ${dt?dname(dt):'מכשיר'}`}
 async function openAutos(){
@@ -72,12 +78,14 @@ async function openAutos(){
     <button class="btn pri wide" id="auA">${svg('plus')}אוטומציה חדשה</button>
     <div class="sec-h"><h2>רעיונות</h2></div><div class="list">
       <button class="row row-btn" data-ai="hot"><span class="grow"><span class="t">חם בבית ← להדליק מזגן שני</span></span>${svg('plus')}</button>
+      <button class="row row-btn" data-ai="wx"><span class="grow"><span class="t">יום חם בתחזית ← להדליק מזגן בצהריים</span></span>${svg('plus')}</button>
       <button class="row row-btn" data-ai="wash"><span class="grow"><span class="t">מכונת הכביסה סיימה ← לכבות את השקע</span></span>${svg('plus')}</button></div>`,(el,close)=>{
     el.querySelectorAll('[data-ae]').forEach(b=>b.onclick=async()=>{const a=HOME.autos[+b.dataset.ae];a.enabled=a.enabled===false;b.setAttribute('aria-checked',a.enabled);await homeSave()});
     el.querySelectorAll('[data-ad]').forEach(b=>b.onclick=async()=>{if(!confirm('למחוק את האוטומציה?'))return;HOME.autos.splice(+b.dataset.ad,1);await homeSave();close();openAutos()});
     el.querySelector('#auA').onclick=()=>autoEdit({});
     el.querySelectorAll('[data-ai]').forEach(b=>b.onclick=()=>{
       if(b.dataset.ai==='hot'){const ac=DEVS.find(d=>TEMPC.some(c=>d.status[c]!=null)),p=DEVS.find(d=>typeof isAcPlug==='function'&&isAcPlug(d));autoEdit({name:'חם בבית',ifD:ac&&ac.id,kind:'temp_above',value:27,thenD:p&&p.id,on:true,notify:true})}
+      else if(b.dataset.ai==='wx'){const ac=DEVS.find(d=>AC.has(d.category))||DEVS.find(d=>typeof isAcPlug==='function'&&isAcPlug(d));autoEdit({name:'יום חם',ifD:'__wx',kind:'fc_above',value:30,at:'13:00',thenD:ac&&ac.id,on:true,notify:true})}
       else{const w=DEVS.find(d=>typeof isWasher==='function'&&isWasher(d));autoEdit({name:'כביסה הסתיימה',ifD:w&&w.id,kind:'power_below',value:3,thenD:w&&w.id,on:false,notify:false})}});
   });
 }
@@ -86,23 +94,33 @@ function autoEdit(p){
   const opt=(id,sel)=>devs.map(d=>`<option value="${esc(d.id)}"${d.id===sel?' selected':''}>${esc(dname(d))}${roomOf(d)?' · '+esc(roomOf(d)):''}</option>`).join('');
   sheet('אוטומציה חדשה',`<div class="list">
     <div class="field"><label for="aN">שם</label><input id="aN" value="${esc(st.name)}" placeholder="למשל: חם בבית"></div>
-    <div class="field"><label for="aI">אם המכשיר</label><select id="aI">${opt('aI',st.ifD)}</select></div>
+    <div class="field"><label for="aI">אם</label><select id="aI"><option value="__wx"${st.ifD==='__wx'?' selected':''}>מזג האוויר בחוץ</option>${opt('aI',st.ifD)}</select></div>
     <div class="field"><label for="aK">מה קורה</label><select id="aK"></select></div>
     <div class="field" id="aVb"><label for="aV">ערך</label><input id="aV" type="number" inputmode="decimal" value="${st.value}"></div>
+    <div class="field" id="aAtb" hidden><label for="aAt">מאיזו שעה לבדוק</label><input id="aAt" type="time" value="${esc(p.at||'07:00')}" style="direction:ltr"></div>
+    <div class="field" id="aLb" hidden><label for="aL">איפה</label><select id="aL">${HOME.loc&&HOME.loc.name==='בית'?'<option value="home">הבית (מהאייפון)</option>':''}${Object.entries(CITIES).map(([k,[n]])=>`<option value="${k}"${(HOME.loc?HOME.loc.name===n:k===((typeof SHB==='function'&&SHB().city)||'ta'))?' selected':''}>${n}</option>`).join('')}</select></div>
+    <p class="s" id="aWx" role="status" hidden></p>
     <div class="field"><label for="aO">אז</label><select id="aO"><option value="1"${st.on?' selected':''}>להדליק</option><option value="0"${st.on?'':' selected'}>לכבות</option></select></div>
     <div class="field"><label for="aT">את המכשיר</label><select id="aT">${devs.filter(d=>powerCode(d)).map(d=>`<option value="${esc(d.id)}"${d.id===st.thenD?' selected':''}>${esc(dname(d))}</option>`).join('')}</select></div>
     <div class="ctl"><div class="ctl-h"><span class="t" id="aNt">התראה לטלפון כשזה קורה</span><button class="sw" id="aNo" role="switch" aria-checked="${st.notify}" aria-labelledby="aNt"></button></div></div></div>
     <p class="s" id="aPv" role="status"></p><button class="btn pri wide" id="aS">שמירה</button>`,(el,close)=>{
     const $$=s=>el.querySelector(s);
-    const fillK=()=>{const d=DEVS.find(x=>x.id===$$('#aI').value);const o=condOpts(d);$$('#aK').innerHTML=o.length?o.map(x=>`<option value="${x.k}"${x.k===st.kind?' selected':''}>${esc(x.t)}</option>`).join(''):'<option value="">אין למכשיר הזה מה למדוד</option>';fillV()};
-    const fillV=()=>{const d=DEVS.find(x=>x.id===$$('#aI').value),o=condOpts(d).find(x=>x.k===$$('#aK').value);$$('#aVb').hidden=!(o&&o.val);prev()};
-    const build=()=>{const d=DEVS.find(x=>x.id===$$('#aI').value),o=condOpts(d).find(x=>x.k===$$('#aK').value),t=DEVS.find(x=>x.id===$$('#aT').value);if(!o||!t)return null;
-      return {id:Math.random().toString(36).slice(2,8),name:$$('#aN').value.trim()||'אוטומציה',enabled:true,notify:$$('#aNo').getAttribute('aria-checked')==='true',cool:10,
-        if:{device:d.id,kind:o.k,code:o.code,scale:o.scale||0,value:o.val?+$$('#aV').value:0},then:{device:t.id,cmds:[{code:powerCode(t),value:$$('#aO').value==='1'}]}}};
+    const wx=()=>$$('#aI').value==='__wx';
+    const optsNow=()=>wx()?WXK:condOpts(DEVS.find(x=>x.id===$$('#aI').value)||{status:{}});
+    const locNow=()=>{const v=$$('#aL').value;if(v==='home')return HOME.loc;const c=CITIES[v];return c?{lat:c[1],lon:c[2],name:c[0]}:null};
+    const showWx=async()=>{const w=$$('#aWx');w.hidden=!wx();if(!wx())return;w.textContent='בודק מזג אוויר...';
+      try{const j=await api('/weather',{loc:locNow()});const x=j.weather;w.textContent=x?`עכשיו בחוץ ${Math.round(x.now)} מעלות. היום בין ${Math.round(x.min)} ל-${Math.round(x.max)} מעלות.`:'אין נתוני מזג אוויר כרגע'}catch(e){w.textContent='צריך עדכון שרת כדי לבדוק מזג אוויר'}};
+    const fillK=()=>{if(wx()){$$('#aK').innerHTML=WXK.map(x=>`<option value="${x.k}"${x.k===st.kind?' selected':''}>${esc(x.t)}</option>`).join('');$$('#aLb').hidden=false;showWx();return fillV()}
+      $$('#aLb').hidden=true;$$('#aWx').hidden=true;
+      const d=DEVS.find(x=>x.id===$$('#aI').value);const o=condOpts(d);$$('#aK').innerHTML=o.length?o.map(x=>`<option value="${x.k}"${x.k===st.kind?' selected':''}>${esc(x.t)}</option>`).join(''):'<option value="">אין למכשיר הזה מה למדוד</option>';fillV()};
+    const fillV=()=>{const o=optsNow().find(x=>x.k===$$('#aK').value);$$('#aVb').hidden=!(o&&o.val);$$('#aAtb').hidden=!(o&&o.at);$$('#aVb label').textContent=wx()?'כמה מעלות':'ערך';prev()};
+    const build=()=>{const o=optsNow().find(x=>x.k===$$('#aK').value),t=DEVS.find(x=>x.id===$$('#aT').value);if(!o||!t)return null;
+      return {id:Math.random().toString(36).slice(2,8),name:$$('#aN').value.trim()||'אוטומציה',enabled:true,notify:$$('#aNo').getAttribute('aria-checked')==='true',cool:wx()?120:10,
+        if:{device:wx()?'':$$('#aI').value,kind:o.k,code:o.code||'',scale:o.scale||0,value:o.val?+$$('#aV').value:0,at:$$('#aAt').value||'07:00'},then:{device:t.id,cmds:[{code:powerCode(t),value:$$('#aO').value==='1'}]}}};
     const prev=()=>{const a=build();$$('#aPv').textContent=a?autoText(a):'';if(a)a.text=autoText(a)};
-    $$('#aI').onchange=fillK;$$('#aK').onchange=fillV;['#aV','#aO','#aT','#aN'].forEach(s=>$$(s).oninput=$$(s).onchange=prev);
+    $$('#aI').onchange=fillK;$$('#aK').onchange=fillV;$$('#aL').onchange=showWx;['#aV','#aO','#aT','#aN','#aAt'].forEach(s=>$$(s).oninput=$$(s).onchange=prev);
     $$('#aNo').onclick=()=>{const b=$$('#aNo');b.setAttribute('aria-checked',b.getAttribute('aria-checked')!=='true')};
     fillK();
-    $$('#aS').onclick=async()=>{const a=build();if(!a)return toast('בחר תנאי ומכשיר');a.text=autoText(a);HOME.autos.push(a);if(await homeSave()){close();openAutos();toast('נשמר')}};
+    $$('#aS').onclick=async()=>{const a=build();if(!a)return toast('בחר תנאי ומכשיר');a.text=autoText(a);if(wx())HOME.loc=locNow();HOME.autos.push(a);if(await homeSave()){close();openAutos();toast('נשמר')}};
   });
 }

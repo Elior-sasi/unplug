@@ -1436,15 +1436,16 @@ if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConne
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active')&&!(typeof REORDER!=='undefined'&&REORDER))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
 </script>
-<script src="extras.js?v=8"></script>
+<script src="extras.js?v=9"></script>
 <script src="smart.js?v=2"></script>
 <script src="motion.js?v=3"></script>
 <script src="washer.js?v=1"></script>
 <script src="acplug.js?v=1"></script>
 <script src="live.js?v=1"></script>
 <script src="gbackup.js?v=1"></script>
-<script src="home.js?v=1"></script>
+<script src="home.js?v=2"></script>
 <script src="tv.js?v=2"></script>
+<script src="native.js?v=1"></script>
 <script>render();</script>
 </body>
 </html>

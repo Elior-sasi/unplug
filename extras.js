@@ -168,7 +168,7 @@ function nextShabbat(city){
 const SHB=()=>LSj('unplug_shabbat',{on:false,city:'ta',acts:[],ids:[],week:''});
 const fmtDay=t=>t.toLocaleDateString('he-IL',{weekday:'long'})+' '+hm(t);
 async function syncShabbat(force){
-  const c=SHB();if(!CFG.key)return;const {inT,outT}=nextShabbat(c.city),wk=inT.toISOString().slice(0,10);
+  const c=SHB();if(!CFG.key||c.server)return;const {inT,outT}=nextShabbat(c.city),wk=inT.toISOString().slice(0,10);
   if(!force&&c.week===wk&&c.on)return;
   for(const id of c.ids||[])await api('/schedules/delete',{id}).catch(()=>{});
   c.ids=[];
@@ -192,14 +192,19 @@ function openShabbat(){
       <div class="seg" role="group" aria-label="מתי"><button data-wh="in" aria-pressed="true">בכניסת שבת</button><button data-wh="out" aria-pressed="false">ביציאת שבת</button></div>
       <div class="field"><label for="shO">הפרש בדקות (מינוס = לפני)</label><input id="shO" type="number" inputmode="numeric" value="0" style="direction:ltr;text-align:center"></div>
       <button class="btn wide" id="shA">${svg('plus')}הוספת פעולה</button></div></div>
-    <p style="font-size:.92rem">הזמנים מחושבים לפי השקיעה בעיר. האפליקציה מתזמנת כל פעם את השבת הקרובה, אז צריך לפתוח אותה לפחות פעם בשבוע. חגים עוד לא נכללים.</p>
+    <p style="font-size:.92rem">כולל חגים. השרת מחשב את הזמנים לפי העיר ומפעיל לבד כל שבוע, גם כשהטלפון כבוי. לא צריך לפתוח את האפליקציה.</p>
     <button class="btn pri wide" id="shS">שמירה</button>`,(el,close)=>{
     let to='on',wh='in';
     el.querySelectorAll('[data-to]').forEach(b=>b.onclick=()=>{to=b.dataset.to;el.querySelectorAll('[data-to]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     el.querySelectorAll('[data-wh]').forEach(b=>b.onclick=()=>{wh=b.dataset.wh;el.querySelectorAll('[data-wh]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     const drawL=()=>{el.querySelector('#shL').innerHTML=c.acts.length?c.acts.map(actRow).join(''):'<div class="row"><span class="s">עוד אין פעולות</span></div>';el.querySelectorAll('[data-rmA]').forEach(b=>b.onclick=()=>{c.acts.splice(+b.dataset.rma,1);drawL()})};drawL();
     el.querySelector('#shA').onclick=()=>{const dv=el.querySelector('#shD').value;if(!dv)return;c.acts.push({device:dv,to,when:wh,off:Math.round(+el.querySelector('#shO').value||0)});drawL();toast('נוסף')};
-    el.querySelector('#shS').onclick=async()=>{c.on=el.querySelector('#shOn').checked;c.city=el.querySelector('#shC').value;LSset('unplug_shabbat',JSON.stringify(c));
-      const b=el.querySelector('#shS');b.disabled=true;b.textContent='מתזמן...';await syncShabbat(true);close();render();toast(c.on?'מצב שבת פעיל':'מצב שבת כבוי')};
+    el.querySelector('#shS').onclick=async()=>{c.on=el.querySelector('#shOn').checked;c.city=el.querySelector('#shC').value;
+      const b=el.querySelector('#shS');b.disabled=true;b.textContent='שומר...';
+      /* the server runs Shabbat and holidays (Hebcal); the old way was one-off schedules from the phone */
+      if(typeof homeLoad==='function'&&await homeLoad()){const [,lat,lng,candle]=CITIES[c.city]||CITIES.ta;
+        HOME.shabbat={on:c.on,lat,lon:lng,candle,city:c.city,acts:c.acts.map(a=>{const d=DEVS.find(x=>x.id===a.device);return {...a,pcode:(d&&powerCode(d))||'switch'}})};
+        if(await homeSave()&&await homeLoad()&&HOME.shabbat){for(const id of c.ids||[])await api('/schedules/delete',{id}).catch(()=>{});c.ids=[];c.server=true;c.week='';LSset('unplug_shabbat',JSON.stringify(c));loadSched();close();render();toast(c.on?'מצב שבת פעיל':'מצב שבת כבוי');return}}
+      c.server=false;LSset('unplug_shabbat',JSON.stringify(c));await syncShabbat(true);close();render();toast(c.on?'מצב שבת פעיל':'מצב שבת כבוי')};
   });
 }
