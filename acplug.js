@@ -38,8 +38,8 @@ function openAcPlug(d){
       const left=Math.max(0,(i.offAt||0)+ACP_GAP-Date.now());
       const mySched=SCHED.filter(s=>s.device===d.id&&s.label!=='מחזור לילה'&&!(s.once&&s.label==='טיימר'));
       body.innerHTML=`${!d.online?`<div class="empty" role="alert"><b>השקע מנותק</b>בדוק שהוא מחובר לחשמל ול-WiFi.</div>`:''}
-        <button class="big-pw" id="apPw" role="switch" aria-checked="${on}" aria-label="${esc(dname(d))} פועל">${devArt(d,1.5)}</button>
-        <div class="state-line" role="status">${on?(hot?'חימום':'קירור'):'כבוי'}${run?' · '+run:''}${!on&&left?` · אפשר להדליק בעוד ${Math.ceil(left/60e3)} דק׳`:''}</div>
+        ${devHero(d,!d.online?'מנותק':on?(hot?'חימום':'קירור'):'כבוי',(run||'')+(!on&&left?`אפשר להדליק בעוד ${Math.ceil(left/60e3)} דק׳`:''))}
+        ${pwPill(d,'apPw')}
         <div class="list"><div class="ctl"><div class="ctl-h"><span class="t" id="apML">מצב במזגן</span></div>
           <div class="seg" role="group" aria-labelledby="apML"><button data-am="cold" aria-pressed="${!hot}">❄︎ קירור</button><button data-am="hot" aria-pressed="${hot}">☀︎ חימום</button></div>
           <p class="s" style="margin:6px 2px 0">השקע רק מדליק ומכבה. את המצב בוחרים בשלט של המזגן, וכאן הוא נשמר לתצוגה.</p></div></div>

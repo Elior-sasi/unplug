@@ -64,9 +64,9 @@ function openWasher(d){
         :s.end&&Date.now()-s.end<4*3600e3?`<div class="n" style="font-size:2rem;font-weight:700">סיימה ב-${hm(new Date(s.end))}</div><div class="s">${Date.now()-s.end<30*60e3?'אפשר לפרוק':'הכביסה מחכה'}</div>`
         :`<div class="n" style="font-size:2rem;font-weight:700">${s.on?'מוכנה':'השקע כבוי'}</div><div class="s">${s.on?'מתחילים במכונה, ו-HomeOn יזהה לבד':'צריך להדליק את השקע כדי שהמכונה תעבוד'}</div>`;
       const runs=(info.runs||[]).slice(-4).reverse();
-      body.innerHTML=`<div class="big-pw" aria-hidden="true" style="pointer-events:none">${devArt(d,1.5)}</div>
-        <div role="status" style="text-align:center">${big}${s.running&&s.phase?`<div class="s" style="margin-top:4px">${esc(s.phase)} · ${Math.round(s.w)} וואט</div>`:''}</div>
-        ${!s.on&&pc?`<button class="btn pri wide" id="wOn">${svg('power')}הדלקת השקע</button>`:''}
+      body.innerHTML=`<div class="dhero${s.running?' on':''}"><div class="dh-art" aria-hidden="true">${devArt(d,1.5)}</div>
+        <div role="status" style="text-align:center">${big}${s.running&&s.phase?`<div class="s" style="margin-top:4px">${esc(s.phase)} · ${Math.round(s.w)} וואט</div>`:''}</div></div>
+        ${!s.on&&pc?`<button class="dpw" id="wOn" aria-pressed="false">${svg('power')}<span>הדלקת השקע</span></button>`:''}
         <div class="sec-h"><h2 id="wPL">התוכנית במכונה</h2></div>
         <div class="list"><div class="ctl"><div class="seg" role="group" aria-labelledby="wPL" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:4px">
           ${WPROG.map(([k,n])=>`<button data-wp="${k}" aria-pressed="${info.prog===k}" class="wpB"><span>${esc(n)}</span><span class="s" style="font-size:.8em">${wMinutes(d,k)} דק׳</span></button>`).join('')}</div>

@@ -123,6 +123,16 @@ nav.bar button[aria-current="page"]{color:var(--acc-txt)}
 .big-pw .d{fill-opacity:.25}
 .big-pw[aria-checked="true"]{background:linear-gradient(160deg,var(--acc),var(--acc2));color:var(--acc-ink);border-color:transparent;box-shadow:0 10px 40px #ff9a3d55}
 .state-line{text-align:center;font-weight:700;font-size:1.2rem}
+.dhero{display:flex;flex-direction:column;align-items:center;gap:4px;padding:20px 16px 18px;border-radius:28px;background:#1c1c1e;border:1px solid var(--line)}
+.dh-art{width:150px;height:150px;display:grid;place-items:center}
+.dh-art img,.dh-art svg,.dh-art .art{width:100%;height:100%;object-fit:contain}
+.dhero:not(.on) .dh-art{filter:saturate(.4) brightness(.8)}
+.dhero.on .dh-art{filter:drop-shadow(0 10px 26px #ff9a3d88)}
+.dh-state{font-size:2.1rem;font-weight:800;line-height:1.15;margin-top:6px}
+.dh-sub{font-size:1rem;color:var(--mut)}
+.dpw{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:62px;border-radius:999px;border:0;background:#ff9a3d;color:#1a0c04;font:inherit;font-size:1.3rem;font-weight:700}
+.dpw svg{width:26px;height:26px}
+.dpw[aria-pressed="true"]{background:#3d8bff;color:#fff}
 .big-pw[aria-checked="true"]+.state-line{color:var(--acc-txt)}
 .ctl{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
 .ctl:last-child{border-bottom:0}
@@ -928,8 +938,13 @@ function sheet(title,html,init){
 function openBreeze(d){
   if(!LS('kor_key'))LSset('kor_key',CFG.key);
   LSset('kor_dev',d.id);
+  openFrame(d,'/kor/?in=unplug','Breeze');
+}
+/* the toaster app, inside HomeOn, on the same plug */
+function openToaster(d){LSset('toaster_key',CFG.key);LSset('toaster_dev',d.id);openFrame(d,'/unplug/toaster/?in=unplug','טוסטר')}
+function openFrame(d,src,what){
   const w=document.createElement('div');w.className='breeze';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label',dname(d));
-  w.innerHTML=`<iframe src="/kor/?in=unplug" title="Breeze - שליטה ב${esc(dname(d))}" allow="clipboard-write"></iframe>`;
+  w.innerHTML=`<iframe src="${src}" title="${esc(what)} - שליטה ב${esc(dname(d))}" allow="clipboard-write"></iframe>`;
   const close=()=>{w.remove();document.querySelector('.app').removeAttribute('aria-hidden');refreshOne(d.id);loadSched()};
   const onMsg=e=>{if(e.data==='unplug-close'){removeEventListener('message',onMsg);close()}};addEventListener('message',onMsg);
   w.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
@@ -940,10 +955,17 @@ let OPEN=null;
 function refreshOpen(d){if(OPEN&&OPEN.id===d.id)OPEN.draw(d)}
 const SKIP=new Set(['colour_data','colour_data_v2','scene_data','scene_data_v2','music_data','control_data','fault','countdown_left']);
 const AC=new Set(['kt','ktkzq','kts']);
+/* the same look as the AC page: a card with the product and its state, then a wide power button */
+function devHero(d,state,sub){const on=isOn(d),w=d.status&&d.status.cur_power!=null&&on?watts(d):null;
+  state=state||(!d.online?'מנותק':on?'דולק':'כבוי');
+  sub=sub!=null?sub:(w!=null?Math.round(w)+' וואט':(roomOf(d)||''));
+  return `<div class="dhero${on?' on':''}"><div class="dh-art" aria-hidden="true">${devArt(d,1.5)}</div><div class="dh-state" role="status">${esc(state)}</div>${sub?`<div class="dh-sub">${esc(sub)}</div>`:''}</div>`}
+function pwPill(d,id){const on=isOn(d);return `<button class="dpw" id="${id}" aria-pressed="${on}" aria-label="${esc(dname(d))}: ${on?'כיבוי':'הדלקה'}">${svg('power')}<span>${on?'כבה':'הדלק'}</span></button>`}
 function openDevice(d,generic){
   if(!generic&&AC.has(d.category))return openBreeze(d);
   if(!generic&&typeof isWasher==='function'&&isWasher(d))return openWasher(d);
   if(!generic&&typeof isAcPlug==='function'&&isAcPlug(d))return openAcPlug(d);
+  if(!generic&&iconOf(d)==='toaster'&&powerCode(d))return openToaster(d);
   const close=sheet(esc(dname(d)),`<div id="dBody"></div>`,(el)=>{
     const body=el.querySelector('#dBody');body.style.cssText='display:flex;flex-direction:column;gap:14px';
     OPEN={id:d.id,draw:dd=>draw(dd)};
@@ -955,13 +977,14 @@ function openDevice(d,generic){
       const mySched=SCHED.filter(s=>s.device===d.id);
       body.innerHTML=`
         ${!d.online?`<div class="empty" role="alert"><b>המכשיר מנותק</b>בדוק שהוא מחובר לחשמל ול-WiFi.</div>`:''}
-        ${pc?`<button class="big-pw" id="bigPw" role="switch" aria-checked="${on}" aria-label="${esc(dname(d))} פועל"${photoOf(d)?' data-photo="1"':''}>${devArt(d,1.5)}</button><div class="state-line" aria-hidden="true">${on?'פועל':'כבוי'}</div>`:''}
+        ${devHero(d)}
+        ${pc?pwPill(d,'bigPw'):''}
         ${ros.length?`<div class="readouts">${ros.map(f=>`<div class="ro"><div class="k">${esc(nameOf(f))}</div><div class="n">${esc(roVal(d,f))}</div></div>`).join('')}</div>`:''}
         ${colF(d)?colHtml(d):''}
-        ${ctrls.length?`<div class="sec-h"><h2>הגדרות המכשיר</h2></div><div class="list device-settings" id="ctrls">${ctrls.map(f=>ctrlHtml(d,f)).join('')}</div>`:''}
         ${pc?`<div class="sec-h"><h2>טיימר</h2></div><div class="list" id="tmr"></div>`:''}
         <div class="sec-h"><h2>תזמונים</h2><button class="btn" id="addS">${svg('plus')}הוספה</button></div>
         <div class="list">${mySched.length?mySched.map(s=>schedRow(s,false)).join(''):`<div class="row"><span class="s">אין תזמונים למכשיר הזה</span></div>`}</div>
+        ${ctrls.length?`<div class="sec-h"><h2>הגדרות השקע</h2></div><div class="list device-settings" id="ctrls">${ctrls.map(f=>ctrlHtml(d,f)).join('')}</div>`:''}
         <div class="sec-h"><h2>פרטים</h2></div>
         <div class="list">
           <button class="row row-btn" id="fav" role="switch" aria-checked="${!!META.fav[d.id]}"><span class="grow"><span class="t">מועדף</span><br><span class="s">${META.fav[d.id]?'מופיע ראשון בבית':'לא'}</span></span>${svg('star')}</button>
@@ -1439,8 +1462,8 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 <script src="extras.js?v=9"></script>
 <script src="smart.js?v=2"></script>
 <script src="motion.js?v=3"></script>
-<script src="washer.js?v=1"></script>
-<script src="acplug.js?v=1"></script>
+<script src="washer.js?v=2"></script>
+<script src="acplug.js?v=2"></script>
 <script src="live.js?v=1"></script>
 <script src="gbackup.js?v=1"></script>
 <script src="home.js?v=2"></script>
