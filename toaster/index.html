@@ -391,12 +391,13 @@ addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];i
 .in-unplug .power[aria-pressed="true"]{background:#3d8bff!important;color:#fff!important}
 .in-unplug .prof[aria-pressed="true"] svg,.in-unplug .prof[aria-pressed="true"] b{color:#6fa8ff!important}
 .in-unplug .bb-t b,.in-unplug .bb-ic{color:#6fa8ff!important}
+html.in-unplug,html.in-unplug body{overscroll-behavior:none}
 /* HomeOn look: product photo in a card with a big countdown, orange "on" button, profiles as a row */
 .in-unplug .hero{background:#1c1c1e!important;border:1px solid rgba(255,255,255,.08);border-radius:28px;padding:18px 16px 16px!important;gap:4px!important}
 .in-unplug .hero svg.toaster{display:none!important}
-.in-unplug .hoImg{width:150px;height:150px;object-fit:contain;filter:saturate(.45) brightness(.85);transition:filter .4s}
+.in-unplug .hoImg{width:118px;height:118px;object-fit:contain;filter:saturate(.45) brightness(.85);transition:filter .4s}
 .in-unplug .app.is-on .hoImg{filter:drop-shadow(0 10px 26px #ff9a3d88)}
-.in-unplug .hoTime{font-size:3.6rem;font-weight:700;line-height:1;letter-spacing:-.02em;direction:ltr;font-variant-numeric:tabular-nums;color:#fff}
+.in-unplug .hoTime{font-size:3rem;font-weight:700;line-height:1;letter-spacing:-.02em;direction:ltr;font-variant-numeric:tabular-nums;color:#fff}
 .in-unplug .status .state{font-size:1.15rem!important}
 .in-unplug .power{background:#ff9a3d!important;color:#1a0c04!important;border:0!important;border-radius:999px!important;min-height:62px;font-size:1.3rem!important;font-weight:700!important}
 .in-unplug .app.is-on .power{background:#3d8bff!important;color:#fff!important;box-shadow:none!important}
@@ -580,7 +581,9 @@ function readStatus(st){
   const left=CAP.cd?+st[CAP.cd]||0:0;
   const was=R.on;
   if(on){
-    if(CAP.cd&&left>0){const end=Date.now()+left*1000;if(!was||Math.abs(end-R.endAt)>3000)R.endAt=end;if(!was)R.total=Math.max(left,R.total||0)}
+    /* the cloud often still shows the countdown as it was set (a stale, larger number), so it may only bring the end closer, never push it back */
+    if(CAP.cd&&left>0){let end=Date.now()+left*1000;const saved=+(LS('toaster_end')||0);if(!was&&saved>Date.now())end=Math.min(end,saved);
+      if(!was||end<R.endAt-3000)R.endAt=end;if(!was)R.total=Math.max(left,R.total||0)}
     else if(!was){R.endAt=0}
   }
   R.on=on;
@@ -918,6 +921,7 @@ function setAccent(){
 }
 function render(){
   setAccent();
+  if(CAP)LSset('toaster_end',R.on&&R.endAt?String(R.endAt):null);
   $('app').classList.toggle('is-on',R.on);
   drawClock();
   $('state').textContent=R.on?(R.rounds>1?(R.midDone?'סיבוב שני':'סיבוב ראשון'):'קולה...'):R.justDone?'הטוסט מוכן':'מוכן לקלייה';
