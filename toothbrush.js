@@ -227,5 +227,18 @@ function brushRenderDialog(el,close){
   }
 }
 function openToothbrush(){
-  sheet(esc(dname(ORALB)),'<div id="brushBody" style="display:flex;flex-direction:column;gap:14px"></div>',(el,close)=>brushRenderDialog(el,close));
+  sheet(esc(dname(ORALB)),'<div id="brushBody" style="display:flex;flex-direction:column;gap:14px"></div>',(el,close)=>{
+    brushRenderDialog(el,close);
+    // Re-arm persisted reminders when returning to an installed iPhone app,
+    // including after a reinstall or when the date was originally set in Safari.
+    if(IN_APP&&brushSettings().headDate){
+      brushHeadReminders().then(result=>{
+        const txt=el.querySelector('#brushReminderStatus');
+        if(txt&&document.body.contains(txt)){
+          txt.textContent=result.ok?'תזכורות החלפת הראש פעילות באייפון.':
+            'התאריך שמור, אבל אין הרשאה להתראות. בדוק את הגדרות ההתראות של HomeOn.';
+        }
+      }).catch(()=>{});
+    }
+  });
 }
