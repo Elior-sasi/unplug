@@ -820,13 +820,11 @@ function render(){
   window.DEVS_ALL=DEVS;
   {const t={scenes:'סצנות',sched:'תזמונים',settings:'הגדרות'}[TAB];document.body.dataset.tab=TAB;const tt=document.getElementById('tabTitle');if(tt)tt.textContent=t||''}
   const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d)).length, off=HD.filter(d=>!d.online).length;
-  const visibleCloudCount=HD.filter(d=>!(META.hidden||{})[d.id]).length;
   const visibleCount=homeDevices().filter(d=>!(META.hidden||{})[d.id]).length;
-  const visibleExtraCount=visibleCount-visibleCloudCount;
   $('homeBtn').innerHTML=`<span>${esc(curHome().name)}</span>${svg('chev',2.6)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
-  const W=HD.reduce((t,d)=>t+watts(d),0),hasW=HD.some(d=>d.status.cur_power!=null);
+
   $('title').textContent=!CFG.key||!HD.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
-  $('sub').innerHTML=!CFG.key?'לא מחובר':visibleCount?[`${visibleCount} מכשירים`,`${visibleCloudCount} מ־Smart Life`,`${visibleExtraCount} נוספים`,on?`<b>${on===1?'מכשיר אחד פועל':on+' פועלים'}</b>`:'',hasW&&W>0?`${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}`:'',off?`<span class="bad">${off} מנותקים</span>`:''].filter(Boolean).join('<span aria-hidden="true"> · </span>'):'';
+  $('sub').textContent=!CFG.key?'לא מחובר':visibleCount===1?'מכשיר אחד':visibleCount?visibleCount+' מכשירים':'';
   {const ob=$('offBtn');ob.disabled=!on;ob.onclick=async()=>{const ds=HD.filter(d=>d.online&&isOn(d));if(!ds.length||!confirm(`לכבות ${ds.length} מכשירים?`))return;for(const d of ds)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')}}
   const tabs=[...document.querySelectorAll('nav.bar button')];tabs.forEach(b=>b.dataset.tab===TAB?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelector('nav.bar').style.setProperty('--tab',tabs.findIndex(b=>b.dataset.tab===TAB));
   const v=$('view');
