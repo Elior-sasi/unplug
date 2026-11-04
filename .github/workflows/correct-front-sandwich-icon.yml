@@ -1,0 +1,58 @@
+name: Correct front-facing sandwich maker icon
+on:
+  push:
+    paths:
+      - .github/workflows/correct-front-sandwich-icon.yml
+permissions:
+  contents: write
+jobs:
+  targeted-icon-correction:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install image processing
+        run: python3 -m pip install --user 'Pillow>=10,<13'
+      - name: Replace only approved custom sandwich maker image
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, io, pathlib, subprocess, urllib.request
+          from PIL import Image
+          url="https://75a04222-6bd9-4922-ae21-228b021935c7.sandbox.floot.app/_cdn/static/0dc7e25c-f1a8-42b6-8260-33927899cb46-white_sandwich_press_front_centered_20261104.png"
+          expected="d45a444cb51a3004ba7402d6d077c26152990def0ef2afd10ef873dc4e23fde0"
+          data=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Unplug-icon-correction/1.0'}),timeout=90).read()
+          assert hashlib.sha256(data).hexdigest()==expected,"Source image changed"
+          with Image.open(io.BytesIO(data)) as im:
+              assert im.mode in ('RGBA','LA'),"Expected transparent PNG"
+              im=im.convert('RGBA')
+              alpha=im.getchannel('A')
+              bounds=alpha.point(lambda a: 255 if a>2 else 0).getbbox()
+              assert bounds,"Empty image"
+              im=im.crop(bounds)
+              im.thumbnail((484,484),Image.Resampling.LANCZOS)
+              new=Image.new('RGBA',(512,512),(0,0,0,0))
+              new.alpha_composite(im,((512-im.width)//2,(512-im.height)//2))
+          target=pathlib.Path("real/custom/user_white_sandwich_press.png")
+          assert target.exists()
+          old_sha=subprocess.check_output(["git","hash-object",str(target)],text=True).strip()
+          assert old_sha=="a784be915c965c7a64cb4e1fbc65f9ddcaa86ee9",f"Image has since changed: {old_sha}"
+          new.save(target,format='PNG',optimize=True)
+          htmlfile=pathlib.Path('index.html')
+          html=htmlfile.read_text('utf-8')
+          original="const realImg=k=>`<img class=\"real\" src=\"${CUSTOMN[k]?'real/custom/'+k.slice(7)+'.png?v=2':'real/'+(REAL.has(k)?k:'plug')+(k==='hotplate'?'.webp':'.png')+(k==='toaster'?'?v=3':'?v=2')}\" alt=\"\" decoding=\"sync\">`;"
+          replacement="const realImg=k=>`<img class=\"real\" src=\"${CUSTOMN[k]?'real/custom/'+k.slice(7)+'.png?v='+(k==='custom_user_white_sandwich_press'?'3':'2'):'real/'+(REAL.has(k)?k:'plug')+(k==='hotplate'?'.webp':'.png')+(k==='toaster'?'?v=3':'?v=2')}\" alt=\"\" decoding=\"sync\">`;"
+          assert html.count(original)==1,"Icon render code has changed"
+          html=html.replace(original,replacement,1)
+          htmlfile.write_text(html,'utf-8')
+          assert set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())=={'index.html',str(target)}, "Unexpected changed files"
+          print("Updated only user's sandwich maker custom image (straight-on 512x512 transparent) and its image-cache version")
+          PY
+      - name: Commit replacement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html real/custom/user_white_sandwich_press.png
+          git diff --cached --quiet && { echo "Expected update missing"; exit 1; }
+          git commit -m "Correct custom sandwich maker image to front-facing white product"
+          git push origin HEAD:main
