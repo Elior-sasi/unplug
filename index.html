@@ -619,6 +619,10 @@ META.homes=META.homes&&META.homes.length?META.homes:[{id:'h1',name:'דירה'}];
 if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
 const homeOf=d=>META.homes.some(h=>h.id===META.devHome[d.id])?META.devHome[d.id]:d.virtual?META.home:META.homes[0].id;
 const inHome=d=>homeOf(d)===META.home;
+const homeDevices=()=>DEVS.filter(inHome)
+  .concat(META.ember===false?[]:[EMBER].filter(inHome))
+  .concat(META.router===false?[]:[ROUTER].filter(inHome))
+  .concat(typeof GTV!=='undefined'&&META.tv?[GTV].filter(inHome):[]);
 const roomHomeOf=r=>META.homes.some(h=>h.id===META.roomHome[r])?META.roomHome[r]:META.homes[0].id;
 const roomsOf=h=>META.roomList.filter(r=>roomHomeOf(r)===h);
 const curHome=()=>META.homes.find(h=>h.id===META.home)||META.homes[0];
@@ -803,10 +807,11 @@ function render(){
   window.DEVS_ALL=DEVS;
   {const t={scenes:'סצנות',sched:'תזמונים',settings:'הגדרות'}[TAB];document.body.dataset.tab=TAB;const tt=document.getElementById('tabTitle');if(tt)tt.textContent=t||''}
   const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d)).length, off=HD.filter(d=>!d.online).length;
+  const visibleCount=homeDevices().filter(d=>!(META.hidden||{})[d.id]).length;
   $('homeBtn').innerHTML=`<span>${esc(curHome().name)}</span>${svg('chev',2.6)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
   const W=HD.reduce((t,d)=>t+watts(d),0),hasW=HD.some(d=>d.status.cur_power!=null);
   $('title').textContent=!CFG.key||!HD.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
-  $('sub').innerHTML=!CFG.key?'לא מחובר':HD.length?[on?`<b>${on===1?'מכשיר אחד פועל':on+' פועלים'}</b>`:'הכול כבוי',`${HD.length} מכשירים`,hasW&&W>0?`${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}`:'',off?`<span class="bad">${off} מנותקים</span>`:''].filter(Boolean).join('<span aria-hidden="true"> · </span>'):'';
+  $('sub').innerHTML=!CFG.key?'לא מחובר':visibleCount?[on?`<b>${on===1?'מכשיר אחד פועל':on+' פועלים'}</b>`:'הכול כבוי',`${visibleCount} מכשירים`,hasW&&W>0?`${W<1000?Math.round(W)+' וואט':(W/1000).toFixed(2)+' קילוואט'}`:'',off?`<span class="bad">${off} מנותקים</span>`:''].filter(Boolean).join('<span aria-hidden="true"> · </span>'):'';
   {const ob=$('offBtn');ob.disabled=!on;ob.onclick=async()=>{const ds=HD.filter(d=>d.online&&isOn(d));if(!ds.length||!confirm(`לכבות ${ds.length} מכשירים?`))return;for(const d of ds)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')}}
   const tabs=[...document.querySelectorAll('nav.bar button')];tabs.forEach(b=>b.dataset.tab===TAB?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelector('nav.bar').style.setProperty('--tab',tabs.findIndex(b=>b.dataset.tab===TAB));
   const v=$('view');
@@ -817,7 +822,7 @@ function render(){
 function roomOf(d){return META.rooms[d.id]||''}
 function watts(d){const f=readOf(d,'cur_power');return d.online&&d.status.cur_power!=null?(+d.status.cur_power)/10**(+(f&&f.values&&f.values.scale)||0):0}
 function viewDevices(v){
-  const DEVS=window.DEVS_ALL.filter(inHome).concat(META.ember===false?[]:[EMBER].filter(inHome)).concat(META.router===false?[]:[ROUTER].filter(inHome)).concat(typeof GTV!=='undefined'&&META.tv?[GTV].filter(inHome):[]);
+  const DEVS=homeDevices();
   const rooms=roomsOf(META.home);
   if(ROOM!=='all'&&ROOM!=='fav'&&ROOM!=='off'&&!rooms.includes(ROOM))ROOM='all';
   const hasFav=DEVS.some(d=>META.fav[d.id]),offN=DEVS.filter(d=>!d.online).length,onDevs=DEVS.filter(d=>d.online&&isOn(d));
