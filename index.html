@@ -939,7 +939,7 @@ function openEmber(){
     draw();refresh();
   });
 }
-const favButton=d=>`<button class="favToggle" type="button" data-fav-toggle aria-label="${META.fav[d.id]?'הסר ממועדפים: ':'הוסף למועדפים: '}${esc(dname(d))}" aria-pressed="${!!META.fav[d.id]}">${svg('star',2)}</button>`;
+const favButton=d=>META.fav[d.id]?`<button class="favToggle" type="button" data-fav-toggle aria-label="הסר ממועדפים: ${esc(dname(d))}" aria-pressed="true">${svg('star',2)}</button>`:'';
 function card(d){
   if(d.id==='gtv'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="gtv">
