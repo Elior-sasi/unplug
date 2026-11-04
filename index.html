@@ -896,16 +896,71 @@ const MOVA={id:'mova-e30-ultra',name:'MOVA E30 Ultra',category:'vacuum',online:f
 /* MOVA E30 Ultra (dreame.vacuum.r2427/r2427a) is not a Smart Life device.
    The visual card exists, but no battery, map or cleaning actions are fabricated.
    Full integration requires an authenticated device connector (e.g. Dreame Vacuum / Home Assistant). */
+const MOVA_WIFI={checked:false,visible:false,ip:'',name:'',error:''};
+let movaScanning=false;
+/* Read-only Wi-Fi presence via the Xiaomi router; not vacuum control. */
+async function syncMovaWifi(){
+  if(!IN_APP||!META.movaMac||movaScanning||META.mova===false)return;
+  movaScanning=true;
+  const before=JSON.stringify(MOVA_WIFI);
+  try{
+    const raw=await nativeCall({action:'routerClients'});
+    const data=typeof raw==='string'?JSON.parse(raw):raw;
+    if(!data?.ok||!Array.isArray(data.clients))throw Error('לא התקבלה רשימת מכשירים מהנתב');
+    const entry=data.clients.find(v=>String(v.mac).toUpperCase()===String(META.movaMac).toUpperCase());
+    Object.assign(MOVA_WIFI,{checked:true,visible:!!entry?.online,ip:entry?.ip||'',name:entry?.name||'',error:''});
+  }catch(e){
+    Object.assign(MOVA_WIFI,{checked:false,visible:false,ip:'',error:String(e?.message||e).slice(0,140)});
+  }finally{
+    movaScanning=false;
+    if(before!==JSON.stringify(MOVA_WIFI)&&TAB==='devices')render();
+  }
+}
+setTimeout(()=>{if(IN_APP)syncMovaWifi()},1700);
+setInterval(()=>{if(IN_APP&&document.visibilityState==='visible')syncMovaWifi()},60000);
+function openMovaWifiSetup(){
+  if(!IN_APP)return toast('זיהוי ברשת זמין רק באפליקציית HomeOn לאייפון');
+  sheet('זיהוי MOVA ברשת',`<p>בחר את השואב מתוך רשימת המכשירים בראוטר Xiaomi. זה מאפשר להציג נוכחות ברשת בלבד — לא להתחיל ניקוי או להציג מפה.</p>
+    <div class="list" id="movaCandidates"><div class="row">טוען מכשירים...</div></div>
+    <button class="btn wide" id="movaRetry">${svg('ref')}רענן רשימה</button>`,(el,close)=>{
+    const load=async()=>{
+      const box=el.querySelector('#movaCandidates');
+      box.innerHTML='<div class="row">בודק את הראוטר...</div>';
+      try{
+        const raw=await nativeCall({action:'routerClients'});
+        const data=typeof raw==='string'?JSON.parse(raw):raw;
+        if(!data?.ok||!Array.isArray(data.clients))throw Error('לא התקבלה רשימת מכשירים');
+        const clients=data.clients.filter(v=>v.mac&&v.online).sort((a,b)=>Number(/mova|dreame|vacuum|r2427/i.test(b.name||''))-Number(/mova|dreame|vacuum|r2427/i.test(a.name||'')));
+        box.innerHTML=clients.length?clients.map(v=>`<button class="row row-btn" data-mova-mac="${esc(v.mac)}"><span class="grow"><span class="t">${esc(v.name||'מכשיר ללא שם')}</span><br><span class="s">${esc(v.ip||'IP לא ידוע')} · ${esc(v.mac)}</span></span>${svg('chev')}</button>`).join(''):
+          '<div class="row">לא נמצאו מכשירים מחוברים בראוטר.</div>';
+        box.querySelectorAll('[data-mova-mac]').forEach(b=>b.onclick=async()=>{
+          META.movaMac=b.dataset.movaMac;
+          saveMeta();
+          close();
+          await syncMovaWifi();
+          render();
+          toast('נשמר זיהוי השואב ברשת. שליטה בניקוי עדיין אינה מחוברת.');
+        });
+      }catch(e){box.textContent='לא ניתן לקרוא רשימת מכשירים. התחבר קודם לנתב דרך Halo. '+String(e?.message||e)}
+    };
+    el.querySelector('#movaRetry').onclick=load;
+    load();
+  });
+}
 function openMova(){
   sheet('MOVA E30 Ultra',`<div style="display:grid;place-items:center;margin:8px 0 12px"><div style="width:160px;height:160px">${devArt(MOVA)}</div></div>
-    <div class="empty"><b>השואב עדיין לא מחובר ל־Unplug</b>
-      אפשר לנהל אותו ב־MOVAhome. חיבור עצמאי לשליטה, מפות וסוללה ידרוש אימות נפרד לחשבון MOVAhome או חיבור תואם.</div>
+    <div class="empty"><b>שליטה בניקוי עדיין לא מחוברת</b>
+      ${META.movaMac?(MOVA_WIFI.checked?(MOVA_WIFI.visible?'השואב נראה כעת ברשת הביתית':'השואב לא זוהה כרגע ברשת'):'מכשיר נבחר, ממתין לבדיקת הראוטר'):'אפשר לבחור את השואב מתוך רשימת המכשירים בראוטר.'}
+      ${MOVA_WIFI.visible&&MOVA_WIFI.ip?' כתובת IP: '+esc(MOVA_WIFI.ip):''}
+      <p>מצב הניקוי, הסוללה והמפה אינם זמינים בלי חיבור MOVAhome או אינטגרציה נתמכת.</p></div>
     <div class="list">
+      ${IN_APP?`<button class="row row-btn" id="movaPair"><span class="grow"><span class="t">זהה את השואב בראוטר</span><br><span class="s">בחירת מכשיר לרישום נוכחות ברשת, ללא שליטה בניקוי</span></span>${svg('chev')}</button>`:''}
       <button class="row row-btn" id="movaRoom"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(MOVA)||'בלי חדר')}</span></span>${svg('chev')}</button>
       <button class="row row-btn" id="movaHelp"><span class="grow"><span class="t">חיבור מתקדם לשואב</span><br><span class="s">מידע על אינטגרציה נתמכת ל־MOVA E30 Ultra דרך Home Assistant</span></span>${svg('chev')}</button>
       <button class="row row-btn" id="movaOfficial"><span class="grow"><span class="t">MOVAhome</span><br><span class="s">עמוד האפליקציה הרשמית ב־App Store</span></span>${svg('chev')}</button>
       <button class="row row-btn" id="movaHide"><span class="grow"><span class="t">הסר את כרטיס השואב מ־Unplug</span><br><span class="s">לא מוחק את השואב מ־MOVAhome</span></span>${svg('close')}</button>
     </div>`,(el,close)=>{
+      const pair=el.querySelector('#movaPair');if(pair)pair.onclick=openMovaWifiSetup;
       el.querySelector('#movaRoom').onclick=()=>pickRoom(MOVA,()=>render());
       el.querySelector('#movaHelp').onclick=()=>location.href='https://dv.tasshack.com/installation';
       el.querySelector('#movaOfficial').onclick=()=>location.href='https://apps.apple.com/app/movahome/id6499421624';
@@ -1028,7 +1083,7 @@ function card(d){
       <button class="open" aria-label="${nm}, שואב שוטף, עדיין לא מחובר ל־Unplug. פרטים וחיבור"></button>
       <div class="ic">${devArt(d)}</div>
       <div class="nm" aria-hidden="true">${nm}</div>
-      <div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}ממתין לחיבור</div>
+      <div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${META.movaMac?(MOVA_WIFI.checked?(MOVA_WIFI.visible?'זוהה ברשת · ללא שליטה':'לא זוהה ברשת'):'בודק נוכחות ברשת'):'ממתין לחיבור'}</div>
       ${favButton(d)}</div>`}
   if(d.id==='gtv'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="gtv">
