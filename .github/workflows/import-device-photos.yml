@@ -20,6 +20,7 @@ jobs:
           SOURCE_SHA256: 8f8ab3a3acea2ca1191f8c4b9ef187f037e3a5a7d088bbbe0bf624830b18919b
         shell: bash
         run: |
+          python3 - <<'PY'
           import hashlib, io, os, pathlib, re, urllib.request, zipfile
           url=os.environ["SOURCE_URL"]
           blob=urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":"Unplug-Device-Icon-Importer/1.0"}), timeout=90).read()
@@ -63,6 +64,7 @@ jobs:
           html_path.write_text(html,"utf-8")
           assert (pathlib.Path("real")/"hotplate.png").exists()
           print("IMPORTED 79 exact original PNG files, 512x512 from verified ZIP; updated icon mappings.")
+          PY
       - name: Commit updated images and device picker
         run: |
           git config user.name "github-actions[bot]"
