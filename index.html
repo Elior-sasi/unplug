@@ -734,7 +734,7 @@ const realImg=k=>`<img class="real" src="${CUSTOMN[k]?'real/custom/'+k.slice(7)+
 const artFor=(k,st)=>realImg(k);
 const photoOf=d=>STYLE()==='photo'&&(!META.icons||META.icons[d.id]==null||META.icons[d.id]==='photo')&&META.img[d.id]?META.img[d.id]:'';
 const drawn=d=>artFor(iconOf(d),STYLE());
-const devArt=(d,w)=>{const u=photoOf(d);return u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createRange().createContextualFragment(this.dataset.fb))" data-fb="${esc(drawn(d))}">`:drawn(d)};
+const devArt=(d,w)=>{if(d.id==='ember')return `<img class="real" src="real/custom/switcher_v4.svg?v=1" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='real/boiler.png'">`;const u=photoOf(d);return u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createRange().createContextualFragment(this.dataset.fb))" data-fb="${esc(drawn(d))}">`:drawn(d)};
 function findIcon(o){if(!o||typeof o!=='object')return '';for(const[k,v]of Object.entries(o)){if(k==='icon'&&typeof v==='string'&&v)return v;if(typeof v==='object'){const r=findIcon(v);if(r)return r}}return ''}
 let iconsBusy=false;
 async function loadPhotos(){
