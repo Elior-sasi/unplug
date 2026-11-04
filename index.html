@@ -1105,33 +1105,33 @@ const favButton=d=>META.fav[d.id]?`<button class="favToggle" type="button" data-
 function card(d){
   if(d.id==='mova-e30-ultra'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
-      <button class="open" aria-label="${nm}, שואב שוטף, עדיין לא מחובר ל־Unplug. פרטים וחיבור"></button>
+      <button class="open" aria-label="${cardLabel(d)}, שואב שוטף, עדיין לא מחובר ל־Unplug. פרטים וחיבור"></button>
       <div class="ic">${devArt(d)}</div>
       <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}
       <div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${META.movaMac?(MOVA_WIFI.checked?(MOVA_WIFI.visible?'זוהה ברשת · ללא שליטה':'לא זוהה ברשת'):'בודק נוכחות ברשת'):'ממתין לחיבור'}</div>
       ${favButton(d)}</div>`}
   if(d.id==='gtv'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="gtv">
-     <button class="open" aria-label="${nm}, שלט לטלוויזיה${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
+     <button class="open" aria-label="${cardLabel(d)}, שלט לטלוויזיה${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <button class="pw" aria-label="${nm}: הדלקה או כיבוי">${svg('power',2.6)}</button>
      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}שלט</div>${favButton(d)}</div>`}
   if(d.id==='router'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="router">
-     <button class="open" aria-label="${nm}, ראוטר${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
+     <button class="open" aria-label="${cardLabel(d)}, ראוטר${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}מכשירים, מהירות ו-WiFi</div>${favButton(d)}</div>`}
   if(d.virtual){const nm=esc(dname(d));
     const status=IN_APP?(HEATER_LINK.checked?(HEATER_LINK.connected?(HEATER_LINK.on?'דולק':'כבוי'):'לא מחובר'):'בודק חיבור...'):'דרך Ember (ללא חיווי)';
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
-     <button class="open" aria-label="${nm}, דוד חכם, ${status}. פתיחה"></button>
+     <button class="open" aria-label="${cardLabel(d)}, דוד חכם, ${status}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      ${(IN_APP?HEATER_LINK.connected:true)?`<button class="pw" data-ember aria-label="${nm}: הדלקה או כיבוי">${svg('power',2.6)}</button>`:''}
      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${esc(status)}</div>${favButton(d)}</div>`}
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
   const c=(ART[iconOf(d)]||ART.dev).p.t,wide=AC.has(d.category)||iconOf(d)==='ac'&&!pc;
   return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
-   <button class="open" aria-label="${nm}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
+   <button class="open" aria-label="${cardLabel(d)}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
    <div class="ic${photoOf(d)?' photo':''}">${devArt(d)}</div>
    ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${nm} פועל" ${d.online?'':'aria-disabled="true"'}>${svg('power',2.6)}</button>`:''}
    <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${esc(stateText(d))}</div>${favButton(d)}</div>`;
