@@ -33,7 +33,7 @@ jobs:
               assert len(names)==79, f"Archive has {len(names)} files, expected 79"
               files={}
               for name in names:
-                  m=re.match(r"^(\\d{2}) - .+\\.png$",name)
+                  m=re.match(r"^(\d{2}) - .+\.png$",name)
                   assert m, f"Unexpected archive name: {name!r}"
                   i=int(m.group(1))
                   assert 1<=i<=79 and i not in files, f"Invalid numbering {i}"
@@ -43,7 +43,7 @@ jobs:
               folder.mkdir(exist_ok=True)
               for i,key in enumerate(keys,1):
                   data=z.read(files[i])
-                  assert data[:8]==b"\\x89PNG\\r\\n\\x1a\\n",f"Invalid PNG #{i}"
+                  assert data[:8]==b"\x89PNG\r\n\x1a\n",f"Invalid PNG #{i}"
                   (folder/f"{key}.png").write_bytes(data)
           html_path=pathlib.Path("index.html")
           html=html_path.read_text("utf-8")
