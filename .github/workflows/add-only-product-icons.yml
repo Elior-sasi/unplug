@@ -1,0 +1,68 @@
+name: Add 79 customer product icons without replacing existing
+on:
+  push:
+    paths:
+      - .github/workflows/add-only-product-icons.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  add-only:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Unplug
+        uses: actions/checkout@v4
+      - name: Add separate PNG files and custom picker section
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib, urllib.request, zipfile, io
+          source = "https://75a04222-6bd9-4922-ae21-228b021935c7.sandbox.floot.app/_cdn/static/c9e12a56-77e2-42ab-8de8-bf8f1434d797-unplug-icon-bundle-79.zip"
+          digest = "8f8ab3a3acea2ca1191f8c4b9ef187f037e3a5a7d088bbbe0bf624830b18919b"
+          data = urllib.request.urlopen(urllib.request.Request(source, headers={"User-Agent":"Unplug-Icon-Add-Only/1.0"}), timeout=90).read()
+          assert hashlib.sha256(data).hexdigest() == digest, "ZIP mismatch: refusing modification"
+          keys = ["washing_machine","refrigerator","coffee_machine","kettle","pop_up_toaster","air_conditioner","led_strip","ceiling_light","smart_bulb","table_lamp","ceiling_fan","radiator","water_heater","general_ge2411fix_dishwasher","wall_socket","smartphone","usb_charger","xiaomi_be6500_pro_router","speaker","game_controller","laptop","television","remote_control","plant","motion_sensor","security_camera","smart_curtains","light_switch","power_strip","mova_e30_ultra_robot_vacuum","electric_roller_shutter","electra_el896_dryer","cordless_vacuum","fan_heater","afikim_noam2_water_dispenser","smart_lock","door_contact_sensor","air_purifier","humidifier","dehumidifier","magcubic_hy350_gtv_projector","streaming_box","av_receiver","video_doorbell","smoke_detector","water_leak_sensor","temperature_humidity_sensor","electric_gate","irrigation_controller","israeli_smart_plug_adapter","portable_ac","range_hood","induction_cooktop","toaster_oven","ninja_a330_grill_airfryer","shabbat_urn","electric_blanket","soundbar","tower_fan","motorized_projection_screen","garage_door","smart_home_hub","shutter_switch","dimmer","thermostat","mmwave_presence_sensor","gas_detector","video_intercom","water_shutoff_valve","alarm_siren","smart_pathway_light","cordless_floor_washer","wall_sconce","pet_feeder","oralb_io2_toothbrush","white_sandwich_press","white_stand_mixer","white_blender","boss_shabbat_hotplate"]
+          assert len(keys)==79 and len(set(keys))==79
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+              names=sorted(z.namelist())
+              assert len(names)==79, "Not 79 images"
+              for i,name in enumerate(names,1):
+                  assert name.startswith(f"{i:02d} - ") and name.endswith(".png"), name
+              folder=pathlib.Path("real/custom")
+              assert not folder.exists(), "Custom directory already exists: refusing to overwrite"
+              folder.mkdir(parents=True,exist_ok=False)
+              labels={}
+              for i,(name,key) in enumerate(zip(names,keys),1):
+                  png=z.read(name)
+                  assert png[:8] == bytes([137,80,78,71,13,10,26,10]), f"Not PNG {name}"
+                  assert (int.from_bytes(png[16:20],"big"),int.from_bytes(png[20:24],"big")) == (512,512), f"Unexpected image size: {name}"
+                  (folder/(key+".png")).write_bytes(png)
+                  labels["custom_"+key]=name[5:-4]
+          htmlfile=pathlib.Path("index.html")
+          html=htmlfile.read_text("utf-8")
+          assert "const CUSTOMN=" not in html, "Custom picker already present"
+          anchor="const REAL=new Set(Object.keys(REALN));"
+          assert html.count(anchor)==1, "Icon anchor missing"
+          custom_picker="""const customPicker=cur=>'<div class="sec-h" style="margin:12px 4px 6px"><h2>התמונות שלנו</h2></div><div class="icgrid" role="group" aria-label="התמונות שלנו">'+Object.entries(CUSTOMN).map(([k,n])=>'<button data-ic2="'+k+'" aria-pressed="'+(k===cur)+'">'+artFor(k,STYLE())+'<span>'+esc(n)+'</span></button>').join('')+'</div>';"""
+          html=html.replace(anchor,"const CUSTOMN="+json.dumps(labels,ensure_ascii=False,separators=(',',':'))+";\n"+custom_picker+"\n"+anchor,1)
+          old_choice="||REALN[META.icons[d.id]]))"
+          new_choice="||REALN[META.icons[d.id]]||CUSTOMN[META.icons[d.id]]))"
+          assert html.count(old_choice)==1,"Icon choice anchor missing"
+          html=html.replace(old_choice,new_choice,1)
+          old_img=next((line for line in html.splitlines() if line.startswith("const realImg=k=>")),None)
+          assert old_img and "k==='hotplate'?'webp':'png'" in old_img, "Existing icon paths unexpectedly changed"
+          new_img="""const realImg=k=>`<img class="real" src="${CUSTOMN[k]?'real/custom/'+k.slice(7)+'.png?v=1':'real/'+(REAL.has(k)?k:'plug')+(k==='hotplate'?'.webp':'.png')+'?v=2'}" alt="" decoding="sync">`;"""
+          html=html.replace(old_img,new_img,1)
+          needle="</div>\n   ${META.icons&&META.icons[d.id]?"
+          assert html.count(needle)==1,"Icon picker insertion anchor missing"
+          html=html.replace(needle,"</div>\n   ${customPicker(cur)}\n   ${META.icons&&META.icons[d.id]?",1)
+          htmlfile.write_text(html,"utf-8")
+          print("ADD-ONLY SUCCESS:",len(labels),"new PNG files; old images untouched.")
+          PY
+      - name: Commit only new files and picker extension
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html real/custom/
+          git commit -m "Add 79 product photos as new selectable icons without changing existing photos"
+          git push origin HEAD:main
