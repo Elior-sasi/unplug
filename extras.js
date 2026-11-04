@@ -81,6 +81,41 @@ function bindLongPress(v){
   });
 }
 
+/* Rename any card, including virtual devices (Switcher, router, MOVA).
+   Use an in-page dialog instead of prompt() so iOS WebView keyboard works reliably. */
+function renameCard(d){
+  const original=d.name||'מכשיר';
+  sheet('שינוי שם',`<p>השם החדש יופיע ב־Unplug בלבד. שם המכשיר באפליקציה המקורית לא ישתנה.</p>
+    <div class="field"><label for="cardName">שם המכשיר</label><input id="cardName" type="text" dir="auto" autocomplete="off" maxlength="60" value="${esc(dname(d))}" placeholder="שם המכשיר" style="min-width:0;flex:1;font-size:18px"></div>
+    <div class="err" id="nameError" role="alert"></div>
+    <div class="btns"><button class="btn" id="nameCancel">ביטול</button><button class="btn pri" id="nameSave">שמור שם</button></div>
+    ${META.names[d.id]?`<button class="btn wide" id="nameReset">החזרת השם המקורי: ${esc(original)}</button>`:''}`,(el,close)=>{
+    const input=el.querySelector('#cardName');
+    const save=()=>{
+      const name=input.value.trim();
+      if(!name){el.querySelector('#nameError').textContent='יש להזין שם למכשיר';input.focus();return}
+      if(name===original)delete META.names[d.id];
+      else META.names[d.id]=name;
+      saveMeta();close();render();toast('השם עודכן: '+dname(d));
+    };
+    el.querySelector('#nameCancel').onclick=close;
+    el.querySelector('#nameSave').onclick=save;
+    input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save()}});
+    const reset=el.querySelector('#nameReset');
+    if(reset)reset.onclick=()=>{delete META.names[d.id];saveMeta();close();render();toast('השם המקורי הוחזר')};
+    input.focus();input.select();
+  });
+}
+function editCardDetails(d){
+  sheet('עריכת '+esc(dname(d)),`<p>מה תרצה לשנות בכרטיס?</p>
+    <div class="list">
+      <button class="row row-btn" id="cardEditName"><span class="grow"><span class="t">שינוי שם</span><br><span class="s">${esc(dname(d))}</span></span>${svg('edit')}</button>
+      <button class="row row-btn" id="cardEditIcon"><span class="grow"><span class="t">שינוי סמליל</span><br><span class="s">בחירת תמונת מוצר או סמליל</span></span>${svg('chev')}</button>
+    </div>`,el=>{
+      el.querySelector('#cardEditName').onclick=()=>renameCard(d);
+      el.querySelector('#cardEditIcon').onclick=()=>pickIcon(d,()=>render());
+    });
+}
 /* ---------- reorder (drag, plus arrow buttons for VoiceOver) ---------- */
 function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);const eb=document.getElementById('editBtn');eb&&eb.setAttribute('aria-pressed',on);render();}
 function saveOrderFrom(grid){[...grid.querySelectorAll('.card')].forEach((c,i)=>META.order[c.dataset.id]=i+(+grid.dataset.base||0));saveMeta()}
@@ -96,11 +131,11 @@ function bindReorder(v){
     grid.querySelectorAll('.card').forEach(c=>{
       const id=c.dataset.id,nm=esc(c.querySelector('.nm').textContent),wide=META.size[id]==='w';
       if(META.hidden[id])c.classList.add('hiddenCard');
-      c.insertAdjacentHTML('beforeend',`<button class="edCorner edFav" data-fav aria-pressed="${!!META.fav[id]}" aria-label="מועדף - ${nm}">${svg('star',2.4)}</button><button class="edCorner edDel" data-hide aria-label="${META.hidden[id]?'הצגת':'הסתרת'} ${nm}">${svg(META.hidden[id]?'plus':'close',2.6)}</button><button class="edCorner edSize" data-size aria-label="${wide?'כרטיס מרובע':'כרטיס מלבני'} - ${nm}">${svg(wide?'close':'plus',2.6)}</button><button class="edCorner edIcon" data-icon aria-label="שינוי סמליל - ${nm}" title="שינוי סמליל">${svg('edit',2.4)}</button>`);
+      c.insertAdjacentHTML('beforeend',`<button class="edCorner edFav" data-fav aria-pressed="${!!META.fav[id]}" aria-label="מועדף - ${nm}">${svg('star',2.4)}</button><button class="edCorner edDel" data-hide aria-label="${META.hidden[id]?'הצגת':'הסתרת'} ${nm}">${svg(META.hidden[id]?'plus':'close',2.6)}</button><button class="edCorner edSize" data-size aria-label="${wide?'כרטיס מרובע':'כרטיס מלבני'} - ${nm}">${svg(wide?'close':'plus',2.6)}</button><button class="edCorner edIcon" data-icon aria-label="עריכת שם וסמליל - ${nm}" title="עריכת שם וסמליל">${svg('edit',2.4)}</button>`);
       c.querySelector('[data-fav]').onclick=e=>{e.stopPropagation();META.fav[id]?delete META.fav[id]:META.fav[id]=true;saveMeta();render()};
       c.querySelector('[data-hide]').onclick=e=>{e.stopPropagation();META.hidden[id]?delete META.hidden[id]:META.hidden[id]=true;saveMeta();render()};
       c.querySelector('[data-size]').onclick=e=>{e.stopPropagation();wide?delete META.size[id]:META.size[id]='w';saveMeta();render()};
-      c.querySelector('[data-icon]').onclick=e=>{e.stopPropagation();const d=window.DEVS_ALL.find(x=>x.id===id)||[typeof EMBER!=='undefined'?EMBER:null,typeof ROUTER!=='undefined'?ROUTER:null,typeof GTV!=='undefined'?GTV:null].find(x=>x&&x.id===id);if(!d)return toast('המכשיר לא נמצא');pickIcon(d,()=>{v._h=null;render()})};
+      c.querySelector('[data-icon]').onclick=e=>{e.stopPropagation();const d=window.DEVS_ALL.find(x=>x.id===id)||[typeof EMBER!=='undefined'?EMBER:null,typeof ROUTER!=='undefined'?ROUTER:null,typeof MOVA!=='undefined'?MOVA:null,typeof GTV!=='undefined'?GTV:null].find(x=>x&&x.id===id);if(!d)return toast('המכשיר לא נמצא');editCardDetails(d)};
       c.querySelector('[data-size]').innerHTML=wide?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
       c.insertAdjacentHTML('beforeend',`<div class="reBtns"><button data-mv="-1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} קדימה">${svg('chev',2.4)}</button><button data-mv="1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} אחורה">${svg('chev',2.4)}</button></div>`);
       c.querySelectorAll('[data-mv]').forEach(b=>b.onclick=e=>{e.stopPropagation();const sib=+b.dataset.mv<0?c.previousElementSibling:c.nextElementSibling;if(!sib)return;+b.dataset.mv<0?grid.insertBefore(c,sib):grid.insertBefore(sib,c);saveOrderFrom(grid);b.focus()});
