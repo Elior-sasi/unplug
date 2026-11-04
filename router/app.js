@@ -133,7 +133,7 @@ function setMode() {
 }
 if (LIVE) {
   document.querySelectorAll('[data-demo]').forEach(e=>e.hidden=true);
-  ['#pauseAll','#addSch','#profiles','#wMlo','#gDurBtn','#txBtn','#chOpt'].forEach(sel=>{
+  ['#pauseAll','#addSch','#profiles','#wMlo','#gDurBtn','#txBtn','#chOpt','#wMain','#wGuest','nav.tabs [data-go="schSec"]'].forEach(sel=>{
     const el=$(sel);if(el){el.hidden=true;el.setAttribute('aria-hidden','true')}
   });
 }
@@ -167,7 +167,7 @@ const PROF = [['norm', 'רגיל', 'מאוזן לכולם', '<path d="M4 10a12 1
 function renderProf() {
   $('#profiles').innerHTML = PROF.map(p => `<button class="prof" data-p="${p[0]}" aria-pressed="${profile === p[0]}">${svg(p[3])}${p[1]}<small>${p[2]}</small></button>`).join('');
   document.querySelectorAll('.prof').forEach(b => b.onclick = () => {
-    if (LIVE) { soon(); return; }
+    if (LIVE) { return; }
     profile = b.dataset.p; store.set('profile', profile); renderProf(); toast('מצב "' + PROF.find(x => x[0] === profile)[1] + '" הופעל');
   });
 }
@@ -182,7 +182,7 @@ function renderDevs() {
     .sort((a, b) => (b.online - a.online) || (b.r - a.r));
   $('#devs').innerHTML = list.length ? list.map(d => {
     const p = prefs[d.mac] || {}; const t = d.t || guessType(d.n, d.band);
-    return `<button class="row ${d.blocked || !d.online ? 'blk' : ''}" data-mac="${esc(d.mac)}"><div class="ic ${d.blocked ? 'bad' : ''}">${svg(IC[t])}</div><div class="t"><b>${esc(devName(d))}</b><small>${d.blocked ? '<span class="tag bad">חסום</span>' : d.online ? bandText(d.band) : 'לא מחובר'}${p.prio ? '<span class="tag acc">עדיפות</span>' : ''}${p.lim ? `<span class="tag hot">${p.lim} Mbps</span>` : ''}${d.isNew ? '<span class="tag hot">חדש</span>' : ''}</small></div><span class="v">${d.online && !d.blocked ? fmtRate(d.r) : ''}</span>${CHEV}</button>`;
+    return `<button class="row ${d.blocked || !d.online ? 'blk' : ''}" data-mac="${esc(d.mac)}"><div class="ic ${d.blocked ? 'bad' : ''}">${svg(IC[t])}</div><div class="t"><b>${esc(devName(d))}</b><small>${d.blocked ? '<span class="tag bad">חסום</span>' : d.online ? bandText(d.band) : 'לא מחובר'}${!LIVE&&p.prio ? '<span class="tag acc">עדיפות</span>' : ''}${!LIVE&&p.lim ? `<span class="tag hot">${p.lim} Mbps</span>` : ''}${d.isNew ? '<span class="tag hot">חדש</span>' : ''}</small></div><span class="v">${d.online && !d.blocked ? fmtRate(d.r) : ''}</span>${CHEV}</button>`;
   }).join('') : `<div class="row" style="color:var(--muted)">${LIVE && !devs.length ? 'טוען מכשירים...' : 'אין מכשירים בסינון הזה'}</div>`;
   document.querySelectorAll('#devs .row[data-mac]').forEach(r => r.onclick = () => devSheet(r.dataset.mac));
   const on = devs.filter(d => d.online).length; $('#devTitle').textContent = `מכשירים · ${on} מחוברים`; $('#cnt').textContent = on;
@@ -218,10 +218,10 @@ function devSheet(mac) {
   <div class="field"><label for="dn">שם</label><input type="text" id="dn" value="${esc(devName(d))}"></div>
   <div class="group">
    <div class="row"><div class="t"><b>גישה לאינטרנט</b></div><button class="sw" role="switch" id="dOn" aria-checked="${!d.blocked}" aria-label="גישה"></button></div>
-   <div class="row"><div class="t"><b>עדיפות במהירות</b><small>QoS - קודם לכל השאר${LIVE ? ' · בשלב הבא' : ''}</small></div><button class="sw" role="switch" id="dPr" aria-checked="${p.prio}" aria-label="עדיפות"></button></div>
+    ${LIVE?'':`<div class="row"><div class="t"><b>עדיפות במהירות</b><small>QoS - קודם לכל השאר${LIVE ? ' · בשלב הבא' : ''}</small></div><button class="sw" role="switch" id="dPr" aria-checked="${p.prio}" aria-label="עדיפות"></button></div>`}
   </div>
-  <div class="lbl">הגבלת מהירות${LIVE ? ' · בשלב הבא' : ''}</div>
-  ${segHtml('dLim', [[0, 'ללא'], [10, '10'], [50, '50'], [100, '100 Mbps']], p.lim)}
+  ${LIVE?'':`<div class="lbl">הגבלת מהירות (הדגמה)</div>`}
+  ${LIVE?'':segHtml('dLim', [[0, 'ללא'],[10,'10'],[50,'50'],[100,'100 Mbps']],p.lim)}
   <div class="group">
    <div class="kv"><span>כתובת IP</span><span>${esc(d.ip || '-')}</span></div>
    <div class="kv"><span>MAC</span><span>${esc(d.mac)}</span></div>
@@ -233,14 +233,14 @@ function devSheet(mac) {
   <div class="btns"><button class="btn" id="dCancel">ביטול</button><button class="btn pri" id="dSave">שמור</button></div>`,
     r => {
       sw(r.querySelector('#dOn'), v => st.blocked = !v);
-      sw(r.querySelector('#dPr'), v => st.prio = v);
+      if(!LIVE)sw(r.querySelector('#dPr'), v => st.prio = v);
       bindSeg(r, 'dLim', v => st.lim = +v);
       r.querySelector('#dCancel').onclick = closeSheet;
       r.querySelector('#dSave').onclick = async () => {
         const nm = r.querySelector('#dn').value.trim();
         if (nm && nm !== d.n) nicks[mac] = nm; else delete nicks[mac];
         store.set('nicks', nicks);
-        prefs[mac] = { prio: st.prio, lim: st.lim }; store.set('prefs', prefs);
+        if(!LIVE){prefs[mac] = { prio: st.prio, lim: st.lim }; store.set('prefs', prefs);}
         if (st.blocked !== d.blocked) {
           const ok = await setBlocked(d, st.blocked);
           if (ok) toast(st.blocked ? devName(d) + ' נחסם' : 'הגישה של ' + devName(d) + ' חזרה');
@@ -298,8 +298,8 @@ $('#speedBtn').onclick = () => {
       if (LIVE) {
         try {
           g.style.width = '8%'; const pg = await native('speed', { phase: 'ping' }); r.querySelector('#r3').textContent = Math.round(pg.ms); $('#ping').textContent = Math.round(pg.ms);
-          P.textContent = 'מודד הורדה...'; g.style.width = '20%'; let fake = setInterval(() => v.textContent = Math.round(Math.random() * 50 + (+v.textContent || 0) * 0.98), 200);
-          const dn = await native('speed', { phase: 'down' }); clearInterval(fake); v.textContent = Math.round(dn.mbps); r.querySelector('#r1').textContent = Math.round(dn.mbps);
+          P.textContent = 'מודד הורדה...'; g.style.width = '20%'; v.textContent = '…';
+          const dn = await native('speed', { phase: 'down' }); v.textContent = Math.round(dn.mbps); r.querySelector('#r1').textContent = Math.round(dn.mbps);
           P.textContent = 'מודד העלאה...'; g.style.width = '60%';
           const up = await native('speed', { phase: 'up' }); v.textContent = Math.round(up.mbps); r.querySelector('#r2').textContent = Math.round(up.mbps);
           g.style.width = '100%'; P.textContent = 'הבדיקה הסתיימה. זו המהירות שמגיעה לטלפון, לא לכבל של הנתב.'; v.textContent = Math.round(dn.mbps);
@@ -486,7 +486,7 @@ async function loadStatus() {
   try {
     const s = await api('misystem/status'); failCount = 0;
     if (!online || rebooting) { online = true; rebooting = 0; setMode(); }
-    setNet('ok', 'מחובר לאינטרנט'); applyStatus(s);
+    setNet('ok', 'הראוטר נגיש ברשת'); applyStatus(s);
   } catch (e) {
     const m = String(e.message);
     if (m.includes('badPassword') || m.includes('noPassword')) { stop(); loginSheet(m.includes('badPassword') ? 'הסיסמה השמורה כבר לא נכונה' : ''); return; }
