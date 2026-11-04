@@ -579,6 +579,8 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .splash .t1{animation:tOn .35s .75s ease-out both}.splash .t2{animation:tOn .35s 1s ease-out both}.splash .glow{animation:tOn .8s .9s ease-out both}
 @keyframes tOn{from{opacity:0}}
 .splash .w1{animation:tOn .3s 1.15s ease-out both}.splash .w2{animation:tOn .3s 1.3s ease-out both}
+/* BOSS warming plate: enlarge 25% only in device-card thumbnail. */
+.card .ic img.real:is([src^="real/hotplate.webp"],[src^="real/custom/boss_shabbat_hotplate.png"]){transform:scale(1.25);transform-origin:center center}
 </style>
 </head>
 <body>
