@@ -650,6 +650,7 @@ const homeDevices=()=>DEVS.filter(inHome)
   .concat(META.ember===false?[]:[EMBER].filter(inHome))
   .concat(META.router===false?[]:[ROUTER].filter(inHome))
   .concat(META.mova===false?[]:[MOVA].filter(inHome))
+  .concat(META.oralb===false?[]:[ORALB].filter(inHome))
   .concat(typeof GTV!=='undefined'&&META.tv?[GTV].filter(inHome):[]);
 const roomHomeOf=r=>META.homes.some(h=>h.id===META.roomHome[r])?META.roomHome[r]:META.homes[0].id;
 const roomsOf=h=>META.roomList.filter(r=>roomHomeOf(r)===h);
@@ -736,7 +737,7 @@ const DI={
 };
 const NAMEKEY=[[/פלטת ?שבת|פלטת ?חימום|פלטה חשמלית|hot ?plate/i,'hotplate'],[/מזגן נייד|portable/i,'portac'],[/מזגן|מיזוג|air ?con/i,'ac'],[/טוסטר אובן|toaster oven/i,'toasteroven'],[/טוסטר|toast/i,'toaster'],[/אייר ?פרייר|air ?fryer|נינג׳ה|ninja/i,'airfryer'],[/מיחם|urn/i,'urn'],[/קומקום|kettle/i,'kettle'],[/קפה|coffee|נספרסו/i,'coffee'],[/מיקרו/i,'microwave'],[/כיריים|cooktop|אינדוקציה/i,'cooktop'],[/קולט/i,'hood'],[/מפזר חום|fan ?heater/i,'fanheater'],[/רדיאטור|תנור חימום|radiator|heater/i,'heater'],[/שמיכה/i,'blanket'],[/תנור|אופה|oven/i,'oven'],[/מקרר|fridge/i,'fridge'],[/מייבש|dryer/i,'dryer'],[/כביסה|washer/i,'washer'],[/מדיח|dish/i,'dish'],[/בר מים|מים קרים|water bar|תמי/i,'water'],[/דוד|בויילר|boiler/i,'boiler'],[/מאוורר תקרה|ceiling fan/i,'ceilfan'],[/מאוורר מגדל|tower/i,'towerfan'],[/מאוורר|fan/i,'fan'],[/מטהר|purifier/i,'purifier'],[/סופח|dehumid/i,'dehumid'],[/אדים|humidif/i,'humidifier'],[/פס לד|לד|led/i,'led'],[/תאורת גינה|גינה|garden/i,'gardenlight'],[/תאורת קיר|מנורת קיר|wall/i,'walllight'],[/תקרה|ceiling/i,'ceiling'],[/מנורה|מנורת|lamp/i,'lamp'],[/דימר|dimmer/i,'dimmer'],[/נורה|אור|תאורה|light|bulb/i,'bulb'],[/סאונד ?בר|soundbar/i,'soundbar'],[/מקרן|projector/i,'projector'],[/מסך הקרנה|screen/i,'screen'],[/סטרימר|אפל ?טי ?וי|apple ?tv|כרומקאסט|streamer/i,'streamer'],[/רסיבר|מגבר|receiver/i,'receiver'],[/טלוויזיה|tv|מסך/i,'tv'],[/מחשב|לפטופ|pc|laptop/i,'laptop'],[/פלייסטיישן|קונסולה|xbox|ps5|playstation/i,'game'],[/רמקול|speaker/i,'speaker'],[/שקע|תקע|smart ?plug|wifi ?plug|socket|outlet/i,'plug'],[/ראוטר|נתב|router/i,'router'],[/רכזת|hub|gateway/i,'hub'],[/מטען|charger/i,'charger'],[/מפסק תריס/i,'blindsw'],[/וילון|תריס|curtain|blind/i,'curtain'],[/דלת מוסך|מוסך|garage/i,'garage'],[/שער|gate/i,'gate'],[/מנעול|lock/i,'lock'],[/פעמון|doorbell/i,'doorbell'],[/אינטרקום|intercom/i,'intercom'],[/מצלמה|camera/i,'camera'],[/עשן|smoke/i,'smoke'],[/גז|gas/i,'gas'],[/נזילה|הצפה|leak|water sensor/i,'leak'],[/סירנה|אזעקה|siren|alarm/i,'siren'],[/חיישן דלת|חיישן חלון|door sensor/i,'doorsensor'],[/נוכחות|presence/i,'presence'],[/תנועה|motion|pir/i,'sensor'],[/לחות|טמפ|thermo.?hygro|humidity/i,'thermo_h'],[/תרמוסטט|thermostat/i,'thermostat'],[/ברז|valve/i,'valve'],[/השקיה|irrigation|sprinkler/i,'irrigation'],[/צמח|עציץ|plant/i,'plant'],[/מאכיל|האכלה|feeder|כלב|חתול/i,'petfeeder'],[/שוטף|mop/i,'mop'],[/שואב רובוטי|רובוט|roborock|robot/i,'vacuum'],[/שואב|vacuum/i,'stickvac'],[/אייפון|iphone|טלפון|פלאפון|נייד|phone/i,'phone'],[/שלט|remote/i,'remote'],[/מתאם|adapter/i,'adapter'],[/מפצל|strip/i,'strip'],[/מפסק|מתג|switch/i,'switch']];
 const CATICON={kg:'switch',tdq:'switch',cz:'plug',pc:'strip',dj:'bulb',dd:'led',xdd:'ceiling',fwd:'bulb',dc:'led',kt:'ac',ktkzq:'ac',kts:'ac',infrared_ac:'ac',fs:'fan',qn:'heater',rs:'boiler',wsdcg:'thermo_h',pir:'sensor',mcs:'sensor',sp:'camera',cl:'curtain',clkg:'blindsw',znrb:'plug',sd:'vacuum',wnykq:'remote',infrared_ac:'ac',ms:'lock',ywbj:'smoke',rqbj:'gas',sj:'leak',cwwsq:'petfeeder',kj:'purifier',jsq:'humidifier',cs:'dehumid',ckmkzq:'garage',sgbj:'siren',wk:'thermostat',sfkzq:'valve',ggq:'irrigation',tgkg:'dimmer',tgq:'dimmer',wg2:'hub',wfcon:'hub',hps:'presence',lyqwg:'hub',bh:'kettle',kfj:'coffee',kg:'switch',mal:'siren',dlq:'switch',jtmspro:'lock',sgj:'doorbell',videolock:'lock',qn:'heater',rs:'boiler',fs:'fan',fsd:'ceilfan',kt:'ac'};
-function iconOf(d){if(META.icons&&META.icons[d.id]&&(ART[META.icons[d.id]]||REALN[META.icons[d.id]]||CUSTOMN[META.icons[d.id]]))return META.icons[d.id];if(d.id==='mova-e30-ultra')return 'custom_mova_e30_ultra_robot_vacuum';const n=dname(d)+' '+(d.name||'');for(const[r,k]of NAMEKEY)if(r.test(n))return k;return CATICON[d.category]||'dev'}
+function iconOf(d){if(META.icons&&META.icons[d.id]&&(ART[META.icons[d.id]]||REALN[META.icons[d.id]]||CUSTOMN[META.icons[d.id]]))return META.icons[d.id];if(d.id==='mova-e30-ultra')return 'custom_mova_e30_ultra_robot_vacuum';if(d.id==='oralb-io2')return 'custom_oralb_io2_toothbrush';const n=dname(d)+' '+(d.name||'');for(const[r,k]of NAMEKEY)if(r.test(n))return k;return CATICON[d.category]||'dev'}
 /* product photos - the same images Smart Life shows, read once per device and cached */
 META.img=META.img||{};
 const STYLE=()=>'real';
@@ -786,7 +787,7 @@ const dname=d=>META.names[d.id]||d.name||'מכשיר';
 /* Show the actual product model under the user-defined name.
    Unknown models stay hidden; a category or status is not a model. */
 function deviceModel(d){
-  const known={'ember':'Switcher V4','router':'Xiaomi BE6500 Pro','mova-e30-ultra':'MOVA E30 Ultra'};
+  const known={'ember':'Switcher V4','router':'Xiaomi BE6500 Pro','mova-e30-ultra':'MOVA E30 Ultra','oralb-io2':'Oral-B iO2'};
   if(known[d.id])return known[d.id];
   for(const value of [d.model,d.model_name,d.product_model,d.productModel]){
     if(typeof value==='string'&&value.trim().length>1&&value.trim().length<=70)return value.trim();
@@ -899,6 +900,7 @@ function viewDevices(v){
     if(d&&d.id==='gtv'){c.querySelector('.open').onclick=()=>openTV();const p=c.querySelector('.pw');if(p)p.onclick=()=>tvKey('power');return}
     if(d&&d.id==='router'){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openRouter'}):openRouter();return}
     if(d&&d.id==='mova-e30-ultra'){c.querySelector('.open').onclick=openMova;return}
+    if(d&&d.id==='oralb-io2'){c.querySelector('.open').onclick=()=>openToothbrush();return}
     if(d&&d.virtual){c.querySelector('.open').onclick=()=>openEmber();const pb=c.querySelector('[data-ember]');if(pb)pb.onclick=async()=>{if(IN_APP&&!HEATER_LINK.connected)return openEmber();await emberGo('toggle');if(IN_APP)setTimeout(syncHeaterLink,1500)};return}
     c.querySelector('.open').onclick=()=>openDevice(d);
     const pw=c.querySelector('.pw');if(pw)pw.onclick=()=>{if(!d.online)return toast('המכשיר מנותק');send(d,[{code:powerCode(d),value:!isOn(d)}])}});
@@ -918,6 +920,7 @@ function groupedRooms(list,rooms){
 const EMBER={id:'ember',name:'דוד',category:'ember',online:true,virtual:true,status:{},functions:[],statusRange:[]};
 const ROUTER={id:'router',name:'ראוטר',category:'router',online:true,virtual:true,status:{},functions:[],statusRange:[]};
 const MOVA={id:'mova-e30-ultra',name:'MOVA E30 Ultra',category:'vacuum',online:true,virtual:true,status:{},functions:[],statusRange:[]};
+const ORALB={id:'oralb-io2',name:'מברשת השיניים שלי',category:'toothbrush',online:true,virtual:true,status:{},functions:[],statusRange:[]};
 /* MOVA E30 Ultra (dreame.vacuum.r2427/r2427a) is not a Smart Life device.
    The visual card exists, but no battery, map or cleaning actions are fabricated.
    Full integration requires an authenticated device connector (e.g. Dreame Vacuum / Home Assistant). */
@@ -1103,6 +1106,13 @@ function openEmber(){
 }
 const favButton=d=>META.fav[d.id]?`<button class="favToggle" type="button" data-fav-toggle aria-label="הסר ממועדפים: ${esc(dname(d))}" aria-pressed="true">${svg('star',2)}</button>`:'';
 function card(d){
+  if(d.id==='oralb-io2'){const nm=esc(dname(d));const status=typeof brushCardStatus==='function'?brushCardStatus():'טעינה ותזכורת להחלפת ראש';
+    return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
+      <button class="open" aria-label="${cardLabel(d)}, ${esc(status)}. פרטי מברשת"></button>
+      <div class="ic">${devArt(d)}</div>
+      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}
+      <div class="st" aria-hidden="true">${esc(status)}</div>
+      ${favButton(d)}</div>`}
   if(d.id==='mova-e30-ultra'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
       <button class="open" aria-label="${cardLabel(d)}, שואב שוטף, עדיין לא מחובר ל־Unplug. פרטים וחיבור"></button>
@@ -1591,6 +1601,7 @@ function openAdd(){
   if(META.ember===false&&confirm('להחזיר את הדוד (Ember) ל-HomeOn?')){delete META.ember;saveMeta();render();return}
   if(META.router===false&&confirm('להחזיר את הראוטר ל-HomeOn?')){delete META.router;saveMeta();render();return}
   if(META.mova===false&&confirm('להחזיר את MOVA E30 Ultra ל־Unplug?')){delete META.mova;saveMeta();render();return}
+  if(META.oralb===false&&confirm('להחזיר את Oral-B iO2 ל־Unplug?')){delete META.oralb;saveMeta();render();return}
   const before=new Set(DEVS.map(d=>d.id));
   sheet('הוספת מכשיר',`<p>את הצימוד עצמו עושים פעם אחת ב-Smart Life, כי אייפון לא מאפשר לאפליקציית רשת להעביר למכשיר את סיסמת ה-WiFi.</p>
     <button class="btn pri wide" id="aO">${svg('plus')}פתיחת Smart Life להוספה</button>
@@ -1690,6 +1701,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 <script src="home.js?v=2"></script>
 <script src="tv.js?v=2"></script>
 <script src="native.js?v=1"></script>
+<script src="toothbrush.js?v=1"></script>
 <script>render();</script>
 </body>
 </html>
