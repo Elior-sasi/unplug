@@ -581,6 +581,18 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .splash .w1{animation:tOn .3s 1.15s ease-out both}.splash .w2{animation:tOn .3s 1.3s ease-out both}
 /* BOSS warming plate: enlarge 25% only in device-card thumbnail. */
 .card .ic img.real:is([src^="real/hotplate.webp"],[src^="real/custom/boss_shabbat_hotplate.png"]){transform:scale(1.25);transform-origin:center center}
+/* Favorites: a direct, accessible orange star on every device tile. */
+.card .favToggle{position:absolute;left:8px;bottom:8px;z-index:3;width:44px;height:44px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:transparent;color:#92949b;cursor:pointer;touch-action:manipulation}
+.card .favToggle svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2}
+.card .favToggle[aria-pressed="true"]{color:#ff9a3d}
+.card .favToggle[aria-pressed="true"] svg{fill:currentColor;filter:drop-shadow(0 0 5px #ff9a3d55)}
+.card .favToggle:focus-visible{outline:2px solid #ff9a3d;outline-offset:1px}
+.card.wide .favToggle{left:auto;right:10px;top:8px;bottom:auto}
+.reordering .card .favToggle{display:none!important}
+.reordering .card .edFav{background:#303237!important;color:#a3a3aa!important}
+.reordering .card .edFav[aria-pressed="true"]{background:#413021!important;color:#ff9a3d!important}
+.reordering .card .edFav[aria-pressed="true"] svg{fill:currentColor}
+
 </style>
 </head>
 <body>
@@ -856,6 +868,8 @@ function viewDevices(v){
   $('allOff')&&($('allOff').onclick=async()=>{if(!confirm(`לכבות ${onDevs.length} מכשירים?`))return;for(const d of onDevs)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')});
   $('sc0')&&($('sc0').onclick=e=>runScene(SCENES[0],e.currentTarget));
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
+     const fb=c.querySelector('[data-fav-toggle]');if(fb&&d){fb.onclick=e=>{e.stopPropagation();META.fav[d.id]?delete META.fav[d.id]:META.fav[d.id]=true;saveMeta();render()}}
+
     if(d&&d.id==='gtv'){c.querySelector('.open').onclick=()=>openTV();const p=c.querySelector('.pw');if(p)p.onclick=()=>tvKey('power');return}
     if(d&&d.id==='router'){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openRouter'}):openRouter();return}
     if(d&&d.virtual){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openHeater'}):openEmber();const pb=c.querySelector('[data-ember]');if(pb)pb.onclick=()=>{LSset('unplug_ember_last',JSON.stringify({t:'הדלקה/כיבוי',at:hm(new Date())}));emberGo('toggle')};return}
@@ -925,31 +939,32 @@ function openEmber(){
     draw();refresh();
   });
 }
+const favButton=d=>`<button class="favToggle" type="button" data-fav-toggle aria-label="${META.fav[d.id]?'הסר ממועדפים: ':'הוסף למועדפים: '}${esc(dname(d))}" aria-pressed="${!!META.fav[d.id]}">${svg('star',2)}</button>`;
 function card(d){
   if(d.id==='gtv'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="gtv">
      <button class="open" aria-label="${nm}, שלט לטלוויזיה${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <button class="pw" aria-label="${nm}: הדלקה או כיבוי">${svg('power',2.6)}</button>
-     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}שלט</div></div>`}
+     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}שלט</div>${favButton(d)}</div>`}
   if(d.id==='router'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="router">
      <button class="open" aria-label="${nm}, ראוטר${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
-     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}מכשירים, מהירות ו-WiFi</div></div>`}
+     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}מכשירים, מהירות ו-WiFi</div>${favButton(d)}</div>`}
   if(d.virtual){const nm=esc(dname(d)),L=JSON.parse(LS('unplug_ember_last')||'null');
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
      <button class="open" aria-label="${nm}, דוד חכם${IN_APP?'':' דרך Ember'}${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <button class="pw" data-ember aria-label="${nm}: הדלקה או כיבוי">${svg('power',2.6)}</button>
-     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${L?esc(L.t):IN_APP?'דוד חשמלי':'דרך Ember'}</div></div>`}
+     <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${L?esc(L.t):IN_APP?'דוד חשמלי':'דרך Ember'}</div>${favButton(d)}</div>`}
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
   const c=(ART[iconOf(d)]||ART.dev).p.t,wide=AC.has(d.category)||iconOf(d)==='ac'&&!pc;
   return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
    <button class="open" aria-label="${nm}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
    <div class="ic${photoOf(d)?' photo':''}">${devArt(d)}</div>
    ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${nm} פועל" ${d.online?'':'aria-disabled="true"'}>${svg('power',2.6)}</button>`:''}
-   <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${esc(stateText(d))}</div>${META.fav[d.id]?`<span class="fav" aria-hidden="true">${svg('star',2)}</span>`:''}</div>`;
+   <div class="nm" aria-hidden="true">${nm}</div><div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${esc(stateText(d))}</div>${favButton(d)}</div>`;
 }
 
 /* ---------- sheets ---------- */
