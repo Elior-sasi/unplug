@@ -1576,11 +1576,34 @@ function openBackup(){
     for(const[k,ls]of[['wash','unplug_wash'],['acp','unplug_acp'],['shabbat','unplug_shabbat'],['presence','unplug_presence'],['widget','unplug_widget']])if(o[k]!=null)LSset(ls,JSON.stringify(o[k]))};
   sheet('גיבוי ושחזור',`<p>שומר שמות, חדרים, סמלילים, מועדפים, סצנות, מכונת הכביסה, מצב שבת והווידג׳ט.</p>
     ${typeof gbRowHtml==='function'?gbRowHtml():''}
+    <div class="sec-h"><h2>Google Drive — גיבוי כקובץ</h2></div>
+    <p>שמור קובץ גיבוי ב-Google Drive דרך תפריט השיתוף של האייפון. זהו גיבוי ידני, לא סנכרון אוטומטי.</p>
+    <button class="btn pri wide" id="bkFileSave">שמירת גיבוי ב-Google Drive</button>
+    <div class="field"><label for="bkFileLoad">שחזור מקובץ גיבוי</label><input id="bkFileLoad" type="file" accept=".json,application/json"></div>
     <div class="sec-h"><h2>קוד גיבוי</h2></div>
     <div class="code" id="bkC">${esc(code())}</div><button class="btn wide" id="bkCp">${svg('save')}העתקת הקוד</button>
     <div class="field"><label for="bkI">שחזור מקוד</label><textarea class="field-ta" id="bkI" placeholder="UNPLUG1:..."></textarea></div>
     <div class="err" id="bkE" role="alert"></div><button class="btn pri wide" id="bkR">שחזור</button>`,(el,close)=>{
     if(typeof gbBind==='function')gbBind(el,()=>openBackup());
+    el.querySelector('#bkFileSave').onclick=async()=>{
+      const blob=new Blob([JSON.stringify(data(),null,2)],{type:'application/json'});
+      const file=new File([blob],'HomeOn-backup-'+new Date().toISOString().slice(0,10)+'.json',{type:'application/json'});
+      try{
+        if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:'גיבוי HomeOn'});return}
+      }catch(e){if(e.name==='AbortError')return}
+      const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+      toast('הקובץ הורד. אפשר לשמור אותו ב-Google Drive');
+    };
+    el.querySelector('#bkFileLoad').onchange=async e=>{
+      const f=e.target.files?.[0];if(!f)return;
+      try{
+        if(f.size>5e6)throw Error('הקובץ גדול מדי');
+        const o=JSON.parse(await f.text());
+        if(o.app!=='HomeOn'||!o.meta||!Array.isArray(o.scenes))throw Error('קובץ לא מתאים');
+        if(!confirm('לשחזר את גיבוי HomeOn? ההגדרות הנוכחיות יוחלפו.'))return;
+        restore(o);close();render();toast('הגיבוי שוחזר');
+      }catch(err){el.querySelector('#bkE').textContent='לא ניתן לשחזר: '+(err.message||'קובץ לא תקין')}
+    };
     el.querySelector('#bkCp').onclick=()=>navigator.clipboard?.writeText(code()).then(()=>toast('הועתק'),()=>{});
     el.querySelector('#bkR').onclick=()=>{try{const t=el.querySelector('#bkI').value.trim().replace(/^UNPLUG1:/,'');restore(JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))))));close();render();toast('שוחזר. סצנות מתוזמנות צריך לשמור שוב')}catch(e){el.querySelector('#bkE').textContent='הקוד לא תקין'}}
   });
