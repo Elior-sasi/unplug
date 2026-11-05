@@ -868,7 +868,7 @@ function render(){
   {const t={scenes:'סצנות',sched:'תזמונים',settings:'הגדרות'}[TAB];document.body.dataset.tab=TAB;const tt=document.getElementById('tabTitle');if(tt)tt.textContent=t||''}
   const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d)).length, off=HD.filter(d=>!d.online).length;
   const visibleCount=homeDevices().filter(d=>!(META.hidden||{})[d.id]).length;
-  $('homeBtn').innerHTML=`<span>${esc(curHome().name)}</span>${svg('chev',2.6)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
+  $('homeBtn').innerHTML=`<span>בית · ${esc(curHome().name)}</span>${svg('chev',2.6)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
 
   $('title').textContent=!CFG.key||!HD.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
   $('sub').textContent=!CFG.key?'לא מחובר':visibleCount===1?'מכשיר אחד':visibleCount?visibleCount+' מכשירים':'';
@@ -891,7 +891,7 @@ function viewDevices(v){
   if(q)list=list.filter(d=>(dname(d)+' '+catOf(d)[0]+' '+roomOf(d)).toLowerCase().includes(q));
   list=list.slice().sort((x,y)=>(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0)||(META.order?.[x.id]??999)-(META.order?.[y.id]??999));
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
-  const chips=[['all','הכול'],['fav','מועדפים'],...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
+  const chips=[['all','הכול'],['fav','מועדפים'],...rooms.map(r=>[r,'חדר · '+r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
   const H=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
       (typeof cmdBarHtml==='function'?cmdBarHtml():'')+(typeof liveStripHtml==='function'?liveStripHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
@@ -1595,7 +1595,7 @@ function renameRoom(o,after){
 function manageRooms(focusRoom){
   const H=META.home,rooms=()=>roomsOf(H),devs=DEVS.filter(d=>homeOf(d)===H||!META.devHome[d.id]&&H===META.homes[0].id);
   const multi=META.homes.length>1;
-  sheet('חדרים ב'+esc(curHome().name),`<div class="list" id="rl"></div><button class="btn wide" id="ra">${svg('plus')}חדר חדש</button>
+  sheet('חדרים בבית '+esc(curHome().name),`<div class="list" id="rl"></div><button class="btn wide" id="ra">${svg('plus')}חדר חדש</button>
     <div class="sec-h"><h2>שיוך מכשירים</h2></div><div class="list" id="dl"></div>`,(el)=>{
     const draw=()=>{
       el.querySelector('#rl').innerHTML=rooms().length?rooms().map(r=>`<div class="row"><button class="row-btn grow" data-ren="${esc(r)}" aria-label="שינוי שם לחדר ${esc(r)}" style="display:block"><span class="t">${esc(r)} <span aria-hidden="true" style="display:inline-block;width:16px;height:16px;vertical-align:-2px;color:var(--gold)">${svg('edit')}</span></span><br><span class="s">${DEVS.filter(d=>roomOf(d)===r).length} מכשירים · הקש לשינוי שם</span></button><button class="icbtn" data-del="${esc(r)}" aria-label="מחיקת חדר ${esc(r)}">${svg('trash')}</button></div>`).join(''):`<div class="row"><span class="s">עוד אין חדרים בבית הזה</span></div>`;
