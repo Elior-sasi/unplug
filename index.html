@@ -999,15 +999,12 @@ async function checkMovaCloudStatus(output){
 }
 function openMova(){
   sheet('MOVA E30 Ultra',`<div style="display:grid;place-items:center;margin:8px 0 12px"><div style="width:160px;height:160px">${devArt(MOVA)}</div></div>
-    <div class="empty"><b>שליטה בניקוי עדיין לא מחוברת</b>
-      ${META.movaMac?(MOVA_WIFI.checked?(MOVA_WIFI.visible?'השואב נראה כעת ברשת הביתית':'השואב לא זוהה כרגע ברשת'):'מכשיר נבחר, ממתין לבדיקת הראוטר'):'אפשר לבחור את השואב מתוך רשימת המכשירים בראוטר.'}
-      ${MOVA_WIFI.visible&&MOVA_WIFI.ip?' כתובת IP: '+esc(MOVA_WIFI.ip):''}
-      <p>מצב הניקוי, הסוללה והמפה אינם זמינים בלי חיבור MOVAhome או אינטגרציה נתמכת.</p></div>
+    <div class="list"><div class="row"><span class="grow"><span class="t">שליטה בניקוי עדיין לא מחוברת</span><br><span class="s">חיבור MOVAhome נדרש להצגת מצב הניקוי והסוללה</span></span></div></div>
     <div class="sec-h"><h2>חיבור ענן MOVA</h2></div>
     <div class="list"><div class="row"><span class="grow"><span class="t">מצב המחבר</span><br><span class="s" id="movaCloudState" role="status" aria-live="polite">טרם נבדק</span></span></div>
     <button class="btn wide" id="movaCheckCloud" type="button">בדוק חיבור ענן</button></div>
     <div class="sec-h"><h2>מפת הבית וחדרים</h2></div>
-    <div class="empty" role="status"><b>ממתין למפה אמיתית מהשואב</b><p>לא נטען שרטוט משוער. כאשר מחבר הענן יאומת, תוצג כאן המפה השמורה בחשבון MOVAhome ובחירת חדרים לניקוי.</p></div>
+    <div class="list"><div class="row"><span class="grow"><span class="t">המפה עדיין לא זמינה</span><br><span class="s">תוצג כאן לאחר חיבור מאומת ל־MOVAhome</span></span></div></div>
     <div class="sec-h"><h2>ניקוי ושליטה</h2></div>
     <div class="list">
       <div class="row"><span class="grow"><span class="t">הפעלה · השהיה · חזרה לעמדה</span><br><span class="s">ממתין לחיבור מאומת — אין פקודות פעילות</span></span></div>
