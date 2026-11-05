@@ -6,6 +6,7 @@ No device identifiers or raw response bodies are printed.
 import json
 import sys
 from mova_adapter import AdapterUnavailable, discover_devices
+from device_summary import summarize_devices
 
 def main() -> int:
     try:
@@ -29,7 +30,12 @@ def main() -> int:
             return None
         return None
 
-    print(json.dumps({"ok": True, "deviceCount": count_devices(result), "responseType": type(result).__name__}))
+    try:
+        summaries = summarize_devices(result)
+    except ValueError:
+        print(json.dumps({"ok": False, "reason": "Unsupported MOVAhome device response"}))
+        return 4
+    print(json.dumps({"ok": True, "deviceCount": len(summaries), "responseType": type(result).__name__}))
     return 0
 
 if __name__ == "__main__":
