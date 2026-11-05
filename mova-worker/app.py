@@ -28,7 +28,10 @@ def setup_state() -> dict:
     credentials_present = bool(os.environ.get("MOVA_USERNAME")) and bool(
         os.environ.get("MOVA_PASSWORD")
     )
-    adapter_installed = (\n        Path("/srv/custom_components/dreame_vacuum/dreame/protocol.py").is_file()\n        and importlib.util.find_spec("requests") is not None\n    )
+    adapter_installed = (
+        Path("/srv/custom_components/dreame_vacuum/dreame/protocol.py").is_file()
+        and importlib.util.find_spec("requests") is not None
+    )
     return {
         "credentialsConfigured": credentials_present,
         "adapterInstalled": adapter_installed,
