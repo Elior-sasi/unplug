@@ -648,6 +648,17 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .reordering .card .ic:not(.photo){max-height:85px}
 .reordering .card .nm,.reordering .card .st{position:relative;z-index:1}
 .reordering .card .nm{margin-top:auto!important}
+
+/* Edit mode: controls occupy their own top strip, and content never sits beneath them. */
+.reordering .card,.reordering .card.wide{padding-top:112px!important;min-height:310px!important}
+.reordering .card .edDel,.reordering .card .edFav,.reordering .card .edSize,.reordering .card .edIcon{width:36px!important;height:36px!important}
+.reordering .card .edDel{top:10px!important;left:10px!important}
+.reordering .card .edFav{top:10px!important;left:52px!important}
+.reordering .card .edSize{top:54px!important;left:10px!important}
+.reordering .card .edIcon{top:54px!important;left:52px!important}
+.reordering .card .ic,.reordering .card .ic.photo,.reordering .card .ic:has(img.real),.reordering .card.wide .ic,.reordering .card.wide .ic.photo,.reordering .card.wide .ic:has(img.real){position:relative!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;align-self:center!important;max-width:100%!important;max-height:85px!important;margin:0 auto 8px!important}
+.reordering .card .nm,.reordering .card .st,.reordering .card.wide .nm,.reordering .card.wide .st{max-width:100%!important;text-align:center!important;overflow-wrap:anywhere}
+.reordering #view{padding-bottom:calc(var(--nav-h,80px) + env(safe-area-inset-bottom) + 110px)!important}
 </style>
 </head>
 <body>
