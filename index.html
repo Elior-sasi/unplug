@@ -1237,7 +1237,7 @@ function openDevice(d,generic){
   if(!generic&&AC.has(d.category))return openBreeze(d);
   if(!generic&&typeof isWasher==='function'&&isWasher(d))return openWasher(d);
   if(!generic&&typeof isAcPlug==='function'&&isAcPlug(d))return openAcPlug(d);
-  if(!generic&&iconOf(d)==='toaster'&&powerCode(d))return openToaster(d);
+  if(!generic&&powerCode(d)&&(/טוסטר|toaster/i.test(dname(d))||['toaster','custom_user_white_sandwich_press','custom_white_sandwich_press'].includes(iconOf(d))))return openToaster(d);
   const close=sheet(esc(dname(d)),`<div id="dBody"></div>`,(el)=>{
     const body=el.querySelector('#dBody');body.style.cssText='display:flex;flex-direction:column;gap:14px';
     OPEN={id:d.id,draw:dd=>draw(dd)};
