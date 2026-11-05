@@ -29,9 +29,9 @@ async function gbSignIn(){await gbLoad();const p=new firebase.auth.GoogleAuthPro
 setTimeout(()=>{if(!LS('unplug_gb_on'))return;gbLoad().then(async()=>{if(!GB.user)return;
   if(!Object.keys(META.names||{}).length&&!Object.keys(META.icons||{}).length){const s=await gbDoc().get();if(s.exists&&gbApply(JSON.parse(s.data().data||'null'))){render();toast('ההגדרות שוחזרו מ-Google')}}
   else gbSave()}).catch(()=>{})},3000);
-function gbRowHtml(){const on=!!LS('unplug_gb_on');const native=typeof IN_APP!=='undefined'&&IN_APP;
+function gbRowHtml(){const on=!!LS('unplug_gb_on')&&!!GB.user;const native=typeof IN_APP!=='undefined'&&IN_APP;
   return `<div class="sec-h"><h2>גיבוי בחשבון Google</h2></div><div class="list" id="gbBox">
-    ${on?`<div class="row"><span class="grow"><span class="t">הגיבוי פועל</span><br><span class="s" id="gbWho">${GB.user?esc(GB.user.email||''):'מחובר'}${GB.last?' · נשמר '+esc(new Date(GB.last).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):''}</span></span></div>
+    ${on?`<div class="row"><span class="grow"><span class="t">הגיבוי פועל</span><br><span class="s" id="gbWho">${GB.user?esc(GB.user.email||''):'בודק חיבור'}${GB.last?' · נשמר '+esc(new Date(GB.last).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):''}</span></span></div>
       <button class="row row-btn" id="gbNow"><span class="grow t">גיבוי עכשיו</span>${svg('save')}</button>
       <button class="row row-btn" id="gbRe"><span class="grow t">שחזור מהגיבוי</span>${svg('chev')}</button>
       <button class="row row-btn" id="gbOut"><span class="grow t" style="color:#ff8f8f">ניתוק מ-Google</span></button>`
@@ -42,4 +42,4 @@ function gbBind(el,redraw){const q=s=>el.querySelector(s);q('#gbBrowser')&&(q('#
   q('#gbRe')&&(q('#gbRe').onclick=async()=>{try{await gbLoad();if(!GB.user)return toast('צריך להתחבר שוב');const s=await gbDoc().get();if(!s.exists)return toast('אין עדיין גיבוי');
     if(!confirm('לשחזר מהגיבוי? ההגדרות הנוכחיות יוחלפו.'))return;gbApply(JSON.parse(s.data().data));render();toast('שוחזר')}catch(e){toast('השחזור נכשל')}});
   q('#gbOut')&&(q('#gbOut').onclick=async()=>{if(!confirm('לנתק את הגיבוי מחשבון Google?'))return;try{await gbLoad();await GB.auth.signOut()}catch(e){}GB.user=null;LSset('unplug_gb_on',null);redraw()});
-  if(LS('unplug_gb_on')&&!GB.user)gbLoad().then(()=>{const w=q('#gbWho');if(w&&GB.user)w.textContent=GB.user.email+(GB.last?' · נשמר '+new Date(GB.last).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'')}).catch(()=>{})}
+  if(LS('unplug_gb_on')&&!GB.user)gbLoad().then(()=>{if(GB.user)redraw()}).catch(()=>{})}
