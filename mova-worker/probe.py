@@ -19,17 +19,6 @@ def main() -> int:
         print(json.dumps({"ok": False, "reason": "Unexpected MOVAhome protocol failure"}))
         return 3
 
-    # Upstream shapes vary. Only expose aggregate metadata in diagnostics.
-    def count_devices(value):
-        if isinstance(value, list):
-            return len(value)
-        if isinstance(value, dict):
-            for key in ("devices", "deviceList", "list"):
-                if isinstance(value.get(key), list):
-                    return len(value[key])
-            return None
-        return None
-
     try:
         summaries = summarize_devices(result)
     except ValueError:
