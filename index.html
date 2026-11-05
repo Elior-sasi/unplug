@@ -1283,16 +1283,20 @@ function openDevice(d,generic){
       const fnCodes=new Set((d.functions||[]).map(f=>f.code));
       const ros=(d.statusRange||[]).filter(f=>!fnCodes.has(f.code)&&!SKIP.has(f.code)&&d.status[f.code]!=null&&['Integer','Enum','Boolean'].includes(f.type));
       const mySched=SCHED.filter(s=>s.device===d.id);
+      const controlTitle=/curtain|blind|וילון|תריס/i.test([d.category,dname(d),iconOf(d)].join(' '))?'שליטה בווילון או בתריס':
+        /light|lamp|נורה|מנורה|תאורה/i.test([d.category,dname(d),iconOf(d)].join(' '))?'שליטה בתאורה':
+        /fan|מאוורר/i.test([d.category,dname(d),iconOf(d)].join(' '))?'שליטה במאוורר':'שליטה במכשיר';
       body.innerHTML=`
         ${!d.online?`<div class="empty" role="alert"><b>המכשיר מנותק</b>בדוק שהוא מחובר לחשמל ול-WiFi.</div>`:''}
         ${devHero(d)}
         ${pc?pwPill(d,'bigPw'):''}
         ${ros.length?`<div class="readouts">${ros.map(f=>`<div class="ro"><div class="k">${esc(nameOf(f))}</div><div class="n">${esc(roVal(d,f))}</div></div>`).join('')}</div>`:''}
         ${colF(d)?colHtml(d):''}
+        ${ctrls.length?`<div class="sec-h"><h2>${esc(controlTitle)}</h2></div><div class="list device-settings" id="ctrls">${ctrls.map(f=>ctrlHtml(d,f)).join('')}</div>`:''}
         ${pc?`<div class="sec-h"><h2>טיימר</h2></div><div class="list" id="tmr"></div>`:''}
         <div class="sec-h"><h2>תזמונים</h2><button class="btn" id="addS">${svg('plus')}הוספה</button></div>
         <div class="list">${mySched.length?mySched.map(s=>schedRow(s,false)).join(''):`<div class="row"><span class="s">אין תזמונים למכשיר הזה</span></div>`}</div>
-        ${ctrls.length?`<div class="sec-h"><h2>הגדרות השקע</h2></div><div class="list device-settings" id="ctrls">${ctrls.map(f=>ctrlHtml(d,f)).join('')}</div>`:''}
+        
         <div class="sec-h"><h2>פרטים</h2></div>
         <div class="list">
           <button class="row row-btn" id="fav" role="switch" aria-checked="${!!META.fav[d.id]}"><span class="grow"><span class="t">מועדף</span><br><span class="s">${META.fav[d.id]?'מופיע ראשון בבית':'לא'}</span></span>${svg('star')}</button>
