@@ -3,7 +3,7 @@ WORKDIR /srv
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app.py .
+COPY app.py mova_adapter.py probe.py ./
 RUN useradd --create-home --uid 10001 appuser
 USER appuser
 EXPOSE 8080
