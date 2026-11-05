@@ -17,7 +17,7 @@ function gbApply(o){if(!o||!o.meta)return false;Object.assign(META,{names:{},roo
   SCENES=o.scenes||[];if(typeof saveScenes==='function')saveScenes();
   for(const[k,ls]of[['wash','unplug_wash'],['acp','unplug_acp'],['shabbat','unplug_shabbat'],['presence','unplug_presence'],['widget','unplug_widget']])if(o[k]!=null)LSset(ls,JSON.stringify(o[k]));
   return true}
-async function gbSave(){if(!GB.user)return;try{await gbDoc().set({data:JSON.stringify(gbData()),updatedAt:Date.now(),device:navigator.userAgent.slice(0,80)});GB.last=Date.now();LSset('unplug_gb_at',String(GB.last))}catch(e){}}
+async function gbSave(){if(!GB.user)throw new Error('לא מחובר ל-Google');await gbDoc().set({data:JSON.stringify(gbData()),updatedAt:Date.now(),device:navigator.userAgent.slice(0,80)});GB.last=Date.now();LSset('unplug_gb_at',String(GB.last));return true}
 function gbQueue(){if(!LS('unplug_gb_on'))return;clearTimeout(GB.t);GB.t=setTimeout(()=>gbLoad().then(()=>gbSave()).catch(()=>{}),2500)}
 async function gbSignIn(){await gbLoad();const p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
   const r=await GB.auth.signInWithPopup(p);GB.user=r.user;LSset('unplug_gb_on','1');
@@ -26,17 +26,17 @@ async function gbSignIn(){await gbLoad();const p=new firebase.auth.GoogleAuthPro
     if(localEmpty||confirm('נמצא גיבוי בחשבון Google. לשחזר ממנו? (ההגדרות הנוכחיות יוחלפו)')){gbApply(o);render();toast('שוחזר מהגיבוי ב-Google');return}}
   await gbSave();toast('מחובר. הגיבוי פועל')}
 /* restore on a fresh install: if already signed in and this phone has nothing yet */
-setTimeout(()=>{if(!LS('unplug_gb_on')||(typeof IN_APP!=='undefined'&&IN_APP))return;gbLoad().then(async()=>{if(!GB.user)return;
+setTimeout(()=>{if(!LS('unplug_gb_on'))return;gbLoad().then(async()=>{if(!GB.user)return;
   if(!Object.keys(META.names||{}).length&&!Object.keys(META.icons||{}).length){const s=await gbDoc().get();if(s.exists&&gbApply(JSON.parse(s.data().data||'null'))){render();toast('ההגדרות שוחזרו מ-Google')}}
   else gbSave()}).catch(()=>{})},3000);
-function gbRowHtml(){if(typeof IN_APP!=='undefined'&&IN_APP)return '';const on=!!LS('unplug_gb_on');
+function gbRowHtml(){const on=!!LS('unplug_gb_on');const native=typeof IN_APP!=='undefined'&&IN_APP;
   return `<div class="sec-h"><h2>גיבוי בחשבון Google</h2></div><div class="list" id="gbBox">
     ${on?`<div class="row"><span class="grow"><span class="t">הגיבוי פועל</span><br><span class="s" id="gbWho">${GB.user?esc(GB.user.email||''):'מחובר'}${GB.last?' · נשמר '+esc(new Date(GB.last).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):''}</span></span></div>
       <button class="row row-btn" id="gbNow"><span class="grow t">גיבוי עכשיו</span>${svg('save')}</button>
       <button class="row row-btn" id="gbRe"><span class="grow t">שחזור מהגיבוי</span>${svg('chev')}</button>
       <button class="row row-btn" id="gbOut"><span class="grow t" style="color:#ff8f8f">ניתוק מ-Google</span></button>`
-    :`<button class="row row-btn" id="gbIn"><span class="grow"><span class="t">התחברות עם Google</span><br><span class="s">כל שינוי נשמר לבד, ומשוחזר בטלפון חדש</span></span>${svg('chev')}</button>`}</div>`}
-function gbBind(el,redraw){const q=s=>el.querySelector(s);
+    :native?`<div class="row"><span class="grow"><span class="t">גיבוי אוטומטי בחשבון Google</span><br><span class="s">התחברות Google באפליקציית iOS עדיין אינה זמינה. אפשר להתחבר דרך האתר בדפדפן.</span></span><button class="btn" id="gbBrowser">פתיחת האתר</button></div>`:`<button class="row row-btn" id="gbIn"><span class="grow"><span class="t">התחברות עם Google</span><br><span class="s">כל שינוי נשמר לבד, ומשוחזר בטלפון חדש</span></span>${svg('chev')}</button>`}</div>`}
+function gbBind(el,redraw){const q=s=>el.querySelector(s);q('#gbBrowser')&&(q('#gbBrowser').onclick=()=>window.open('https://elior-sasi.github.io/unplug/?app=1','_blank'));
   q('#gbIn')&&(q('#gbIn').onclick=async()=>{try{await gbSignIn();redraw()}catch(e){const c=(e&&e.code)||'';if(/popup-closed|cancelled/.test(c))return;toast(c==='auth/popup-blocked'?'הדפדפן חסם את חלון ההתחברות - נסה שוב':e instanceof Event||/network/.test(c)?'אין חיבור לגוגל. בדוק אינטרנט ונסה שוב':'ההתחברות נכשלה ('+(c||e.message||'שגיאה')+')')}});
   q('#gbNow')&&(q('#gbNow').onclick=async()=>{try{await gbLoad();if(!GB.user)return toast('צריך להתחבר שוב');await gbSave();toast('נשמר בגוגל');redraw()}catch(e){toast('לא נשמר')}});
   q('#gbRe')&&(q('#gbRe').onclick=async()=>{try{await gbLoad();if(!GB.user)return toast('צריך להתחבר שוב');const s=await gbDoc().get();if(!s.exists)return toast('אין עדיין גיבוי');
