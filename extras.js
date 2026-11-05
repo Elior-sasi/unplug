@@ -122,7 +122,7 @@ function saveOrderFrom(grid){[...grid.querySelectorAll('.card')].forEach((c,i)=>
 function bindReorder(v){
   if(!REORDER)return;
   META.size=META.size||{};META.hidden=META.hidden||{};
-  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="status"><span>גרור כדי להזיז</span><button class="btn pri" id="reDone">סיום</button></div>`);
+  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="group" aria-label="עריכת כרטיסים"><button class="btn pri" id="reDone">סיום עריכה</button></div>`);
   v.insertAdjacentHTML('beforeend',`<button class="btn wide addCard" id="addCard">${svg('plus')}הוספת כרטיס${Object.keys(META.hidden).length?' ('+Object.keys(META.hidden).length+' מוסתרים)':''}</button>`);
   v.querySelector('#reDone').onclick=()=>setReorder(false);
   v.querySelector('#addCard').onclick=()=>{const hs=DEVS.filter(d=>META.hidden[d.id]);if(!hs.length)return toast('כל המכשירים כבר מוצגים');
