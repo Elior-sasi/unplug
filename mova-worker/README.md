@@ -19,3 +19,9 @@ The image now includes `mova_adapter.py` and `probe.py`. **The upstream MOVAhome
 Use a secrets manager for `MOVA_USERNAME` and `MOVA_PASSWORD`, and set `MOVA_COUNTRY=il`. Do not paste credentials into GitHub, issue comments, chat, or CI logs.
 
 The probe is CLI-only: `python probe.py`. It prints only a response type and an optional aggregate device count, not device details. No production account test has been performed.
+
+## Cloud deployment blueprint
+
+The repository root includes `render.yaml` for a Render Docker web service (persistent hosting, not a serverless function). The blueprint starts the **fail-closed API only** and exposes `/health`. It does **not** install the third-party MOVAhome library, establish a cloud connection, or enable commands. Deploy only after reviewing cost and privacy settings in the hosting account.
+
+No MOVA credentials belong in the blueprint or GitHub. A future secure private worker will need secrets configured in the hosting provider, server-side authorization and a supported verification flow before device discovery can be enabled.
