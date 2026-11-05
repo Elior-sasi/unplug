@@ -901,7 +901,7 @@ function viewDevices(v){
   if(q)list=list.filter(d=>(dname(d)+' '+catOf(d)[0]+' '+roomOf(d)).toLowerCase().includes(q));
   list=list.slice().sort((x,y)=>(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0)||(META.order?.[x.id]??999)-(META.order?.[y.id]??999));
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
-  const chips=[['all','הכול'],['fav','מועדפים'],...rooms.map(r=>[r,'חדר · '+r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
+  const chips=[['all','הכול'],['fav','מועדפים'],...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
   const H=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
       (typeof cmdBarHtml==='function'?cmdBarHtml():'')+(typeof liveStripHtml==='function'?liveStripHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
