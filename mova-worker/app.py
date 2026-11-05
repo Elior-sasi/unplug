@@ -3,6 +3,7 @@
 Cloud Run IAM must remain enabled. No credentials are accepted via HTTP.
 """
 import importlib.util
+from pathlib import Path
 import os
 
 from fastapi import FastAPI
@@ -27,7 +28,7 @@ def setup_state() -> dict:
     credentials_present = bool(os.environ.get("MOVA_USERNAME")) and bool(
         os.environ.get("MOVA_PASSWORD")
     )
-    adapter_installed = importlib.util.find_spec("custom_components") is not None
+    adapter_installed = (\n        Path("/srv/custom_components/dreame_vacuum/dreame/protocol.py").is_file()\n        and importlib.util.find_spec("requests") is not None\n    )
     return {
         "credentialsConfigured": credentials_present,
         "adapterInstalled": adapter_installed,
