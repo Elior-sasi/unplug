@@ -887,6 +887,7 @@ async function refreshOne(id){try{const j=await api('/device',{id});if(!j.device
 /* ---------- render ---------- */
 function render(){
   window.DEVS_ALL=DEVS;
+  {const edit=$('editBtn');if(edit){const editing=typeof REORDER!=='undefined'&&REORDER;edit.innerHTML=svg(editing?'check':'edit',2.4);edit.setAttribute('aria-label',editing?'סיום עריכה':'עריכת מסך');edit.title=editing?'סיום עריכה':'עריכת מסך'}}
   {const t={scenes:'סצנות',sched:'תזמונים',settings:'הגדרות'}[TAB];document.body.dataset.tab=TAB;const tt=document.getElementById('tabTitle');if(tt)tt.textContent=t||''}
   const HD=DEVS.filter(inHome),on=HD.filter(d=>d.online&&isOn(d)).length, off=HD.filter(d=>!d.online).length;
   const visibleCount=homeDevices().filter(d=>!(META.hidden||{})[d.id]).length;
