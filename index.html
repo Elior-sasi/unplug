@@ -1632,9 +1632,21 @@ async function importTuya(manual){
   if(!j.homes||!j.homes.length){if(manual)toast('לא נמצאו בתים ב-Smart Life');return false}
   const idOf=h=>'t'+h.id;
   for(const h of j.homes){const ex=META.homes.find(x=>x.id===idOf(h));ex?ex.name=h.name||ex.name:META.homes.push({id:idOf(h),name:h.name||'בית'})}
-  // drop the placeholder home if it is empty
+  // Merge duplicate local homes with the exact same Smart Life home name.
+  // Move only local metadata references; never delete a device or change its Tuya ID.
+  const canonical=new Map(j.homes.map(h=>[String(h.name||'').trim(),idOf(h)]));
+  for(const legacy of [...META.homes]){
+    if(legacy.id.startsWith('t')||legacy.id===UNASSIGNED_HOME)continue;
+    const target=canonical.get(String(legacy.name||'').trim());
+    if(!target||target===legacy.id)continue;
+    for(const [did,hid] of Object.entries(META.devHome))if(hid===legacy.id)META.devHome[did]=target;
+    for(const [room,hid] of Object.entries(META.roomHome))if(hid===legacy.id)META.roomHome[room]=target;
+    if(META.home===legacy.id)META.home=target;
+    META.homes=META.homes.filter(h=>h.id!==legacy.id);
+  }
+  // Keep legacy homes with distinct names and local device assignments.
   META.homes=META.homes.filter(h=>h.id===UNASSIGNED_HOME||h.id.startsWith('t')||DEVS.some(d=>META.devHome[d.id]===h.id)||META.roomList.some(r=>META.roomHome[r]===h.id));
-  if(!META.homes.length)META.homes=[{id:idOf(j.homes[0]),name:j.homes[0].name}];
+  if(!META.homes.some(h=>h.id===UNASSIGNED_HOME))META.homes.push({id:UNASSIGNED_HOME,name:'לא משויכים'});
   for(const[did,w]of Object.entries(j.where||{})){META.devHome[did]=idOf({id:w.home});
     if(w.room&&w.room.name){const r=(META.roomAlias||{})[w.room.name]||w.room.name;if(!META.roomList.includes(r))META.roomList.push(r);META.roomHome[r]=idOf({id:w.home});if(manual||!META.rooms[did])META.rooms[did]=r}}
   if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
