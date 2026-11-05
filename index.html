@@ -958,7 +958,7 @@ function viewDevices(v){
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
      const fb=c.querySelector('[data-fav-toggle]');if(fb&&d){fb.onclick=e=>{e.stopPropagation();META.fav[d.id]?delete META.fav[d.id]:META.fav[d.id]=true;saveMeta();render()}}
 
-    if(d&&d.id==='gtv'){c.querySelector('.open').onclick=()=>openTV();const p=c.querySelector('.pw');if(p)p.onclick=()=>tvKey('power');return}
+    if(d&&d.id==='gtv'){c.querySelector('.open').onclick=()=>openProjectorPreview(d);const p=c.querySelector('.pw');if(p)p.onclick=()=>openProjectorPreview(d);return}
     if(d&&d.id==='router'){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openRouter'}):openRouter();return}
     if(d&&d.id==='mova-e30-ultra'){c.querySelector('.open').onclick=openMova;return}
     if(d&&d.id==='oralb-io2'){c.querySelector('.open').onclick=()=>openToothbrush();return}
