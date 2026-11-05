@@ -332,6 +332,9 @@ header.top::before{background:linear-gradient(180deg,rgba(12,15,22,.85),rgba(12,
 .card .ic img.real{object-fit:contain;filter:drop-shadow(0 8px 12px rgba(0,0,0,.5))!important}
 .card:not(.is-on) .ic img.real{filter:saturate(.5) brightness(.78) drop-shadow(0 8px 12px rgba(0,0,0,.5))!important}
 .card[data-id="oralb-io2"] .ic img.real{filter:drop-shadow(0 8px 12px rgba(0,0,0,.5))!important}
+/* Preserve identical toothbrush colors in tile and detail sheet. */
+.card[data-id="oralb-io2"] .ic img,.card[data-id="oralb-io2"] .ic img.real,.dhero .dh-art img[src*="oralb_io2_toothbrush"],.sheet img[src*="oralb_io2_toothbrush"]{filter:none!important;opacity:1!important;mix-blend-mode:normal!important}
+
 .dhero:has(.dh-state) .dh-art:has(img[src*="oralb_io2_toothbrush"]){filter:none}
 .card.is-on .ic:has(img.real){filter:drop-shadow(0 0 18px #ff9a3d55)}
 .big-pw img.real{object-fit:contain;filter:drop-shadow(0 14px 22px rgba(0,0,0,.55))}
