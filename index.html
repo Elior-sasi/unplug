@@ -1697,6 +1697,7 @@ function openHomes(){
   sheet('הבתים שלי',`<div class="list" id="hl"></div><button class="btn wide" id="ha">${svg('plus')}בית חדש</button>
     <button class="btn wide" id="hImp">${svg('ref')}ייבוא בתים וחדרים מ-Smart Life</button>
     <button class="btn wide" id="hDiag">אבחון שיוך בתים</button>
+    <button class="btn wide" id="hRestoreLocal">שחזור הצגת מכשירים מקומיים (מברשת, שואב, ראוטר, דוד)</button>
     <p style="font-size:.92rem">לכל בית יש חדרים ומכשירים משלו. מעבירים מכשיר בית מתוך "חדרים" ← שיוך מכשירים.</p>`,(el,close)=>{
     const draw=()=>{el.querySelector('#hl').innerHTML=META.homes.map(h=>`<div class="row"><button class="row-btn grow" data-hs="${h.id}" aria-pressed="${h.id===META.home}" style="display:block"><span class="t">${esc(h.name)}${h.id===META.home?' ✓':''}</span><br><span class="s">${DEVS.filter(d=>homeOf(d)===h.id).length} מכשירים · ${roomsOf(h.id).length} חדרים</span></button>
       <button class="icbtn" data-hr="${h.id}" aria-label="שינוי שם לבית ${esc(h.name)}">${svg('edit')}</button>${META.homes.length>1?`<button class="icbtn" data-hd="${h.id}" aria-label="מחיקת הבית ${esc(h.name)}">${svg('trash')}</button>`:''}</div>`).join('');
@@ -1706,6 +1707,9 @@ function openHomes(){
         META.homes=META.homes.filter(x=>x.id!==h.id);const to=META.homes[0].id;for(const k in META.devHome)if(META.devHome[k]===h.id)META.devHome[k]=to;for(const k in META.roomHome)if(META.roomHome[k]===h.id)META.roomHome[k]=to;if(META.home===h.id)META.home=to;saveMeta();draw();render()});
     };
     draw();
+    el.querySelector('#hRestoreLocal').onclick=()=>{const h=eliorHome();if(!h)return toast('לא נמצא הבית אליאור');if(!confirm('להציג מחדש את המכשירים המקומיים בבית אליאור? לא יימחקו בתים או מכשירי Smart Life.'))return;
+      META.hidden=META.hidden||{};for(const id of ['oralb-io2','mova-e30-ultra','router','ember','gtv']){delete META.hidden[id];META.devHome[id]=h.id}
+      META.oralb=true;META.mova=true;META.router=true;META.ember=true;META.home=h.id;ROOM='all';Q='';saveMeta();close();render();toast('המכשירים המקומיים הוחזרו לתצוגה')};
     el.querySelector('#hDiag').onclick=()=>{close();openHomeDiagnostics()};
     el.querySelector('#hImp').onclick=async()=>{const b=el.querySelector('#hImp');b.disabled=true;b.textContent='מייבא...';const ok=await importTuya(true);if(ok)close();else{b.disabled=false;b.textContent='ייבוא בתים וחדרים מ-Smart Life'}};
     el.querySelector('#ha').onclick=()=>{const n=(prompt('שם הבית החדש','בית ההורים')||'').trim();if(!n)return;const id='h'+Date.now().toString(36);META.homes.push({id,name:n});saveMeta();draw()};
