@@ -10,17 +10,31 @@ class DeviceSummary:
 
 def summarize_devices(payload: Any) -> list[DeviceSummary]:
     """Accept known list shapes, omit identifiers, tokens, maps and addresses."""
-    if isinstance(payload, list):
-        entries = payload
-    elif isinstance(payload, dict):
-        entries = None
-        for key in ("devices", "deviceList", "list"):
-            if isinstance(payload.get(key), list):
-                entries = payload[key]
-                break
-        if entries is None:
-            raise ValueError("Unsupported MOVA device-list response")
-    else:
+    def find_entries(value, depth=0):
+        if depth > 4:
+            return None
+        if isinstance(value, list):
+            if not value or any(isinstance(item, dict) and ("did" in item or "model" in item or "mac" in item) for item in value):
+                return value
+            for item in value:
+                found = find_entries(item, depth + 1)
+                if found is not None:
+                    return found
+        elif isinstance(value, dict):
+            for key in ("devices", "deviceList", "list", "device_list", "data"):
+                if key in value:
+                    found = find_entries(value[key], depth + 1)
+                    if found is not None:
+                        return found
+            for child in value.values():
+                if isinstance(child, (dict, list)):
+                    found = find_entries(child, depth + 1)
+                    if found is not None:
+                        return found
+        return None
+
+    entries = find_entries(payload)
+    if entries is None:
         raise ValueError("Unsupported MOVA device-list response")
     output = []
     for entry in entries:
