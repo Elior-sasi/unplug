@@ -994,11 +994,11 @@ async function checkMovaCloudStatus(output){
     if(typeof data.connected!=='boolean')throw Error('invalid response');
     output.textContent=data.connected?'מחבר הענן מדווח שהחשבון מחובר. עדיין יש לאמת את זיהוי השואב.':'מחבר הענן זמין, אך חשבון MOVA עדיין אינו מחובר.';
   }catch(e){
-    output.textContent='מחבר MOVA עדיין לא הותקן בשרת. לא נשלחו פרטי חשבון או פקודות לשואב.';
+    output.textContent='לא ניתן לבדוק את שרת MOVA מתוך גרסה זו של HomeOn. נדרש חיבור מאובטח בין האפליקציה לשרת הענן; לא נשלחו פרטי חשבון או פקודות לשואב.';
   }
 }
 function openMova(){
-  sheet('MOVA E30 Ultra',`<div style="display:grid;place-items:center;margin:8px 0 12px"><div style="width:160px;height:160px">${devArt(MOVA)}</div></div>
+  sheet('MOVA E30 Ultra',`<div style="display:grid;place-items:center;margin:8px 0 12px"><div style="width:160px;height:160px;max-width:100%;overflow:hidden;display:grid;place-items:center"><div style="width:100%;height:100%;overflow:hidden;display:grid;place-items:center">${devArt(MOVA)}</div></div></div>
     <div class="list"><div class="row"><span class="grow"><span class="t">שליטה בניקוי עדיין לא מחוברת</span><br><span class="s">חיבור MOVAhome נדרש להצגת מצב הניקוי והסוללה</span></span></div></div>
     <div class="sec-h"><h2>חיבור ענן MOVA</h2></div>
     <div class="list"><div class="row"><span class="grow"><span class="t">מצב המחבר</span><br><span class="s" id="movaCloudState" role="status" aria-live="polite">טרם נבדק</span></span></div>
