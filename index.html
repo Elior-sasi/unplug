@@ -665,17 +665,14 @@ META.homes=META.homes&&META.homes.length?META.homes:[{id:'h1',name:'דירה'}];
 if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
 // Devices without an explicit home stay in the default home; switching homes must not move virtual devices.
 // HomeOn-only devices belong to the Elior apartment, never to a Smart Life home such as Shuva.
-const ELIOR_ONLY=new Set(['ember','router','mova-e30-ultra','oralb-io2','gtv']);
-const eliorHome=()=>META.homes.find(h=>h.name.trim()==='אליאור') || META.homes.find(h=>h.name.trim()==='דירה' && !h.id.startsWith('t'));
+const APARTMENT_DEVICES=new Set(['router','mova-e30-ultra','oralb-io2']);
 const UNASSIGNED_HOME='h_unassigned';
 if(!META.homes.some(h=>h.id===UNASSIGNED_HOME))META.homes.push({id:UNASSIGNED_HOME,name:'לא משויכים'});
 const homeOf=d=>{
-  if(ELIOR_ONLY.has(d.id)){
-    const h=eliorHome();
-    return h?h.id:UNASSIGNED_HOME;
+  if(APARTMENT_DEVICES.has(d.id)){
+    const apartment=META.homes.find(h=>h.name.trim()==='דירה');
+    return apartment?apartment.id:UNASSIGNED_HOME;
   }
-  // Never silently put a Smart Life device in the first apartment.
-  // Keep unmatched devices visible in a separate review home.
   return META.homes.some(h=>h.id===META.devHome[d.id])?META.devHome[d.id]:UNASSIGNED_HOME;
 };
 const inHome=d=>homeOf(d)===META.home;
