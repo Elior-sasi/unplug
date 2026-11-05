@@ -8,6 +8,8 @@ import os
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from mova_adapter import AdapterUnavailable, discover_devices
+from device_summary import summarize_devices
 
 app = FastAPI(title="HomeOn MOVA gateway", docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -49,6 +51,25 @@ def health():
 @app.get("/api/mova/setup-status")
 def setup_status():
     return guarded(setup_state())
+
+
+@app.get("/api/mova/discovery")
+def discovery():
+    """Read-only diagnostic protected by Cloud Run IAM."""
+    if not setup_state()["readyForDiscovery"]:
+        return guarded({"ok": False, "errorCode": "MOVA_DISCOVERY_NOT_READY"}, 503)
+    try:
+        devices = summarize_devices(discover_devices())
+    except (AdapterUnavailable, ValueError):
+        return guarded({"ok": False, "errorCode": "MOVA_DISCOVERY_UNAVAILABLE"}, 503)
+    except Exception:
+        return guarded({"ok": False, "errorCode": "MOVA_DISCOVERY_FAILED"}, 502)
+    return guarded({
+        "ok": True,
+        "deviceCount": len(devices),
+        "devices": [{"name": d.name, "model": d.model, "online": d.online} for d in devices],
+        "commandsEnabled": False,
+    })
 
 
 @app.get("/api/mova/connection")
