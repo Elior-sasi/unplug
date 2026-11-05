@@ -666,7 +666,7 @@ if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
 // Devices without an explicit home stay in the default home; switching homes must not move virtual devices.
 // HomeOn-only devices belong to the Elior apartment, never to a Smart Life home such as Shuva.
 const ELIOR_ONLY=new Set(['ember','router','mova-e30-ultra']);
-const eliorHome=()=>META.homes.find(h=>h.name.trim()==='אליאור');
+const eliorHome=()=>META.homes.find(h=>h.name.trim()==='אליאור') || META.homes.find(h=>h.name.trim()==='דירה' && !h.id.startsWith('t'));
 const homeOf=d=>{
   if(ELIOR_ONLY.has(d.id)){
     const h=eliorHome();
