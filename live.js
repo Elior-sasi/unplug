@@ -11,7 +11,26 @@ function liveItems(){
   return out}
 function liveStripHtml(){const it=liveItems();if(!it.length)return '';
   return `<div class="live" role="list" aria-label="פועל עכשיו">${it.map(x=>`<button class="livePill" role="listitem" data-live="${esc(x.id)}">${x.ic==='washer'?'🫧':x.ic==='moon'?'🌙':'⏱'}<span>${esc(x.t)}</span></button>`).join('')}</div>`}
-function bindLive(v){v.querySelectorAll('[data-live]').forEach(b=>b.onclick=()=>{const d=DEVS.find(x=>x.id===b.dataset.live);if(d)openDevice(d)})}
+async function cancelNightCycle(id,el,close){
+  const err=el.querySelector('#nightCancelError'),btn=el.querySelector('#nightCancelButton');
+  btn.disabled=true;err.textContent='';
+  try{
+    const targets=SCHED.filter(s=>String(s.device)===String(id)&&s.label==='מחזור לילה');
+    if(!targets.length){close();render();return}
+    for(const s of targets){if(s.id==null)throw new Error('לתזמון אין מזהה שרת');await api('/schedules/delete',{id:s.id})}
+    const updated=await loadSched();
+    if(updated.some(s=>String(s.device)===String(id)&&s.label==='מחזור לילה'))throw new Error('חלק מהתזמונים עדיין קיימים בשרת');
+    close();render();toast('מחזור הלילה בוטל');
+  }catch(e){err.textContent='לא ניתן לאמת ביטול מלא: '+e.message+' — בדוק את התזמונים לפני ניסיון נוסף';try{await loadSched();render()}catch(_){}}
+  finally{btn.disabled=false}
+}
+function openNightCycle(id){
+  const d=DEVS.find(x=>String(x.id)===String(id));
+  const targets=SCHED.filter(s=>String(s.device)===String(id)&&s.label==='מחזור לילה');
+  if(!targets.length)return toast('לא נמצא מחזור לילה פעיל');
+  sheet('מחזור לילה',`<p>${esc(d?dname(d):'מכשיר')}</p><p>מחזור הלילה כולל ${targets.length} פעולות מתוזמנות. ביטול יסיר רק את פעולות מחזור הלילה של המכשיר הזה.</p><div class="err" id="nightCancelError" role="alert"></div><div class="btns"><button class="btn bad" id="nightCancelButton">ביטול מחזור לילה</button></div>`,(el,close)=>{el.querySelector('#nightCancelButton').onclick=()=>cancelNightCycle(id,el,close)});
+}
+function bindLive(v){v.querySelectorAll('[data-live]').forEach(b=>b.onclick=()=>{const id=b.dataset.live;if(SCHED.some(s=>String(s.device)===String(id)&&s.label==='מחזור לילה'))return openNightCycle(id);const d=DEVS.find(x=>String(x.id)===String(id));if(d)openDevice(d)})}
 document.head.insertAdjacentHTML('beforeend',`<style>
 .live{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 12px;padding:0 16px}.live::-webkit-scrollbar{display:none}
 .livePill{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border-radius:999px;background:#2c2c2e;color:#fff;font:inherit;font-size:.95rem;font-weight:600;border:1px solid #ff9a3d55;white-space:nowrap}
