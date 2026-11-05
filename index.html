@@ -1296,7 +1296,7 @@ function openDevice(d,generic){
         <div class="device-remote" data-device-kind="${controlKind}">
           <div class="device-remote-top"><span class="device-remote-label">שלט ${esc(dname(d))}</span><span class="device-remote-state" role="status">${!d.online?'מנותק':pc?(on?'פועל':'כבוי'):'מחובר'}</span></div>
           ${pc?pwPill(d,'bigPw'):''}
-          ${hasCurtainRemote?`<div class="curtain-actions" role="group" aria-label="שליטה בווילון"><button data-curtain="open">פתיחה</button><button data-curtain="stop">עצירה</button><button data-curtain="close">סגירה</button></div>`:''}
+          ${hasCurtainRemote?`<div class="curtain-actions" role="group" aria-label="שליטה בווילון"><button data-curtain="open" aria-label="פתיחה, למעלה"><span aria-hidden="true">↑</span> פתיחה</button><button data-curtain="stop" aria-label="עצירה"><span aria-hidden="true">■</span> עצירה</button><button data-curtain="close" aria-label="סגירה, למטה"><span aria-hidden="true">↓</span> סגירה</button></div>`:''}
 
           ${ctrls.length?(controlKind==='curtain'?`<details class="curtain-more"><summary>אפשרויות נוספות</summary><div class="list device-settings" id="ctrls">${ctrls.filter(f=>!hasCurtainRemote||f.code!==curtainFn.code).map(f=>ctrlHtml(d,f)).join('')}</div></details>`:`<div class="sec-h"><h2>${esc(controlTitle)}</h2></div><div class="list device-settings" id="ctrls">${ctrls.map(f=>ctrlHtml(d,f)).join('')}</div>`):''}
         </div>
