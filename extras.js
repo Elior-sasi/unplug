@@ -167,12 +167,29 @@ function startDrag(e,c,grid,o){
   const place=()=>{raf=0;
     c.style.left=(lx-dx)+'px';c.style.top=(ly-dy)+'px';
     const now=performance.now();if(now-last<70)return;last=now;
-    const sibs=[...grid.querySelectorAll('.card:not(.dragPh)')];let best=null,bd=1e9;
-    for(const el of sibs){const b=el.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2,d=Math.hypot(lx-cx,ly-cy);if(d<bd){bd=d;best=el}}
-    if(!best)return;const b=best.getBoundingClientRect();if(lx<b.left-20||lx>b.right+20||ly<b.top-20||ly>b.bottom+20)return;
-    const rtl=getComputedStyle(grid).direction==='rtl',after=b.width>=grid.clientWidth*0.9?ly>b.top+b.height/2:(rtl?lx<b.left+b.width/2:lx>b.left+b.width/2);
-    const ref=after?best.nextElementSibling:best;if(ref===ph||ref===ph.nextElementSibling&&!after&&best===ph.nextElementSibling)return;
-    if((after&&best.nextElementSibling===ph)||(!after&&best.previousElementSibling===ph))return;
+    const sibs=[...grid.querySelectorAll('.card:not(.dragPh)')];
+    if(!sibs.length)return;
+    // Allow moving above the first card or below the last even when the pointer
+    // is outside their bounds. This is essential for wide two-column cards.
+    const first=sibs[0].getBoundingClientRect();
+    const last=sibs[sibs.length-1].getBoundingClientRect();
+    let ref;
+    if(ly<first.top+first.height/2){ref=sibs[0]}
+    else if(ly>last.bottom){ref=null}
+    else{
+      let best=null,bd=Infinity;
+      for(const el of sibs){const b=el.getBoundingClientRect();
+        const cy=b.top+b.height/2,cx=b.left+b.width/2;
+        const d=Math.abs(ly-cy)*2+Math.abs(lx-cx)*0.35;
+        if(d<bd){bd=d;best=el}
+      }
+      const b=best.getBoundingClientRect();
+      const rtl=getComputedStyle(grid).direction==='rtl';
+      const after=ly>b.top+b.height*.65 ||
+        (ly>=b.top+b.height*.35 && (rtl?lx<b.left+b.width/2:lx>b.left+b.width/2));
+      ref=after?best.nextElementSibling:best;
+    }
+    if(ref===ph||ref===ph.nextElementSibling)return;
     flip(grid,()=>grid.insertBefore(ph,ref));
   };
   const tick=()=>{if(scrollV){document.querySelector('.app').scrollBy(0,scrollV);if(!raf)raf=requestAnimationFrame(place)}if(c.isConnected&&c.classList.contains('dragging'))requestAnimationFrame(tick)};
