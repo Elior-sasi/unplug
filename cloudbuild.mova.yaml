@@ -1,0 +1,11 @@
+# Deploy only the isolated MOVA gateway; never deploy Unbox or the HomeOn frontend.
+# Cloud Run service uses scale-to-zero; this is not a persistent MQTT worker.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-f', 'mova-worker/Dockerfile', '-t', '${_IMAGE}', 'mova-worker']
+images:
+  - '${_IMAGE}'
+substitutions:
+  _IMAGE: 'europe-west1-docker.pkg.dev/$PROJECT_ID/homeon-mova/gateway:$SHORT_SHA'
+options:
+  logging: CLOUD_LOGGING_ONLY
