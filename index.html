@@ -664,7 +664,16 @@ const META=LSj('unplug_meta',{names:{},rooms:{},roomList:[]});   // local names,
 META.homes=META.homes&&META.homes.length?META.homes:[{id:'h1',name:'דירה'}];META.devHome=META.devHome||{};META.roomHome=META.roomHome||{};
 if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
 // Devices without an explicit home stay in the default home; switching homes must not move virtual devices.
-const homeOf=d=>META.homes.some(h=>h.id===META.devHome[d.id])?META.devHome[d.id]:META.homes[0].id;
+// HomeOn-only devices belong to the Elior apartment, never to a Smart Life home such as Shuva.
+const ELIOR_ONLY=new Set(['ember','router','mova-e30-ultra']);
+const eliorHome=()=>META.homes.find(h=>h.name.trim()==='אליאור');
+const homeOf=d=>{
+  if(ELIOR_ONLY.has(d.id)){
+    const h=eliorHome();
+    return h?h.id:null; // do not leak into another apartment while Elior is unavailable
+  }
+  return META.homes.some(h=>h.id===META.devHome[d.id])?META.devHome[d.id]:META.homes[0].id;
+};
 const inHome=d=>homeOf(d)===META.home;
 const homeDevices=()=>DEVS.filter(inHome)
   .concat(META.ember===false?[]:[EMBER].filter(inHome))
