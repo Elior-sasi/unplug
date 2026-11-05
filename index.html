@@ -1652,9 +1652,40 @@ async function importTuya(manual){
   if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
   META.tuyaAt=Date.now();saveMeta();render();if(manual)toast('יובא מ-Smart Life');return true;
 }
+function openHomeDiagnostics(){
+  sheet('אבחון שיוך בתים','<p>השוואה לקריאה בלבד בין Smart Life לבין HomeOn.</p><div class="list" id="diagRows" aria-live="polite">טוען...</div><button class="btn wide" id="diagAgain">בדיקה מחדש</button>',el=>{
+    const out=el.querySelector('#diagRows');
+    const run=async()=>{
+      out.textContent='בודק שיוכים בשרת...';
+      try{
+        const [j,d]=await Promise.all([api('/homes'),api('/devices')]);
+        const homes=Array.isArray(j.homes)?j.homes:[],where=j.where||{},devices=Array.isArray(d.devices)?d.devices:[];
+        const rows=[];
+        for(const h of homes){
+          const members=Object.entries(where).filter(([,w])=>String(w?.home)===String(h.id));
+          rows.push('<div class="row"><span class="t">'+esc(h.name)+' · '+members.length+' מכשירים בשרת</span></div>');
+          for(const [id] of members){
+            const device=devices.find(x=>String(x.id)===String(id));
+            const local=META.devHome[id];
+            const localName=META.homes.find(x=>x.id===local)?.name||'ללא שיוך';
+            rows.push('<div class="row"><span class="grow"><span class="t">'+esc(META.names?.[id]||device?.name||'מכשיר ללא שם')+'</span><br><span class="s">HomeOn: '+esc(localName)+(local!=='t'+String(h.id)?' · שיוך שונה':'')+'</span></span></div>');
+          }
+        }
+        const missing=devices.filter(x=>!where[String(x.id)]);
+        rows.push('<div class="row"><span class="t">ללא שיוך בשרת: '+missing.length+' מכשירים</span></div>');
+        for(const d of missing)rows.push('<div class="row"><span class="t">'+esc(META.names?.[d.id]||d.name||'ללא שם')+'</span></div>');
+        const extra=META.homes.filter(h=>!homes.some(x=>h.id==='t'+String(x.id)));
+        rows.push('<div class="row"><span class="grow"><span class="t">בתים מקומיים נוספים</span><br><span class="s">'+esc(extra.map(x=>x.name).join(' · ')||'אין')+'</span></span></div>');
+        out.innerHTML=rows.join('');
+      }catch(e){out.textContent='שגיאה בבדיקת השרת: '+(e.message||String(e))}
+    };
+    el.querySelector('#diagAgain').onclick=run;run();
+  });
+}
 function openHomes(){
   sheet('הבתים שלי',`<div class="list" id="hl"></div><button class="btn wide" id="ha">${svg('plus')}בית חדש</button>
     <button class="btn wide" id="hImp">${svg('ref')}ייבוא בתים וחדרים מ-Smart Life</button>
+    <button class="btn wide" id="hDiag">אבחון שיוך בתים</button>
     <p style="font-size:.92rem">לכל בית יש חדרים ומכשירים משלו. מעבירים מכשיר בית מתוך "חדרים" ← שיוך מכשירים.</p>`,(el,close)=>{
     const draw=()=>{el.querySelector('#hl').innerHTML=META.homes.map(h=>`<div class="row"><button class="row-btn grow" data-hs="${h.id}" aria-pressed="${h.id===META.home}" style="display:block"><span class="t">${esc(h.name)}${h.id===META.home?' ✓':''}</span><br><span class="s">${DEVS.filter(d=>homeOf(d)===h.id).length} מכשירים · ${roomsOf(h.id).length} חדרים</span></button>
       <button class="icbtn" data-hr="${h.id}" aria-label="שינוי שם לבית ${esc(h.name)}">${svg('edit')}</button>${META.homes.length>1?`<button class="icbtn" data-hd="${h.id}" aria-label="מחיקת הבית ${esc(h.name)}">${svg('trash')}</button>`:''}</div>`).join('');
@@ -1664,6 +1695,7 @@ function openHomes(){
         META.homes=META.homes.filter(x=>x.id!==h.id);const to=META.homes[0].id;for(const k in META.devHome)if(META.devHome[k]===h.id)META.devHome[k]=to;for(const k in META.roomHome)if(META.roomHome[k]===h.id)META.roomHome[k]=to;if(META.home===h.id)META.home=to;saveMeta();draw();render()});
     };
     draw();
+    el.querySelector('#hDiag').onclick=()=>{close();openHomeDiagnostics()};
     el.querySelector('#hImp').onclick=async()=>{const b=el.querySelector('#hImp');b.disabled=true;b.textContent='מייבא...';const ok=await importTuya(true);if(ok)close();else{b.disabled=false;b.textContent='ייבוא בתים וחדרים מ-Smart Life'}};
     el.querySelector('#ha').onclick=()=>{const n=(prompt('שם הבית החדש','בית ההורים')||'').trim();if(!n)return;const id='h'+Date.now().toString(36);META.homes.push({id,name:n});saveMeta();draw()};
   });
