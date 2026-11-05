@@ -650,7 +650,7 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .schedule-editor .schedule-save{position:sticky;bottom:0;z-index:8;background:linear-gradient(transparent,#191714 18%);padding:12px 0 calc(8px + env(safe-area-inset-bottom));margin-top:8px}
 .schedule-editor .schedule-save .btn{min-height:52px}
 @media(max-width:360px){.schedule-editor .days{gap:3px}.schedule-editor .days button{font-size:.9rem}}
-.schedule-editor .schedule-power-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.schedule-editor .schedule-power-choices button{min-height:48px;border-radius:15px;border:1px solid var(--line);background:var(--card);font-weight:700}.schedule-editor .schedule-power-choices button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}.schedule-editor .schedule-power-select{display:none}.schedule-editor .schedule-power-select:has(option:checked:not([value="on"]):not([value="off"])){display:block}</style>
+.schedule-editor .schedule-power-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.schedule-editor .schedule-power-choices button{min-height:48px;border-radius:15px;border:1px solid var(--line);background:var(--card);font-weight:700}.schedule-editor .schedule-power-choices button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}.schedule-editor .schedule-power-select{display:none}.schedule-editor .schedule-power-select:has(option:checked:not([value="on"]):not([value="off"])){display:block}.schedule-editor .schedule-times{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.schedule-editor .schedule-times input[type="time"]{width:100%;min-width:0;text-align:center;direction:ltr;font-size:1.3rem;min-height:48px}</style>
 </head>
 <body>
 <div class="splash" id="splash" aria-hidden="true"><svg viewBox="40 30 452 420" aria-hidden="true"><defs><linearGradient id="sr" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="260"><stop offset="0" stop-color="#6fa8ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient><linearGradient id="sw" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="180"><stop offset="0" stop-color="#ffc35a"/><stop offset="1" stop-color="#ffa040"/></linearGradient><radialGradient id="sg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb347" stop-opacity=".9"/><stop offset="1" stop-color="#ff7a2e" stop-opacity="0"/></radialGradient></defs><circle class="glow" cx="240" cy="330" r="200" fill="url(#sg)" opacity=".45"/><path d="M240 104 Q252 104 262 112 L388 214 Q404 227 404 248 V398 Q404 428 374 428 H106 Q76 428 76 398 V248 Q76 227 92 214 L218 112 Q228 104 240 104 Z" fill="#1c2130"/><path class="roof" d="M90 224 L230 112 Q240 104 250 112 L390 224" fill="none" stroke="url(#sr)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><rect x="150" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="250" y="264" width="80" height="64" rx="16" fill="#3a4258"/><rect x="150" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect x="250" y="342" width="80" height="62" rx="16" fill="#3a4258"/><rect class="t1" x="150" y="264" width="80" height="64" rx="16" fill="#5aa0ff"/><rect class="t2" x="250" y="342" width="80" height="62" rx="16" fill="#ff8a33"/><g class="wav" fill="none" stroke="url(#sw)" stroke-width="26" stroke-linecap="round"><path class="w1" d="M352 104 a58 58 0 0 1 58 58"/><path class="w2" d="M352 50 a112 112 0 0 1 112 112"/></g></svg><b>HomeOn</b></div>
@@ -1432,23 +1432,38 @@ function openSchedEdit(s,d){
   // Schedule-only layout adjustments; no changes to other sheets.
 
   if(!d)return toast('המכשיר לא נמצא');
-  const ed=actionEditor(d,s&&s.cmds&&s.cmds[0]);let days=new Set(s?s.days:[]);
+  const ed=actionEditor(d,s&&s.cmds&&s.cmds[0]);const pc=powerCode(d);const paired=!s&&!!pc;let days=new Set(s?s.days:[]);
   sheet(s?'עריכת תזמון':'תזמון חדש',`<div class="schedule-editor"><p>${esc(dname(d))}</p>
-    <div class="field"><label for="sT">שעה</label><input id="sT" type="time" value="${esc(s?s.time:'07:00')}" style="font-size:1.6rem;direction:ltr;text-align:center"></div>
+    ${paired?`<div class="schedule-times"><div class="field"><label for="sT">הפעלה</label><input id="sT" type="time" value="07:00"></div><div class="field"><label for="sOff">כיבוי</label><input id="sOff" type="time" value="23:00"></div></div>`:`<div class="field"><label for="sT">שעה</label><input id="sT" type="time" value="${esc(s?s.time:'07:00')}" style="font-size:1.6rem;direction:ltr;text-align:center"></div>`}
     <div class="field"><span style="font-weight:600" id="dL">ימים</span><div class="days" role="group" aria-labelledby="dL">${DAYS.map((x,i)=>`<button data-d="${i}" aria-pressed="${days.has(i)}" aria-label="${DAYSL[i]}">${x}</button>`).join('')}</div><div class="seg" role="group" aria-label="בחירה מהירה" style="margin-top:8px"><button data-dp="0,1,2,3,4,5,6">כל יום</button><button data-dp="0,1,2,3,4">א׳-ה׳</button><button data-dp="5,6">סופ״ש</button></div></div>
     <label class="row" style="background:var(--surface);border-radius:14px"><span class="grow t">פעם אחת בלבד</span><input type="checkbox" id="sO" ${s&&s.once?'checked':''} style="width:28px;height:28px;accent-color:var(--accent)"></label>
-    ${ed.html}
+    ${paired?'':ed.html}
     <div class="field"><label for="sL">תיאור (לא חובה)</label><input id="sL" value="${esc(s&&s.label!=='טיימר'?s.label||'':'')}"></div>
     <div class="err" id="sE" role="alert"></div>
     <div class="btns schedule-save">${s?`<button class="btn bad" id="sD">${svg('trash')}מחיקה</button>`:''}<button class="btn pri" id="sS">שמירה</button></div></div>`,
   (el,close)=>{
-    const get=ed.bind(el);
+    const get=paired?()=>({code:pc,value:true}):ed.bind(el);
     el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const i=+b.dataset.d;days.has(i)?days.delete(i):days.add(i);b.setAttribute('aria-pressed',days.has(i))});
     el.querySelectorAll('[data-dp]').forEach(b=>b.onclick=()=>{days=new Set(b.dataset.dp.split(',').map(Number));el.querySelectorAll('[data-d]').forEach(x=>x.setAttribute('aria-pressed',days.has(+x.dataset.d)))});
     el.querySelector('#sS').onclick=async()=>{const c=get(),t=el.querySelector('#sT').value,once=el.querySelector('#sO').checked;
       if(!t)return el.querySelector('#sE').textContent='בחר שעה';if(!c)return el.querySelector('#sE').textContent='ערך לא תקין';
       let ds=[...days];if(once){const now=new Date(),[h,m]=t.split(':').map(Number),at=new Date();at.setHours(h,m,0,0);if(at<=now)at.setDate(at.getDate()+1);ds=[at.getDay()]}
       if(!ds.length)return el.querySelector('#sE').textContent='בחר לפחות יום אחד';
+      if(paired){
+        const off=el.querySelector('#sOff').value,err=el.querySelector('#sE'),btn=el.querySelector('#sS');
+        if(!off)return err.textContent='בחר שעת כיבוי';
+        if(off===t)return err.textContent='שעת ההפעלה והכיבוי חייבות להיות שונות';
+        btn.disabled=true;err.textContent='';
+        try{
+          const label=el.querySelector('#sL').value.trim();
+          const verify=async(time,value)=>{const list=await loadSched();return list.some(x=>String(x.device)===String(d.id)&&String(x.time).slice(0,5)===time&&x.cmds?.some(y=>y.code===pc&&String(y.value)===String(value)))};
+          const saveOne=async(time,value)=>{await api('/schedules/save',{device:d.id,time,days:ds,cmds:[{code:pc,value}],label,enabled:true,once});if(!await verify(time,value))throw new Error('התזמון בשעה '+time+' לא אומת בשרת')};
+          await saveOne(t,true);await saveOne(off,false);
+          close();render();refreshOpen(d);toast('שעות ההפעלה והכיבוי נשמרו');
+        }catch(e){err.textContent=e.message+' — ייתכן שאחת הפעולות כבר נשמרה. בדוק ברשימת התזמונים לפני ניסיון נוסף'}
+        finally{btn.disabled=false}
+        return;
+      }
       try{const response=await api('/schedules/save',{id:s?.id,device:d.id,time:t,days:ds,cmds:[c],label:el.querySelector('#sL').value.trim(),enabled:true,once});const saved=await loadSched();const serverId=response.id??response.schedule?.id??s?.id;const normalizeDays=a=>(Array.isArray(a)?a:[]).map(Number).sort((a,b)=>a-b).join(',');const found=saved.find(x=>serverId!=null&&String(x.id)===String(serverId))||saved.find(x=>String(x.device)===String(d.id)&&String(x.time).slice(0,5)===t&&normalizeDays(x.days)===normalizeDays(ds)&&x.cmds?.some(y=>y.code===c.code&&String(y.value)===String(c.value)));if(!found)throw new Error('לא ניתן לאמת את התזמון ברשימת השרת. בדוק אם הוא כבר מופיע לפני ניסיון נוסף');close();render();refreshOpen(d);toast('התזמון נשמר ואומת')}
       catch(e){el.querySelector('#sE').textContent=e.message}};
     if(s)el.querySelector('#sD').onclick=async()=>{if(!confirm('למחוק את התזמון?'))return;try{await api('/schedules/delete',{id:s.id});await loadSched();close();render();refreshOpen(d);toast('נמחק')}catch(e){toast(e.message)}};
