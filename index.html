@@ -698,7 +698,7 @@ async function pullMeta(){if(metaPulled||!CFG.key)return;metaPulled=true;
   try{const m=(await api('/meta')).meta;if(!m||typeof m!=='object'){api('/meta/save',{meta:META}).catch(()=>{});return}
     let changed=false;for(const k of Object.keys(m)){const v=m[k],cur=META[k];
       if(cur==null||(typeof cur==='object'&&!Array.isArray(cur)&&!Object.keys(cur).length)||(Array.isArray(cur)&&!cur.length)){META[k]=v;changed=true}
-      else if(typeof v==='object'&&v&&!Array.isArray(v)&&typeof cur==='object'&&!Array.isArray(cur)){for(const j of Object.keys(v))if(!(j in cur)){cur[j]=v[j];changed=true}}}
+      else if(typeof v==='object'&&v&&!Array.isArray(v)&&typeof cur==='object'&&!Array.isArray(cur)){for(const j of Object.keys(v))if(!(j in cur)&&!['devHome','roomHome','homes','home','rooms','roomList'].includes(k)){cur[j]=v[j];changed=true}}}
     if(changed){LSset('unplug_meta',JSON.stringify(META));render()}
   }catch(e){metaPulled=false}}
 const saveScenes=()=>{LSset('unplug_scenes',JSON.stringify(SCENES));if(typeof gbQueue==='function')gbQueue()};
