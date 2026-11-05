@@ -1,0 +1,2 @@
+import {auth,signIn,signOut} from '../auth';
+export default async function Page(){const session=await auth();return <main dir="rtl" style={{fontFamily:'system-ui',maxWidth:520,margin:'5rem auto',padding:24}}><h1>HomeOn · גיבוי Google</h1>{session?.user?<><p>מחובר: {session.user.email}</p><form action={async()=>{'use server';await signOut()}}><button>התנתקות</button></form></>:<form action={async()=>{'use server';await signIn('google')}}><button style={{fontSize:22,padding:16}}>התחברות עם Google</button></form>}</main>}
