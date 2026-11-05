@@ -9,4 +9,4 @@ COPY app.py mova_adapter.py probe.py device_summary.py ./
 RUN useradd --create-home --uid 10001 appuser
 USER appuser
 EXPOSE 8080
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["sh", "-c", "exec uvicorn app:app --host 0.0.0.0 --port ${PORT:-8080}"]
