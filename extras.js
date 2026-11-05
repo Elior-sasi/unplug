@@ -122,9 +122,9 @@ function saveOrderFrom(grid){[...grid.querySelectorAll('.card')].forEach((c,i)=>
 function bindReorder(v){
   if(!REORDER)return;
   META.size=META.size||{};META.hidden=META.hidden||{};
-  v.insertAdjacentHTML('afterbegin',`<div class="reBar" role="group" aria-label="עריכת כרטיסים"><button class="btn pri" id="reDone">סיום עריכה</button></div>`);
+  
   v.insertAdjacentHTML('beforeend',`<button class="btn wide addCard" id="addCard">${svg('plus')}הוספת כרטיס${Object.keys(META.hidden).length?' ('+Object.keys(META.hidden).length+' מוסתרים)':''}</button>`);
-  v.querySelector('#reDone').onclick=()=>setReorder(false);
+  
   v.querySelector('#addCard').onclick=()=>{const hs=DEVS.filter(d=>META.hidden[d.id]);if(!hs.length)return toast('כל המכשירים כבר מוצגים');
     sheet('הוספת כרטיס',`<div class="list">${hs.map(d=>`<button class="row row-btn" data-unh="${esc(d.id)}"><span class="mini">${devArt(d)}</span><span class="grow t">${esc(dname(d))}</span>${svg('plus')}</button>`).join('')}</div>`,(el,cl)=>el.querySelectorAll('[data-unh]').forEach(b=>b.onclick=()=>{delete META.hidden[b.dataset.unh];saveMeta();cl();render()}))};
   v.querySelectorAll('.grid').forEach((grid,gi)=>{grid.dataset.base=gi*100;
