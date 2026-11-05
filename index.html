@@ -608,6 +608,8 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .card.wide .nm{grid-row:2;margin:0}
 .card.wide .model{grid-row:3}
 .card.wide .st{grid-row:4}
+/* Prevent long labels from increasing intrinsic square tile height. */
+.card:not(.wide),.roomSec .card:not(.wide){contain:size;min-width:0;min-height:0;aspect-ratio:1 / 1;overflow:hidden}
 /* Keep compact square tiles readable: reserve room for status and prevent model overflow. */
 .card:not(.wide) .nm{font-size:clamp(.88rem,3.4vw,1.02rem);line-height:1.16;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;padding-top:0}
 .card:not(.wide) .model{font-size:.75rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:auto}
