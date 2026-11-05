@@ -667,12 +667,16 @@ if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
 // HomeOn-only devices belong to the Elior apartment, never to a Smart Life home such as Shuva.
 const ELIOR_ONLY=new Set(['ember','router','mova-e30-ultra']);
 const eliorHome=()=>META.homes.find(h=>h.name.trim()==='אליאור') || META.homes.find(h=>h.name.trim()==='דירה' && !h.id.startsWith('t'));
+const UNASSIGNED_HOME='h_unassigned';
+if(!META.homes.some(h=>h.id===UNASSIGNED_HOME))META.homes.push({id:UNASSIGNED_HOME,name:'לא משויכים'});
 const homeOf=d=>{
   if(ELIOR_ONLY.has(d.id)){
     const h=eliorHome();
-    return h?h.id:null; // do not leak into another apartment while Elior is unavailable
+    return h?h.id:UNASSIGNED_HOME;
   }
-  return META.homes.some(h=>h.id===META.devHome[d.id])?META.devHome[d.id]:META.homes[0].id;
+  // Never silently put a Smart Life device in the first apartment.
+  // Keep unmatched devices visible in a separate review home.
+  return META.homes.some(h=>h.id===META.devHome[d.id])?META.devHome[d.id]:UNASSIGNED_HOME;
 };
 const inHome=d=>homeOf(d)===META.home;
 const homeDevices=()=>DEVS.filter(inHome)
@@ -1629,7 +1633,7 @@ async function importTuya(manual){
   const idOf=h=>'t'+h.id;
   for(const h of j.homes){const ex=META.homes.find(x=>x.id===idOf(h));ex?ex.name=h.name||ex.name:META.homes.push({id:idOf(h),name:h.name||'בית'})}
   // drop the placeholder home if it is empty
-  META.homes=META.homes.filter(h=>h.id.startsWith('t')||DEVS.some(d=>META.devHome[d.id]===h.id)||META.roomList.some(r=>META.roomHome[r]===h.id));
+  META.homes=META.homes.filter(h=>h.id===UNASSIGNED_HOME||h.id.startsWith('t')||DEVS.some(d=>META.devHome[d.id]===h.id)||META.roomList.some(r=>META.roomHome[r]===h.id));
   if(!META.homes.length)META.homes=[{id:idOf(j.homes[0]),name:j.homes[0].name}];
   for(const[did,w]of Object.entries(j.where||{})){META.devHome[did]=idOf({id:w.home});
     if(w.room&&w.room.name){const r=(META.roomAlias||{})[w.room.name]||w.room.name;if(!META.roomList.includes(r))META.roomList.push(r);META.roomHome[r]=idOf({id:w.home});if(manual||!META.rooms[did])META.rooms[did]=r}}
