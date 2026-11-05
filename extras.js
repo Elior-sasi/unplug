@@ -158,7 +158,11 @@ function startDrag(e,c,grid,o){
   if(e.target.closest('.edCorner,.reBtns')||e.button>0)return;
   e.preventDefault();
   const r=c.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;
-  const ph=document.createElement('div');ph.className='card dragPh'+(c.classList.contains('wide')?' wide':'');ph.style.height=r.height+'px';
+  const ph=document.createElement('div');ph.className='card dragPh'+(c.classList.contains('wide')?' wide':'');
+  // Preserve the card's actual grid span without forcing a tall empty row.
+  // The grid owns row sizing; a fixed placeholder height caused large gaps on iOS.
+  ph.style.minHeight='0';ph.style.height=c.classList.contains('wide')?'124px':'auto';
+  ph.style.aspectRatio=c.classList.contains('wide')?'auto':'1 / 1';
   grid.insertBefore(ph,c);
   Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',zIndex:60,transition:'none',pointerEvents:'none'});
   c.classList.add('dragging');document.body.appendChild(c);
