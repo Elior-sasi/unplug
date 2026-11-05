@@ -643,7 +643,7 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .schedule-editor{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
 .schedule-editor .field{margin:10px 0}
 .schedule-editor .days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;flex-wrap:nowrap}
-.schedule-editor .days button{width:100%;height:44px;min-width:0;border-radius:13px;font-size:1rem}
+.schedule-editor .days button{width:100%;aspect-ratio:1 / 1;height:auto;min-width:0;border-radius:50%;font-size:1rem;padding:0;display:grid;place-items:center}
 .schedule-editor .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .schedule-editor .seg button{min-width:0;padding:9px 3px;font-size:.92rem}
 .schedule-editor .row{min-height:52px;padding:8px 12px}
