@@ -639,6 +639,17 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .reordering #view{padding-bottom:calc(var(--nav-h,80px) + env(safe-area-inset-bottom) + 110px)!important}
 .card .pw{top:2px!important}
 
+/* Compact, accessible schedule editor; scoped to this sheet only. */
+.schedule-editor{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+.schedule-editor .field{margin:10px 0}
+.schedule-editor .days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;flex-wrap:nowrap}
+.schedule-editor .days button{width:100%;height:44px;min-width:0;border-radius:13px;font-size:1rem}
+.schedule-editor .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.schedule-editor .seg button{min-width:0;padding:9px 3px;font-size:.92rem}
+.schedule-editor .row{min-height:52px;padding:8px 12px}
+.schedule-editor .schedule-save{position:sticky;bottom:0;z-index:8;background:linear-gradient(transparent,#191714 18%);padding:12px 0 calc(8px + env(safe-area-inset-bottom));margin-top:8px}
+.schedule-editor .schedule-save .btn{min-height:52px}
+@media(max-width:360px){.schedule-editor .days{gap:3px}.schedule-editor .days button{font-size:.9rem}}
 </style>
 </head>
 <body>
@@ -1418,16 +1429,18 @@ function actionEditor(d,cur){
       const vv=f.values||{},sc=+vv.scale||0;let n=Math.round(parseFloat(x.value)*10**sc);if(isNaN(n))return null;n=Math.min(+vv.max,Math.max(+vv.min,n));return{code:f.code,value:n}}}};
 }
 function openSchedEdit(s,d){
+  // Schedule-only layout adjustments; no changes to other sheets.
+
   if(!d)return toast('המכשיר לא נמצא');
   const ed=actionEditor(d,s&&s.cmds&&s.cmds[0]);let days=new Set(s?s.days:[]);
-  sheet(s?'עריכת תזמון':'תזמון חדש',`<p>${esc(dname(d))}</p>
+  sheet(s?'עריכת תזמון':'תזמון חדש',`<div class="schedule-editor"><p>${esc(dname(d))}</p>
     <div class="field"><label for="sT">שעה</label><input id="sT" type="time" value="${esc(s?s.time:'07:00')}" style="font-size:1.6rem;direction:ltr;text-align:center"></div>
     <div class="field"><span style="font-weight:600" id="dL">ימים</span><div class="days" role="group" aria-labelledby="dL">${DAYS.map((x,i)=>`<button data-d="${i}" aria-pressed="${days.has(i)}" aria-label="${DAYSL[i]}">${x}</button>`).join('')}</div><div class="seg" role="group" aria-label="בחירה מהירה" style="margin-top:8px"><button data-dp="0,1,2,3,4,5,6">כל יום</button><button data-dp="0,1,2,3,4">א׳-ה׳</button><button data-dp="5,6">סופ״ש</button></div></div>
     <label class="row" style="background:var(--surface);border-radius:14px"><span class="grow t">פעם אחת בלבד</span><input type="checkbox" id="sO" ${s&&s.once?'checked':''} style="width:28px;height:28px;accent-color:var(--accent)"></label>
     ${ed.html}
     <div class="field"><label for="sL">תיאור (לא חובה)</label><input id="sL" value="${esc(s&&s.label!=='טיימר'?s.label||'':'')}"></div>
     <div class="err" id="sE" role="alert"></div>
-    <div class="btns">${s?`<button class="btn bad" id="sD">${svg('trash')}מחיקה</button>`:''}<button class="btn pri" id="sS">שמירה</button></div>`,
+    <div class="btns schedule-save">${s?`<button class="btn bad" id="sD">${svg('trash')}מחיקה</button>`:''}<button class="btn pri" id="sS">שמירה</button></div></div>`,
   (el,close)=>{
     const get=ed.bind(el);
     el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const i=+b.dataset.d;days.has(i)?days.delete(i):days.add(i);b.setAttribute('aria-pressed',days.has(i))});
