@@ -1490,11 +1490,22 @@ function pickRoom(d,cb){
 /* ---------- scenes (run several actions in one tap) ---------- */
 function viewScenes(v){
   v.innerHTML=`<button class="row row-btn list" id="shbS" style="margin-bottom:12px"><span class="grow"><span class="t">מצב שבת</span><br><span class="s">הדלקה וכיבוי לפי זמני כניסת ויציאת שבת</span></span>${svg('chev')}</button><button class="btn pri wide" id="nsc">${svg('plus')}סצנה חדשה</button><div class="sec-h"><h2>סצנות</h2></div>
-   ${SCENES.length?`<div class="list">${SCENES.map((s,i)=>`<div class="row"><button class="row-btn grow" data-ed="${i}" style="display:block"><span class="t">${esc(s.name)}</span><br><span class="s">${s.acts.length} פעולות${s.at?' · '+esc(s.at)+' '+esc(daysText({days:s.days})):''}</span></button><button class="btn pri" data-run="${i}" aria-label="הפעלת ${esc(s.name)}">${svg('play')}הפעל</button></div>`).join('')}</div>`
+   ${SCENES.length?`<div class="list">${SCENES.map((s,i)=>`<div class="row"><button class="row-btn grow" data-ed="${i}" style="display:block"><span class="t">${esc(s.name)}</span><br><span class="s">${s.acts.length} פעולות${s.at?' · '+esc(s.at)+' '+esc(daysText({days:s.days})):''}</span></button><button class="btn" data-preview="${i}" aria-label="תצוגה מקדימה של ${esc(s.name)}">בדיקה</button><button class="btn pri" data-run="${i}" aria-label="הפעלת ${esc(s.name)}">${svg('play')}הפעל</button></div>`).join('')}</div>`
    :`<div class="empty"><b>אין סצנות</b>סצנה מפעילה כמה מכשירים בלחיצה אחת, למשל "יוצא מהבית" שמכבה הכול.</div>`}`;
   $('nsc').onclick=()=>openScene(null);$('shbS').onclick=()=>openShabbat();
   v.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>openScene(+b.dataset.ed));
   v.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>runScene(SCENES[+b.dataset.run],b));
+  v.querySelectorAll('[data-preview]').forEach(b=>b.onclick=()=>previewScene(SCENES[+b.dataset.preview]));
+}
+function previewScene(s){
+  const rows=(s.acts||[]).map(a=>{
+    const d=DEVS.find(x=>String(x.id)===String(a.device));
+    const action=d&&a.cmd&&a.cmd.code===powerCode(d)?(a.cmd.value?'הדלקה':'כיבוי'):
+      (a.cmd?.code||'פעולה')+': '+String(a.cmd?.value??'');
+    return '<div class="row"><span class="grow"><span class="t">'+esc(d?dname(d):'מכשיר לא נמצא')+
+      '</span><br><span class="s">'+esc(action)+'</span></span><span class="s">'+(d?'':'לא זמין')+'</span></div>';
+  }).join('');
+  sheet('בדיקת סצנה',`<p>${esc(s.name)} — ${(s.acts||[]).length} פעולות</p><p class="s">תצוגה בלבד: לא נשלחות פקודות למכשירים.</p><div class="list">${rows||'<div class="row">אין פעולות</div>'}</div>`);
 }
 async function runScene(s,b){
   b&&(b.disabled=true);let ok=0,bad=0;
