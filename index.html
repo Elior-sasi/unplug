@@ -989,6 +989,15 @@ function openMova(){
       ${META.movaMac?(MOVA_WIFI.checked?(MOVA_WIFI.visible?'השואב נראה כעת ברשת הביתית':'השואב לא זוהה כרגע ברשת'):'מכשיר נבחר, ממתין לבדיקת הראוטר'):'אפשר לבחור את השואב מתוך רשימת המכשירים בראוטר.'}
       ${MOVA_WIFI.visible&&MOVA_WIFI.ip?' כתובת IP: '+esc(MOVA_WIFI.ip):''}
       <p>מצב הניקוי, הסוללה והמפה אינם זמינים בלי חיבור MOVAhome או אינטגרציה נתמכת.</p></div>
+    <div class="sec-h"><h2>מפת הבית וחדרים</h2></div>
+    <div class="empty" role="status"><b>ממתין למפה אמיתית מהשואב</b><p>לא נטען שרטוט משוער. כאשר מחבר הענן יאומת, תוצג כאן המפה השמורה בחשבון MOVAhome ובחירת חדרים לניקוי.</p></div>
+    <div class="sec-h"><h2>ניקוי ושליטה</h2></div>
+    <div class="list">
+      <div class="row"><span class="grow"><span class="t">הפעלה · השהיה · חזרה לעמדה</span><br><span class="s">ממתין לחיבור מאומת — אין פקודות פעילות</span></span></div>
+      <div class="row"><span class="grow"><span class="t">עוצמת שאיבה · כמות מים · מצבי שטיפה</span><br><span class="s">הערכים ייטענו מהשואב, ולא יומצאו</span></span></div>
+    </div>
+    <div class="sec-h"><h2>תחנת עגינה ותחזוקה</h2></div>
+    <div class="list"><div class="row"><span class="grow"><span class="t">סוללה · שטיפת מגבים · ייבוש · חומרים מתכלים</span><br><span class="s">ממתין לנתונים אמיתיים מחיבור MOVA</span></span></div></div>
     <div class="list">
       ${IN_APP?`<button class="row row-btn" id="movaPair"><span class="grow"><span class="t">זהה את השואב בראוטר</span><br><span class="s">בחירת מכשיר לרישום נוכחות ברשת, ללא שליטה בניקוי</span></span>${svg('chev')}</button>`:''}
       <button class="row row-btn" id="movaRoom"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(MOVA)||'בלי חדר')}</span></span>${svg('chev')}</button>
