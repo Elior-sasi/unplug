@@ -1456,6 +1456,13 @@ function openSchedEdit(s,d){
         btn.disabled=true;err.textContent='';
         try{
           const label=el.querySelector('#sL').value.trim();
+          const existing=await loadSched();
+          const normalizeDays=a=>(Array.isArray(a)?a:[]).map(Number).sort((a,b)=>a-b).join(',');
+          const conflicts=existing.filter(x=>String(x.device)===String(d.id)&&
+            ((String(x.time).slice(0,5)===t&&x.cmds?.some(y=>y.code===pc&&y.value===true))||
+             (String(x.time).slice(0,5)===off&&x.cmds?.some(y=>y.code===pc&&y.value===false)))&&
+            normalizeDays(x.days)===normalizeDays(ds)&&!!x.once===once);
+          if(conflicts.length)throw new Error('כבר קיים תזמון זהה לאחת השעות. לא נשמר דבר נוסף');
           const verify=async(time,value)=>{const list=await loadSched();return list.some(x=>String(x.device)===String(d.id)&&String(x.time).slice(0,5)===time&&x.cmds?.some(y=>y.code===pc&&String(y.value)===String(value)))};
           const saveOne=async(time,value)=>{await api('/schedules/save',{device:d.id,time,days:ds,cmds:[{code:pc,value}],label,enabled:true,once});if(!await verify(time,value))throw new Error('התזמון בשעה '+time+' לא אומת בשרת')};
           await saveOne(t,true);await saveOne(off,false);
