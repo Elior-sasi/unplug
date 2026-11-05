@@ -636,6 +636,18 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .reordering .card .edIcon{left:48px;top:48px}
 .reordering .reBar{position:relative;top:auto;width:max-content;max-width:100%;margin:0 0 10px;padding:0!important;background:transparent;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 .reordering .reBar .btn{min-height:36px;padding:0 14px}
+
+/* Edit mode: reserve a dedicated control row instead of overlaying card content. */
+.reordering .card{padding-top:100px!important;min-height:260px!important}
+.reordering .card.wide{min-height:260px!important}
+.reordering .card .edDel,.reordering .card .edFav,.reordering .card .edSize,.reordering .card .edIcon{top:12px!important;width:36px!important;height:36px!important}
+.reordering .card .edDel{left:8px!important}
+.reordering .card .edFav{left:50px!important}
+.reordering .card .edSize{left:8px!important;top:54px!important}
+.reordering .card .edIcon{left:50px!important;top:54px!important}
+.reordering .card .ic:not(.photo){max-height:85px}
+.reordering .card .nm,.reordering .card .st{position:relative;z-index:1}
+.reordering .card .nm{margin-top:auto!important}
 </style>
 </head>
 <body>
