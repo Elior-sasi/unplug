@@ -2,15 +2,15 @@
 function liveItems(){
   const out=[],name=id=>{const d=DEVS.find(x=>x.id===id);return d?dname(d):'מכשיר'};
   for(const s of SCHED.filter(s=>s.once&&s.label==='טיימר'&&s.enabled!==false)){const on=s.cmds?.[0]?.value===true;
-    out.push({id:s.device,ic:'clock',t:`${name(s.device)} ${on?'יידלק':'ייכבה'} ב-${s.time}`})}
+    out.push({id:s.device,ic:'clock',kind:'timer',scheduleId:s.id,t:`${name(s.device)} ${on?'יידלק':'ייכבה'} ב-${s.time}`})}
   const cyc={};for(const s of SCHED.filter(s=>s.label==='מחזור לילה'))(cyc[s.device]=cyc[s.device]||[]).push(s.time);
-  for(const id in cyc){const t=cyc[id].sort();out.push({id,ic:'moon',t:`${name(id)}: מחזור לילה עד ${t[t.length-1]}`})}
+  for(const id in cyc){const t=cyc[id].sort();out.push({id,ic:'moon',kind:'night',t:`${name(id)}: מחזור לילה עד ${t[t.length-1]}`})}
   if(typeof isWasher==='function')for(const d of DEVS.filter(isWasher)){const s=wNow(d);
-    if(s.running)out.push({id:d.id,ic:'washer',t:s.left!=null?`${dname(d)} מסיימת ב-${hm(new Date(Date.now()+s.left*60e3))}`:`${dname(d)} עובדת`});
+    if(s.running)out.push({id:d.id,ic:'washer',kind:'washer',t:s.left!=null?`${dname(d)} מסיימת ב-${hm(new Date(Date.now()+s.left*60e3))}`:`${dname(d)} עובדת`});
     else if(s.end&&Date.now()-s.end<3*3600e3)out.push({id:d.id,ic:'washer',t:`${dname(d)} סיימה ב-${hm(new Date(s.end))}`})}
   return out}
 function liveStripHtml(){const it=liveItems();if(!it.length)return '';
-  return `<div class="live" role="list" aria-label="פועל עכשיו">${it.map(x=>`<button class="livePill" role="listitem" data-live="${esc(x.id)}">${x.ic==='washer'?'🫧':x.ic==='moon'?'🌙':'⏱'}<span>${esc(x.t)}</span></button>`).join('')}</div>`}
+  return `<div class="live" role="list" aria-label="פועל עכשיו">${it.map(x=>`<button class="livePill" role="listitem" data-live="${esc(x.id)}" data-kind="${x.kind||''}" data-schedule="${esc(x.scheduleId??'')}">${x.ic==='washer'?'🫧':x.ic==='moon'?'🌙':'⏱'}<span>${esc(x.t)}</span></button>`).join('')}</div>`}
 async function cancelNightCycle(id,el,close){
   const err=el.querySelector('#nightCancelError'),btn=el.querySelector('#nightCancelButton');
   btn.disabled=true;err.textContent='';
@@ -30,7 +30,28 @@ function openNightCycle(id){
   if(!targets.length)return toast('לא נמצא מחזור לילה פעיל');
   sheet('מחזור לילה',`<p>${esc(d?dname(d):'מכשיר')}</p><p>מחזור הלילה כולל ${targets.length} פעולות מתוזמנות. ביטול יסיר רק את פעולות מחזור הלילה של המכשיר הזה.</p><div class="err" id="nightCancelError" role="alert"></div><div class="btns"><button class="btn bad" id="nightCancelButton">ביטול מחזור לילה</button></div>`,(el,close)=>{el.querySelector('#nightCancelButton').onclick=()=>cancelNightCycle(id,el,close)});
 }
-function bindLive(v){v.querySelectorAll('[data-live]').forEach(b=>b.onclick=()=>{const id=b.dataset.live;if(SCHED.some(s=>String(s.device)===String(id)&&s.label==='מחזור לילה'))return openNightCycle(id);const d=DEVS.find(x=>String(x.id)===String(id));if(d)openDevice(d)})}
+function openTimerCancel(id){
+  const timer=SCHED.find(s=>String(s.id)===String(id)&&s.once&&s.label==='טיימר');
+  if(!timer)return toast('הטיימר כבר אינו פעיל');
+  sheet('ביטול טיימר',`<p>הטיימר מתוכנן לשעה ${esc(timer.time)}.</p><div class="err" id="timerErr" role="alert"></div><div class="btns"><button class="btn bad" id="timerCancel">ביטול הטיימר</button></div>`,(el,close)=>{
+    el.querySelector('#timerCancel').onclick=async()=>{
+      const btn=el.querySelector('#timerCancel');btn.disabled=true;
+      try{
+        await api('/schedules/delete',{id:timer.id});
+        await loadSched();
+        if(SCHED.some(s=>String(s.id)===String(timer.id)))throw new Error('הטיימר עדיין מופיע בשרת');
+        close();render();toast('הטיימר בוטל');
+      }catch(e){el.querySelector('#timerErr').textContent='הביטול לא אומת: '+e.message}
+      finally{btn.disabled=false}
+    };
+  });
+}
+function bindLive(v){v.querySelectorAll('[data-live]').forEach(b=>b.onclick=()=>{
+  const id=b.dataset.live,kind=b.dataset.kind;
+  if(kind==='timer')return openTimerCancel(b.dataset.schedule);
+  if(kind==='night')return openNightCycle(id);
+  const d=DEVS.find(x=>String(x.id)===String(id));if(d)openDevice(d)
+})}
 document.head.insertAdjacentHTML('beforeend',`<style>
 .live{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 12px;padding:0 16px}.live::-webkit-scrollbar{display:none}
 .livePill{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border-radius:999px;background:#2c2c2e;color:#fff;font:inherit;font-size:.95rem;font-weight:600;border:1px solid #ff9a3d55;white-space:nowrap}
