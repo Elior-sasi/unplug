@@ -872,7 +872,7 @@ async function loadDevices(){
   catch(e){if(CFG.key)toast(e.message)}
   finally{busy=false;$('refBtn').removeAttribute('aria-busy')}
 }
-async function loadSched(){if(!CFG.key)return;try{const j=await api('/schedules');SCHED=j.schedules||[]}catch(e){}}
+async function loadSched(){if(!CFG.key)throw new Error('אין חיבור לחשבון');const j=await api('/schedules');if(!Array.isArray(j.schedules))throw new Error('השרת לא החזיר רשימת תזמונים תקינה');SCHED=j.schedules;return SCHED}
 /* Tuya's REST "online" flag is often stale (Smart Life itself uses a live channel), so a device counts as
    reachable unless a command to it actually failed. */
 const FAIL={};
@@ -1436,7 +1436,7 @@ function openSchedEdit(s,d){
       if(!t)return el.querySelector('#sE').textContent='בחר שעה';if(!c)return el.querySelector('#sE').textContent='ערך לא תקין';
       let ds=[...days];if(once){const now=new Date(),[h,m]=t.split(':').map(Number),at=new Date();at.setHours(h,m,0,0);if(at<=now)at.setDate(at.getDate()+1);ds=[at.getDay()]}
       if(!ds.length)return el.querySelector('#sE').textContent='בחר לפחות יום אחד';
-      try{await api('/schedules/save',{id:s?.id,device:d.id,time:t,days:ds,cmds:[c],label:el.querySelector('#sL').value.trim(),enabled:true,once});await loadSched();close();render();refreshOpen(d);toast('נשמר')}
+      try{await api('/schedules/save',{id:s?.id,device:d.id,time:t,days:ds,cmds:[c],label:el.querySelector('#sL').value.trim(),enabled:true,once});const saved=await loadSched();if(!saved.some(x=>x.device===d.id&&x.time===t&&x.once===once&&x.days?.slice().sort().join(',')===ds.slice().sort().join(',')&&x.cmds?.some(y=>y.code===c.code&&JSON.stringify(y.value)===JSON.stringify(c.value))))throw new Error('השרת לא אישר שהתזמון נשמר. נסה שוב');close();render();refreshOpen(d);toast('התזמון נשמר ואומת')}
       catch(e){el.querySelector('#sE').textContent=e.message}};
     if(s)el.querySelector('#sD').onclick=async()=>{if(!confirm('למחוק את התזמון?'))return;try{await api('/schedules/delete',{id:s.id});await loadSched();close();render();refreshOpen(d);toast('נמחק')}catch(e){toast(e.message)}};
   });
