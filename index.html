@@ -611,7 +611,7 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 /* Keep compact square tiles readable: reserve room for status and prevent model overflow. */
 .card:not(.wide) .nm{font-size:clamp(.88rem,3.4vw,1.02rem);line-height:1.16;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;padding-top:0}
 .card:not(.wide) .model{font-size:.75rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:auto}
-.card:not(.wide) .st{font-size:.76rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card:not(.wide) .st{font-size:.76rem;line-height:1.2;white-space:normal;overflow-wrap:break-word;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;text-overflow:ellipsis}
 .card:not(.wide) .ic,.card:not(.wide) .ic.photo,.card:not(.wide) .ic:has(.art),.card:not(.wide) .ic:has(img.real){width:48px;height:48px;margin-bottom:4px}
 .card:not(.wide){padding:12px;gap:2px}
 </style>
