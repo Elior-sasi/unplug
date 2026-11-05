@@ -669,6 +669,15 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 
 /* Nudge power control upward without changing its touch target or other card content. */
 .card .pw{top:2px!important}
+
+/* Final edit layout: fixed-size image area, readable label and a separate footer. */
+.reordering .grid{align-items:start!important}
+.reordering .card,.reordering .card.wide{box-sizing:border-box!important;min-height:0!important;height:244px!important;padding:10px!important;display:grid!important;grid-template-rows:92px minmax(0,1fr) 48px!important;grid-template-columns:minmax(0,1fr)!important;align-content:stretch!important;gap:0!important}
+.reordering .card .ic,.reordering .card .ic.photo,.reordering .card .ic:has(img.real),.reordering .card.wide .ic,.reordering .card.wide .ic.photo,.reordering .card.wide .ic:has(img.real){grid-row:1!important;position:relative!important;inset:auto!important;transform:none!important;align-self:center!important;justify-self:center!important;width:auto!important;max-width:100%!important;height:82px!important;max-height:82px!important;margin:0!important;overflow:hidden!important}
+.reordering .card .nm,.reordering .card .st,.reordering .card.wide .nm,.reordering .card.wide .st{position:relative!important;z-index:1!important;max-width:100%!important;text-align:center!important;margin:0!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.reordering .card .editActions{grid-row:3!important;align-self:end!important;margin:0!important;padding:5px 0 0!important;gap:4px!important;border-top:1px solid #ffffff20!important}
+.reordering .card .editActions .edCorner{height:38px!important;min-height:38px!important}
+.reordering .card .open{min-width:0!important;min-height:0!important;overflow:hidden!important}
 </style>
 </head>
 <body>
