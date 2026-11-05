@@ -28,7 +28,11 @@ async function gbSignIn(){await gbLoad();const p=new firebase.auth.GoogleAuthPro
 /* restore on a fresh install: if already signed in and this phone has nothing yet */
 setTimeout(()=>{if(!LS('unplug_gb_on'))return;gbLoad().then(async()=>{if(!GB.user)return;
   if(!Object.keys(META.names||{}).length&&!Object.keys(META.icons||{}).length){const s=await gbDoc().get();if(s.exists&&gbApply(JSON.parse(s.data().data||'null'))){render();toast('ההגדרות שוחזרו מ-Google')}}
-  else gbSave()}).catch(()=>{})},3000);
+  else { /* Never overwrite a possibly newer cloud backup merely by opening the app. */
+    const remote=await gbDoc().get();
+    if(!remote.exists)await gbSave();
+    else if(Number(remote.data().updatedAt||0)<=Number(GB.last||0))await gbSave();
+  }}).catch(()=>{})},3000);
 function gbRowHtml(){const on=!!LS('unplug_gb_on')&&!!GB.user;const native=typeof IN_APP!=='undefined'&&IN_APP;
   return `<div class="sec-h"><h2>גיבוי בחשבון Google</h2></div><div class="list" id="gbBox">
     ${on?`<div class="row"><span class="grow"><span class="t">הגיבוי פועל</span><br><span class="s" id="gbWho">${GB.user?esc(GB.user.email||''):'בודק חיבור'}${GB.last?' · נשמר '+esc(new Date(GB.last).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):''}</span></span></div>
