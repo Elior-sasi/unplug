@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: homeon-mova-gateway
+    runtime: docker
+    rootDir: mova-worker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: MOVA_COUNTRY
+        value: il
