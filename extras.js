@@ -157,6 +157,7 @@ function flip(grid,mutate){
 function startDrag(e,c,grid,o){
   if(e.target.closest('.edCorner,.reBtns')||e.button>0)return;
   e.preventDefault();
+  const pointerId=e.pointerId;
   const r=c.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;
   const ph=document.createElement('div');ph.className='card dragPh'+(c.classList.contains('wide')?' wide':'');
   // Preserve the card's actual grid span without forcing a tall empty row.
@@ -203,6 +204,10 @@ function startDrag(e,c,grid,o){
     const pr=ph.getBoundingClientRect();c.style.transition='left .18s ease,top .18s ease';c.style.left=pr.left+'px';c.style.top=pr.top+'px';
     setTimeout(()=>{grid.insertBefore(c,ph);ph.remove();c.classList.remove('dragging');c.removeAttribute('style');saveOrderFrom(grid)},180)};
   addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+  // Safari can cancel a touch pointer when its target moves to document.body.
+  // Re-capture after reparenting so the drag continues on iOS.
+  try{o.setPointerCapture(pointerId)}catch(_){}
+  try{c.querySelector('.open')?.setPointerCapture(pointerId)}catch(_){}
 }
 /* ---------- Shabbat mode ---------- */
 const CITIES={jer:['ירושלים',31.778,35.235,40],ta:['תל אביב',32.085,34.782,21],hai:['חיפה',32.794,34.99,30],bs:['באר שבע',31.252,34.791,21],pt:['פתח תקווה',32.087,34.887,21],ash:['אשדוד',31.804,34.655,21]};
