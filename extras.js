@@ -161,54 +161,64 @@ function flip(grid,mutate){
     el.style.transition='transform .22s cubic-bezier(.2,.8,.2,1)';el.style.transform=''}
 }
 function startDrag(e,c,grid,o){
-  if(e.target.closest('.edCorner,.reBtns,.preview-icon-edit')||e.button>0||!c.dataset.id)return;
+  if(e.button>0||!c.dataset.id||e.target.closest('.edCorner,.reBtns,.preview-icon-edit'))return;
   e.preventDefault();
-  const pointer=e.pointerId,origin=c.getBoundingClientRect(),startX=e.clientX,startY=e.clientY;
-  let x=startX,y=startY,active=true,raf=0,scroll=0,tx=0,ty=0,lastSwap=0;
+  const pid=e.pointerId,startX=e.clientX,startY=e.clientY;
+  let x=startX,y=startY,active=true,raf=0,moved=false,scroll=0;
   const app=document.querySelector('.app');
+  const cards=()=>[...grid.querySelectorAll('.card[data-id]')].filter(el=>el!==c&&!el.classList.contains('hiddenCard'));
   c.classList.add('draggingCard');
-  // The actual card remains the pointer target and follows the finger.
-  // No cloned card, reparenting to body, or empty placeholder.
-  const update=()=>{
-    raf=0;if(!active)return;
-    const r=c.getBoundingClientRect();
-    const dx=x-startX,dy=y-startY;
-    // transform is relative to the card's current grid position.
-    const baseLeft=r.left-tx,baseTop=r.top-ty;
-    tx=origin.left+dx-baseLeft;
-    ty=origin.top+dy-baseTop;
-    c.style.transform=`translate3d(${tx}px,${ty}px,0)`;
-    const others=[...grid.querySelectorAll('.card:not(.draggingCard)')];
-    if(!others.length)return;
-    const rtl=getComputedStyle(grid).direction==='rtl';
-    let nearest=null,score=Infinity,after=false;
-    for(const el of others){const q=el.getBoundingClientRect(),cx=q.left+q.width/2,cy=q.top+q.height/2;
-      const d=Math.abs(y-cy)*1.5+Math.abs(x-cx);
-      if(d<score){score=d;nearest=el;after=y>q.top+q.height*.65||(y>=q.top+q.height*.35&&(rtl?x<cx:x>cx))}
-    }
-    if(nearest){
-      const q=nearest.getBoundingClientRect(),cx=q.left+q.width/2,cy=q.top+q.height/2;
-      // Require the finger to enter the target's central area, and limit
-      // swaps so grid reflow cannot trigger rapid back-and-forth jumps.
-      const inside=x>q.left+q.width*.22&&x<q.right-q.width*.22&&y>q.top+q.height*.22&&y<q.bottom-q.height*.22;
-      const now=performance.now();
-      if(inside&&now-lastSwap>220){const ref=after?nearest.nextElementSibling:nearest;
-        if(ref!==c&&ref!==c.nextElementSibling){grid.insertBefore(c,ref);lastSwap=now}}
-    }
+  // Do not reorder the grid during a gesture: it causes iOS hit-target loss
+  // and makes mixed-width cards jump. Only commit one insertion on release.
+  const paint=()=>{raf=0;if(!active)return;
+    c.style.transform=`translate3d(${x-startX}px,${y-startY}px,0)`;
   };
-  const schedule=()=>{if(!raf)raf=requestAnimationFrame(update)};
-  const move=ev=>{if(ev.pointerId!==pointer)return;x=ev.clientX;y=ev.clientY;
-    const bounds=app?.getBoundingClientRect();scroll=bounds?(y<bounds.top+75?-8:y>bounds.bottom-90?8:0):0;
-    schedule();if(ev.cancelable)ev.preventDefault()};
-  const tick=()=>{if(!active)return;if(scroll&&app){app.scrollBy(0,scroll);schedule()}requestAnimationFrame(tick)};
-  const finish=ev=>{if(ev.pointerId!==pointer)return;active=false;
-    removeEventListener('pointermove',move,true);removeEventListener('pointerup',finish,true);removeEventListener('pointercancel',finish,true);
+  const move=ev=>{
+    if(ev.pointerId!==pid)return;
+    x=ev.clientX;y=ev.clientY;
+    moved=moved||Math.hypot(x-startX,y-startY)>8;
+    if(!raf)raf=requestAnimationFrame(paint);
+    const rect=app?.getBoundingClientRect();
+    scroll=rect?(y<rect.top+75?-8:y>rect.bottom-90?8:0):0;
+    if(ev.cancelable)ev.preventDefault();
+  };
+  const tick=()=>{if(!active)return;if(scroll&&app)app.scrollBy(0,scroll);requestAnimationFrame(tick)};
+  const finish=ev=>{
+    if(ev.pointerId!==pid)return;
+    active=false;
+    removeEventListener('pointermove',move,true);
+    removeEventListener('pointerup',finish,true);
+    removeEventListener('pointercancel',cancel,true);
     if(raf)cancelAnimationFrame(raf);
-    c.classList.remove('draggingCard');c.style.transform='';delete c.dataset.dragX;delete c.dataset.dragY;
-    saveOrderFrom(grid);
-    try{o.releasePointerCapture(pointer)}catch(_){}};
-  addEventListener('pointermove',move,true);addEventListener('pointerup',finish,true);addEventListener('pointercancel',finish,true);
-  try{o.setPointerCapture(pointer)}catch(_){}
+    c.style.transform='';c.classList.remove('draggingCard');
+    if(moved){
+      const rtl=getComputedStyle(grid).direction==='rtl';
+      let best=null,score=Infinity,after=false;
+      for(const el of cards()){
+        const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+        const distance=Math.hypot((x-cx)*.9,(y-cy)*1.25);
+        if(distance<score){
+          score=distance;best=el;
+          after=y>cy+Math.min(r.height*.15,24)||(Math.abs(y-cy)<r.height*.35&&(rtl?x<cx:x>cx));
+        }
+      }
+      if(best){
+        const ref=after?best.nextElementSibling:best;
+        if(ref!==c&&ref!==c.nextElementSibling)grid.insertBefore(c,ref);
+        saveOrderFrom(grid);
+      }
+    }
+    try{o.releasePointerCapture(pid)}catch(_){}
+  };
+  const cancel=ev=>{if(ev.pointerId!==pid)return;active=false;
+    removeEventListener('pointermove',move,true);removeEventListener('pointerup',finish,true);removeEventListener('pointercancel',cancel,true);
+    if(raf)cancelAnimationFrame(raf);
+    c.style.transform='';c.classList.remove('draggingCard');
+  };
+  addEventListener('pointermove',move,true);
+  addEventListener('pointerup',finish,true);
+  addEventListener('pointercancel',cancel,true);
+  try{o.setPointerCapture(pid)}catch(_){}
   requestAnimationFrame(tick);
 }
 /* ---------- Shabbat mode ---------- */
