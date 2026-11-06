@@ -118,7 +118,7 @@ function editCardDetails(d){
 }
 /* ---------- reorder (drag, plus arrow buttons for VoiceOver) ---------- */
 function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);const eb=document.getElementById('editBtn');eb&&eb.setAttribute('aria-pressed',on);render();}
-function saveOrderFrom(grid){[...grid.querySelectorAll('.card')].forEach((c,i)=>META.order[c.dataset.id]=i+(+grid.dataset.base||0));saveMeta()}
+function saveOrderFrom(grid){const cards=[...grid.querySelectorAll('.card[data-id]')];const ids=new Set(cards.map(c=>c.dataset.id));const prior=Object.entries(META.order||{}).filter(([id])=>!ids.has(id));META.order=Object.fromEntries([...prior,...cards.map((c,i)=>[c.dataset.id,i+(+grid.dataset.base||0)])]);saveMeta()}
 function bindReorder(v){
   if(!REORDER)return;
   META.size=META.size||{};META.hidden=META.hidden||{};
@@ -157,50 +157,42 @@ function flip(grid,mutate){
 function startDrag(e,c,grid,o){
   if(e.target.closest('.edCorner,.reBtns,.preview-icon-edit')||e.button>0||!c.dataset.id)return;
   e.preventDefault();
-  const pointer=e.pointerId, start=c.getBoundingClientRect(),ox=e.clientX-start.left,oy=e.clientY-start.top;
-  // Keep the original in the grid. Moving the actual touch target to body
-  // made iOS cancel the pointer and left empty slots behind.
-  const ghost=c.cloneNode(true);
-  ghost.removeAttribute('id');ghost.removeAttribute('data-id');
-  ghost.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
-  ghost.classList.add('dragGhost');
-  Object.assign(ghost.style,{position:'fixed',left:start.left+'px',top:start.top+'px',width:start.width+'px',height:start.height+'px',margin:'0',zIndex:'999',pointerEvents:'none',transform:'none',transition:'none',opacity:'.94'});
-  document.body.appendChild(ghost);
-  c.classList.add('dragOrigin');
-  let px=e.clientX,py=e.clientY,frame=0,active=true,scroll=0;
+  const pointer=e.pointerId,origin=c.getBoundingClientRect(),startX=e.clientX,startY=e.clientY;
+  let x=startX,y=startY,active=true,raf=0,scroll=0;
   const app=document.querySelector('.app');
+  c.classList.add('draggingCard');
+  // The actual card remains the pointer target and follows the finger.
+  // No cloned card, reparenting to body, or empty placeholder.
   const update=()=>{
-    frame=0;if(!active)return;
-    ghost.style.left=(px-ox)+'px';ghost.style.top=(py-oy)+'px';
-    const others=[...grid.querySelectorAll('.card:not(.dragOrigin)')];
+    raf=0;if(!active)return;
+    const r=c.getBoundingClientRect();
+    const dx=x-startX,dy=y-startY;
+    // transform is relative to the card's current grid position.
+    c.style.transform='translate3d('+(origin.left+dx-(r.left-(parseFloat(c.dataset.dragX)||0)))+'px,'+(origin.top+dy-(r.top-(parseFloat(c.dataset.dragY)||0)))+'px,0)';
+    c.dataset.dragX=String(parseFloat(c.style.transform.match(/translate3d\\(([-.\\d]+)/)?.[1])||0);
+    c.dataset.dragY=String(parseFloat(c.style.transform.match(/,([-.\\d]+)px,0\\)/)?.[1])||0);
+    const others=[...grid.querySelectorAll('.card:not(.draggingCard)')];
     if(!others.length)return;
     const rtl=getComputedStyle(grid).direction==='rtl';
-    let target=null,after=false,dist=Infinity;
-    for(const el of others){
-      const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
-      const d=Math.abs(py-cy)*1.8+Math.abs(px-cx);
-      if(d<dist){dist=d;target=el;after=py>r.top+r.height*.65||(py>=r.top+r.height*.35&&(rtl?px<cx:px>cx))}
+    let nearest=null,score=Infinity,after=false;
+    for(const el of others){const q=el.getBoundingClientRect(),cx=q.left+q.width/2,cy=q.top+q.height/2;
+      const d=Math.abs(y-cy)*1.5+Math.abs(x-cx);
+      if(d<score){score=d;nearest=el;after=y>q.top+q.height*.65||(y>=q.top+q.height*.35&&(rtl?x<cx:x>cx))}
     }
-    if(!target)return;
-    const ref=after?target.nextElementSibling:target;
-    if(ref===c||ref===c.nextElementSibling)return;
-    grid.insertBefore(c,ref);
+    if(nearest){const ref=after?nearest.nextElementSibling:nearest;
+      if(ref!==c&&ref!==c.nextElementSibling)grid.insertBefore(c,ref)}
   };
-  const schedule=()=>{if(!frame)frame=requestAnimationFrame(update)};
-  const move=ev=>{if(ev.pointerId!==pointer)return;px=ev.clientX;py=ev.clientY;
-    const top=app?app.getBoundingClientRect().top:0,bottom=app?app.getBoundingClientRect().bottom:innerHeight;
-    scroll=py<top+90?-9:py>bottom-95?9:0;schedule();
-    if(ev.cancelable)ev.preventDefault();
-  };
+  const schedule=()=>{if(!raf)raf=requestAnimationFrame(update)};
+  const move=ev=>{if(ev.pointerId!==pointer)return;x=ev.clientX;y=ev.clientY;
+    const bounds=app?.getBoundingClientRect();scroll=bounds?(y<bounds.top+75?-8:y>bounds.bottom-90?8:0):0;
+    schedule();if(ev.cancelable)ev.preventDefault()};
   const tick=()=>{if(!active)return;if(scroll&&app){app.scrollBy(0,scroll);schedule()}requestAnimationFrame(tick)};
-  const finish=ev=>{
-    if(ev.pointerId!==pointer)return;
-    active=false;removeEventListener('pointermove',move,true);removeEventListener('pointerup',finish,true);removeEventListener('pointercancel',finish,true);
-    if(frame)cancelAnimationFrame(frame);
-    ghost.remove();c.classList.remove('dragOrigin');
+  const finish=ev=>{if(ev.pointerId!==pointer)return;active=false;
+    removeEventListener('pointermove',move,true);removeEventListener('pointerup',finish,true);removeEventListener('pointercancel',finish,true);
+    if(raf)cancelAnimationFrame(raf);
+    c.classList.remove('draggingCard');c.style.transform='';delete c.dataset.dragX;delete c.dataset.dragY;
     saveOrderFrom(grid);
-    try{o.releasePointerCapture(pointer)}catch(_){}
-  };
+    try{o.releasePointerCapture(pointer)}catch(_){}};
   addEventListener('pointermove',move,true);addEventListener('pointerup',finish,true);addEventListener('pointercancel',finish,true);
   try{o.setPointerCapture(pointer)}catch(_){}
   requestAnimationFrame(tick);
