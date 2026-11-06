@@ -158,7 +158,7 @@ function startDrag(e,c,grid,o){
   if(e.target.closest('.edCorner,.reBtns,.preview-icon-edit')||e.button>0||!c.dataset.id)return;
   e.preventDefault();
   const pointer=e.pointerId,origin=c.getBoundingClientRect(),startX=e.clientX,startY=e.clientY;
-  let x=startX,y=startY,active=true,raf=0,scroll=0,tx=0,ty=0;
+  let x=startX,y=startY,active=true,raf=0,scroll=0,tx=0,ty=0,lastSwap=0;
   const app=document.querySelector('.app');
   c.classList.add('draggingCard');
   // The actual card remains the pointer target and follows the finger.
@@ -180,8 +180,15 @@ function startDrag(e,c,grid,o){
       const d=Math.abs(y-cy)*1.5+Math.abs(x-cx);
       if(d<score){score=d;nearest=el;after=y>q.top+q.height*.65||(y>=q.top+q.height*.35&&(rtl?x<cx:x>cx))}
     }
-    if(nearest){const ref=after?nearest.nextElementSibling:nearest;
-      if(ref!==c&&ref!==c.nextElementSibling)grid.insertBefore(c,ref)}
+    if(nearest){
+      const q=nearest.getBoundingClientRect(),cx=q.left+q.width/2,cy=q.top+q.height/2;
+      // Require the finger to enter the target's central area, and limit
+      // swaps so grid reflow cannot trigger rapid back-and-forth jumps.
+      const inside=x>q.left+q.width*.22&&x<q.right-q.width*.22&&y>q.top+q.height*.22&&y<q.bottom-q.height*.22;
+      const now=performance.now();
+      if(inside&&now-lastSwap>220){const ref=after?nearest.nextElementSibling:nearest;
+        if(ref!==c&&ref!==c.nextElementSibling){grid.insertBefore(c,ref);lastSwap=now}}
+    }
   };
   const schedule=()=>{if(!raf)raf=requestAnimationFrame(update)};
   const move=ev=>{if(ev.pointerId!==pointer)return;x=ev.clientX;y=ev.clientY;
