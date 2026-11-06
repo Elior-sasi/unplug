@@ -155,59 +155,55 @@ function flip(grid,mutate){
     el.style.transition='transform .22s cubic-bezier(.2,.8,.2,1)';el.style.transform=''}
 }
 function startDrag(e,c,grid,o){
-  if(e.target.closest('.edCorner,.reBtns')||e.button>0)return;
+  if(e.target.closest('.edCorner,.reBtns,.preview-icon-edit')||e.button>0||!c.dataset.id)return;
   e.preventDefault();
-  const pointerId=e.pointerId;
-  const r=c.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;
-  const ph=document.createElement('div');ph.className='card dragPh'+(c.classList.contains('wide')?' wide':'');
-  // Preserve the card's actual grid span without forcing a tall empty row.
-  // The grid owns row sizing; a fixed placeholder height caused large gaps on iOS.
-  ph.style.minHeight='0';ph.style.height=c.classList.contains('wide')?'124px':'auto';
-  ph.style.aspectRatio=c.classList.contains('wide')?'auto':'1 / 1';
-  grid.insertBefore(ph,c);
-  Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',zIndex:60,transition:'none',pointerEvents:'none'});
-  c.classList.add('dragging');document.body.appendChild(c);
-  try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}
-  let lx=e.clientX,ly=e.clientY,raf=0,scrollV=0,last=0;
-  const place=()=>{raf=0;
-    c.style.left=(lx-dx)+'px';c.style.top=(ly-dy)+'px';
-    const now=performance.now();if(now-last<70)return;last=now;
-    const sibs=[...grid.querySelectorAll('.card:not(.dragPh)')];
-    if(!sibs.length)return;
-    // Allow moving above the first card or below the last even when the pointer
-    // is outside their bounds. This is essential for wide two-column cards.
-    const first=sibs[0].getBoundingClientRect();
-    const last=sibs[sibs.length-1].getBoundingClientRect();
-    let ref;
-    if(ly<first.top+first.height/2){ref=sibs[0]}
-    else if(ly>last.bottom){ref=null}
-    else{
-      let best=null,bd=Infinity;
-      for(const el of sibs){const b=el.getBoundingClientRect();
-        const cy=b.top+b.height/2,cx=b.left+b.width/2;
-        const d=Math.abs(ly-cy)*2+Math.abs(lx-cx)*0.35;
-        if(d<bd){bd=d;best=el}
-      }
-      const b=best.getBoundingClientRect();
-      const rtl=getComputedStyle(grid).direction==='rtl';
-      const after=ly>b.top+b.height*.65 ||
-        (ly>=b.top+b.height*.35 && (rtl?lx<b.left+b.width/2:lx>b.left+b.width/2));
-      ref=after?best.nextElementSibling:best;
+  const pointer=e.pointerId, start=c.getBoundingClientRect(),ox=e.clientX-start.left,oy=e.clientY-start.top;
+  // Keep the original in the grid. Moving the actual touch target to body
+  // made iOS cancel the pointer and left empty slots behind.
+  const ghost=c.cloneNode(true);
+  ghost.removeAttribute('id');ghost.removeAttribute('data-id');
+  ghost.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+  ghost.classList.add('dragGhost');
+  Object.assign(ghost.style,{position:'fixed',left:start.left+'px',top:start.top+'px',width:start.width+'px',height:start.height+'px',margin:'0',zIndex:'999',pointerEvents:'none',transform:'none',transition:'none',opacity:'.94'});
+  document.body.appendChild(ghost);
+  c.classList.add('dragOrigin');
+  let px=e.clientX,py=e.clientY,frame=0,active=true,scroll=0;
+  const app=document.querySelector('.app');
+  const update=()=>{
+    frame=0;if(!active)return;
+    ghost.style.left=(px-ox)+'px';ghost.style.top=(py-oy)+'px';
+    const others=[...grid.querySelectorAll('.card:not(.dragOrigin)')];
+    if(!others.length)return;
+    const rtl=getComputedStyle(grid).direction==='rtl';
+    let target=null,after=false,dist=Infinity;
+    for(const el of others){
+      const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+      const d=Math.abs(py-cy)*1.8+Math.abs(px-cx);
+      if(d<dist){dist=d;target=el;after=py>r.top+r.height*.65||(py>=r.top+r.height*.35&&(rtl?px<cx:px>cx))}
     }
-    if(ref===ph||ref===ph.nextElementSibling)return;
-    flip(grid,()=>grid.insertBefore(ph,ref));
+    if(!target)return;
+    const ref=after?target.nextElementSibling:target;
+    if(ref===c||ref===c.nextElementSibling)return;
+    grid.insertBefore(c,ref);
   };
-  const tick=()=>{if(scrollV){document.querySelector('.app').scrollBy(0,scrollV);if(!raf)raf=requestAnimationFrame(place)}if(c.isConnected&&c.classList.contains('dragging'))requestAnimationFrame(tick)};
+  const schedule=()=>{if(!frame)frame=requestAnimationFrame(update)};
+  const move=ev=>{if(ev.pointerId!==pointer)return;px=ev.clientX;py=ev.clientY;
+    const top=app?app.getBoundingClientRect().top:0,bottom=app?app.getBoundingClientRect().bottom:innerHeight;
+    scroll=py<top+90?-9:py>bottom-95?9:0;schedule();
+    if(ev.cancelable)ev.preventDefault();
+  };
+  const tick=()=>{if(!active)return;if(scroll&&app){app.scrollBy(0,scroll);schedule()}requestAnimationFrame(tick)};
+  const finish=ev=>{
+    if(ev.pointerId!==pointer)return;
+    active=false;removeEventListener('pointermove',move,true);removeEventListener('pointerup',finish,true);removeEventListener('pointercancel',finish,true);
+    if(frame)cancelAnimationFrame(frame);
+    ghost.remove();c.classList.remove('dragOrigin');
+    saveOrderFrom(grid);
+    try{o.releasePointerCapture(pointer)}catch(_){}
+  };
+  addEventListener('pointermove',move,true);addEventListener('pointerup',finish,true);addEventListener('pointercancel',finish,true);
+  try{o.setPointerCapture(pointer)}catch(_){}
   requestAnimationFrame(tick);
-  const move=ev=>{lx=ev.clientX;ly=ev.clientY;scrollV=ly<90?-10:ly>innerHeight-130?10:0;if(!raf)raf=requestAnimationFrame(place)};
-  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);scrollV=0;
-    const pr=ph.getBoundingClientRect();c.style.transition='left .18s ease,top .18s ease';c.style.left=pr.left+'px';c.style.top=pr.top+'px';
-    setTimeout(()=>{grid.insertBefore(c,ph);ph.remove();c.classList.remove('dragging');c.removeAttribute('style');saveOrderFrom(grid)},180)};
-  addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
-  // Safari can cancel a touch pointer when its target moves to document.body.
-  // Re-capture after reparenting so the drag continues on iOS.
-  try{o.setPointerCapture(pointerId)}catch(_){}
-  try{c.querySelector('.open')?.setPointerCapture(pointerId)}catch(_){}
 }
 /* ---------- Shabbat mode ---------- */
 const CITIES={jer:['ירושלים',31.778,35.235,40],ta:['תל אביב',32.085,34.782,21],hai:['חיפה',32.794,34.99,30],bs:['באר שבע',31.252,34.791,21],pt:['פתח תקווה',32.087,34.887,21],ash:['אשדוד',31.804,34.655,21]};
