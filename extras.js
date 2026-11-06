@@ -132,6 +132,12 @@ function bindReorder(v){
       const id=c.dataset.id;if(!id)return;const nm=esc(c.querySelector('.nm').textContent),wide=META.size[id]==='w';
       if(META.hidden[id])c.classList.add('hiddenCard');
       c.insertAdjacentHTML('beforeend',`<div class="editActions" role="group" aria-label="פעולות עריכה עבור ${nm}"><button class="edCorner edFav" data-fav aria-pressed="${!!META.fav[id]}" aria-label="מועדף - ${nm}">${svg('star',2.4)}</button><button class="edCorner edDel" data-hide aria-label="${META.hidden[id]?'הצגת':'הסתרת'} ${nm}">${svg(META.hidden[id]?'plus':'close',2.6)}</button><button class="edCorner edSize" data-size aria-label="${wide?'כרטיס מרובע':'כרטיס מלבני'} - ${nm}">${svg(wide?'close':'plus',2.6)}</button><button class="edCorner edIcon" data-icon aria-label="עריכת שם וסמליל - ${nm}" title="עריכת שם וסמליל">${svg('edit',2.4)}</button></div>`);
+      // Editing controls must win hit testing over the full-card drag surface.
+      // Prevent the iOS drag handler from capturing their pointer.
+      c.querySelectorAll('.editActions button,.reBtns button').forEach(btn=>{
+        btn.addEventListener('pointerdown',ev=>ev.stopPropagation());
+        btn.addEventListener('touchstart',ev=>ev.stopPropagation(),{passive:true});
+      });
       c.querySelector('[data-fav]').onclick=e=>{e.stopPropagation();META.fav[id]?delete META.fav[id]:META.fav[id]=true;saveMeta();render()};
       c.querySelector('[data-hide]').onclick=e=>{e.stopPropagation();META.hidden[id]?delete META.hidden[id]:META.hidden[id]=true;saveMeta();render()};
       c.querySelector('[data-size]').onclick=e=>{e.stopPropagation();wide?delete META.size[id]:META.size[id]='w';saveMeta();render()};
