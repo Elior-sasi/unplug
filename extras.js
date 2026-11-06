@@ -158,7 +158,7 @@ function startDrag(e,c,grid,o){
   if(e.target.closest('.edCorner,.reBtns,.preview-icon-edit')||e.button>0||!c.dataset.id)return;
   e.preventDefault();
   const pointer=e.pointerId,origin=c.getBoundingClientRect(),startX=e.clientX,startY=e.clientY;
-  let x=startX,y=startY,active=true,raf=0,scroll=0;
+  let x=startX,y=startY,active=true,raf=0,scroll=0,tx=0,ty=0;
   const app=document.querySelector('.app');
   c.classList.add('draggingCard');
   // The actual card remains the pointer target and follows the finger.
@@ -168,9 +168,10 @@ function startDrag(e,c,grid,o){
     const r=c.getBoundingClientRect();
     const dx=x-startX,dy=y-startY;
     // transform is relative to the card's current grid position.
-    c.style.transform='translate3d('+(origin.left+dx-(r.left-(parseFloat(c.dataset.dragX)||0)))+'px,'+(origin.top+dy-(r.top-(parseFloat(c.dataset.dragY)||0)))+'px,0)';
-    c.dataset.dragX=String(parseFloat(c.style.transform.match(/translate3d\\(([-.\\d]+)/)?.[1])||0);
-    c.dataset.dragY=String(parseFloat(c.style.transform.match(/,([-.\\d]+)px,0\\)/)?.[1])||0);
+    const baseLeft=r.left-tx,baseTop=r.top-ty;
+    tx=origin.left+dx-baseLeft;
+    ty=origin.top+dy-baseTop;
+    c.style.transform=`translate3d(${tx}px,${ty}px,0)`;
     const others=[...grid.querySelectorAll('.card:not(.draggingCard)')];
     if(!others.length)return;
     const rtl=getComputedStyle(grid).direction==='rtl';
