@@ -121,7 +121,7 @@ function brushRenderDialog(el,close){
       charged?'<div class="empty"><b>מחזור הטעינה האחרון הסתיים לפי הטיימר</b>בדוק אם השקע אכן כבוי. לא קיימת מדידת סוללה מהמכשיר.</div>':'',
     '<button class="btn pri wide" id="brushStart" '+(!chosen||chargeActive?'disabled':'')+'>'+svg('bolt')+'הפעל טעינה ל־24 שעות וכיבוי אוטומטי</button>',
     chargeActive?'<button class="btn wide" id="brushStop">כבה את השקע וסיים טעינה עכשיו</button>':'',
-    '<label class="row" style="padding:12px"><span class="grow"><span class="t">תזכורת לבדוק טעינה כעבור כשבועיים</span><br><span class="s">לפי זמן בלבד, לא אחוז סוללה</span></span><input type="checkbox" id="brushRecharge" '+(s.rechargeReminder?'checked':'')+'></label>',
+    '<label class="row" style="padding:12px"><span class="grow"><span class="t">תזכורת לבדוק טעינה כעבור כשבועיים</span><br><span class="s">לפי זמן בלבד, לא אחוז סוללה</span></span><input type="checkbox" class="tgl" id="brushRecharge" '+(s.rechargeReminder?'checked':'')+'></label>',
     '<div class="sec-h"><h2>החלפת ראש מברשת</h2></div>',
     '<p class="s">Oral-B ממליצה להחליף ראש בכל 3 חודשים, או קודם אם הסיבים התבלו.</p>',
     '<div class="field"><label for="brushHeadDate">התאריך שבו התחלת להשתמש בראש הנוכחי</label><input id="brushHeadDate" type="date" dir="ltr" max="'+todayISO+'" value="'+esc(s.headDate||'')+'" style="min-width:0;max-width:100%;flex:1;font-size:17px"></div>',
