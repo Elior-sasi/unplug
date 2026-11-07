@@ -74,6 +74,42 @@ details.more[open] summary svg{transform:rotate(180deg)}
 .bb small{display:block;font-size:.8rem;color:var(--mut)}
 .bb b{display:block;font-size:1rem;color:#ffc48a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar[hidden]{display:none}
+.vhero{background:var(--card);border-radius:24px;padding:12px 14px;display:flex;align-items:center;gap:14px}
+.vimg{width:72px;height:72px;flex:none;display:grid;place-items:center}.vimg img,.vimg svg{max-width:100%;max-height:100%;object-fit:contain}
+.vhero.on .vimg{filter:drop-shadow(0 6px 18px #ff9a3d88)}
+.vtx{flex:1;min-width:0}.vst{font-size:1.45rem;font-weight:700;line-height:1.15}.vhero.on .vst{color:var(--acc)}
+.vsub{color:var(--mut);font-size:.95rem;margin-top:2px}
+.vbat{height:8px;border-radius:999px;background:#3a3a3c;margin-top:8px;overflow:hidden}.vbat i{display:block;height:100%;background:var(--ok);border-radius:999px}.vbat.low i{background:#ffd60a}
+.vstat{font-size:.85rem;color:var(--mut);margin-top:6px}
+.mcard{position:relative;background:#141416;border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.mcard .mwrap{position:relative;max-width:100%}
+.mcard img{display:block;max-width:100%;max-height:var(--mh,48vh);width:auto;height:auto;margin:auto}
+.mbig{position:absolute;top:10px;left:10px;width:46px;height:46px;border-radius:50%;background:#000b;border:1px solid #ffffff33;display:grid;place-items:center}
+.mpill{position:absolute;top:12px;right:12px;background:#000c;border-radius:999px;padding:8px 14px;font-weight:700;font-size:.9rem}
+.rbs{display:flex;justify-content:space-around;gap:4px}
+.rb{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.9rem;font-weight:600;color:#ddd;min-width:56px}
+.rb>span{width:60px;height:60px;border-radius:50%;background:var(--card);display:grid;place-items:center}
+.rb.busy>span{background:#3d8bff33;color:var(--on-txt)}
+/* the big map */
+.mv{position:fixed;inset:0;background:#000;z-index:15;display:flex;flex-direction:column}
+.mv-h{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 8px}
+.mv-h h2{flex:1;margin:0;font-size:1.4rem}
+.mv-stage{flex:1;position:relative;overflow:hidden;touch-action:none;background:#0b0b0c}
+.mv-in{position:absolute;left:0;top:0;transform-origin:0 0}
+.mv-in img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.mv-in svg.ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.mv-in .pin{transform:translate(-50%,-50%) scale(var(--inv,1))}
+.mv-zoom{position:absolute;bottom:12px;left:12px;display:flex;flex-direction:column;gap:8px}
+.mv-zoom button{width:48px;height:48px;border-radius:50%;background:#1c1c1e;border:1px solid #ffffff22;font-size:1.5rem;font-weight:700}
+.mv-hint{position:absolute;top:10px;right:10px;left:70px;background:#000c;border-radius:16px;padding:10px 14px;font-weight:600;font-size:.95rem}
+.mv-b{padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;flex-direction:column;gap:10px;background:#000}
+.tools{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}.tools::-webkit-scrollbar{display:none}
+.tools .chip[aria-pressed="true"]{background:var(--acc);color:var(--ink)}
+.tabs2{display:flex;background:var(--card);border-radius:999px;padding:4px;gap:4px}
+.tabs2 button{flex:1;min-height:44px;border-radius:999px;font-weight:700}
+.tabs2 button[aria-pressed="true"]{background:var(--card3)}
+.dot{fill:#fff;stroke:#ff9a3d;stroke-width:3}
+
 /* sheets */
 .scrim{position:fixed;inset:0;background:#0008;z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet{width:100%;max-width:620px;max-height:88vh;overflow:auto;background:var(--card);border-radius:38px 38px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 20px);box-shadow:0 -10px 40px #000a;overscroll-behavior:contain}
@@ -159,6 +195,8 @@ const I={
  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
  station:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="6" y="3" width="12" height="15" rx="2"/><path d="M4 21h16M9 14h6"/></svg>',
  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+ expand:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 15v5h-5M4 4l6 6M20 20l-6-6"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
  sliders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>'
 };
 const ST_HE={1:'שואב',2:'ממתין',3:'מושהה',4:'תקלה',5:'חוזר לעמדה',6:'בטעינה',7:'שוטף',8:'מייבש מגבים',9:'שוטף מגבים',10:'חוזר לשטוף מגבים',11:'ממפה',12:'שואב ושוטף',13:'טעון',14:'מתעדכן',15:'בא אליך',16:'איפוס עמדה',17:'חוזר להתקין מגבים',18:'חוזר להסיר מגבים',19:'בודק מים',20:'מוסיף מים',21:'שטיפה מושהית',22:'מרוקן אבק',23:'בשליטה ידנית',24:'טעינה חכמה',25:'ניקוי חוזר',27:'ניקוי נקודתי',28:'חוזר לריקון',29:'ממתין למשימה',30:'מנקה את העמדה',31:'חוזר לניקוז',32:'מנקז',33:'מנקז',34:'מרוקן',35:'מייבש שקית אבק',37:'בדרך לניקוי נוסף',38:'ניקוי נוסף',101:'ניקוי יסודי ראשון',103:'מחטא',104:'מחטא',105:'מחליף מגבים',116:'מתקין מגבים',117:'מסיר מגבים',118:'טעינה חכמה',121:'נכנס לעמדה',122:'יוצא מהעמדה'};
@@ -176,7 +214,7 @@ async function load(){try{const j=await api('/mova/state');D=j;linked=true;err='
   draw()}
 async function loadMap(force){if(!linked)return;const x=D&&D.state,busy=x&&(x.running||BUSY.has(x.state));
   if(!force&&!busy&&mapD&&Date.now()-mapAt<5*60000)return;
-  try{const j=await api('/mova/map');mapAt=Date.now();if(j.map){mapD=j.map;MV.map=j.map;MV.mapAt=mapAt;refreshSheet()}}catch(e){}}
+  try{const j=await api('/mova/map');mapAt=Date.now();if(j.map){mapD=j.map;MV.map=j.map;MV.mapAt=mapAt;draw();refreshSheet();mvDraw()}}catch(e){}}
 async function send(path,body,ok){buzz();try{const j=await api(path,body);if(j&&j.state){D=Object.assign({},D,j);delete D.sent;MV.d=D}ok&&toast(ok);draw();refreshSheet()}catch(e){toast(e.message);load()}}
 const act=(a,ok,extra)=>send('/mova/act',Object.assign({a},extra||{}),ok);
 const setv=(k,v,ok)=>send('/mova/set',{k,v},ok);
@@ -198,37 +236,42 @@ function draw(){
   if($('login')){$('main').innerHTML='';sig={}}
   const x=D&&D.state;
   const busy=x&&(x.running||BUSY.has(x.state)),paused=x&&(x.paused||x.state===3),home=x&&(x.docked||HOME.has(x.state));
-  /* the ring: battery; while cleaning it follows the progress */
-  const prog=x&&x.running&&x.progress?x.progress:null,val=prog!=null?prog:(x&&x.battery!=null?x.battery:0);
-  const a=A0+SPAN*Math.max(.001,Math.min(1,val/100)),[kx,ky]=pt(a);
+  const prog=x&&x.running&&x.progress?x.progress:null;
   const room=x&&x.room&&D.rooms?(D.rooms.find(r=>r.id===x.room)||{}).name:null;
-  const sub2=!x?(err||'מתחבר...'):busy||paused?[room?'ב'+room:'',x.area?x.area+' מ״ר':'',x.time?x.time+' דק׳':''].filter(Boolean).join(' · '):(x.drying&&x.drying_left?'נשארו '+x.drying_left+' דק׳ ייבוש':(x.charging===1||x.state===6?'בעמדה, נטען':home?'בעמדה':''));
-  const big=x&&x.battery!=null?(prog!=null?prog:x.battery):'--';
-  const aria=x?`${stateName(x)}. ${prog!=null?'התקדמות '+prog+' אחוז':''} סוללה ${x.battery} אחוז. ${sub2}`:'מתחבר';
-  part('pHero',`<div class="hero" role="group" aria-label="${esc(aria)}"><div class="dial${busy?' on':''}"><svg viewBox="0 0 300 300" aria-hidden="true">${ticks}<path class="trk" d="${arc(A0,A0+SPAN)}"/><path class="val" d="${arc(A0,a)}"/><circle class="knob" r="13" cx="${kx}" cy="${ky}"/></svg>
-    <div class="ctr" aria-hidden="true"><div class="big">${big}<small>%</small></div><div class="st">${esc(x?stateName(x)+(prog!=null?' · התקדמות':' · סוללה'):'')}</div>${sub2?`<div class="st2">${esc(sub2)}</div>`:''}</div></div></div>`);
+  const sub2=!x?(err||'מתחבר...'):busy||paused?[room?'ב'+room:'',x.area?x.area+' מ״ר':'',x.time?x.time+' דק׳':'',prog!=null?'התקדמות '+pct(prog):''].filter(Boolean).join(' · '):(x.drying&&x.drying_left?'מייבש, נשארו '+x.drying_left+' דק׳':(x.charging===1||x.state===6?'בעמדה, נטען':home?'בעמדה':''));
+  const bat=x&&x.battery!=null?x.battery:null;
+  /* last cleaning and maintenance, one short line */
+  const h0=(D&&D.history||[])[0],cons=(D&&D.consumables)||[],due=cons.filter(c=>c.pct<=15).length;
+  const stats=D&&!busy&&!paused?[h0?'ניקוי אחרון: '+(h0.m2!=null?h0.m2+' מ״ר':'')+(h0.min!=null?' · '+h0.min+' דק׳':''):'',cons.length?(due?(due===1?'חלק אחד להחלפה':due+' חלקים להחלפה'):'תחזוקה: הכול תקין'):''].filter(Boolean).join(' · '):'';
+  part('pHero',`<div class="vhero${busy?' on':''}" role="group" aria-label="${esc(x?stateName(x)+'. '+(bat!=null?'סוללה '+bat+' אחוז. ':'')+sub2+(stats?'. '+stats:''):'מתחבר')}">
+    <div class="vimg" aria-hidden="true">${HO.devArt(HO.MOVA,1)}</div>
+    <div class="vtx" aria-hidden="true"><div class="vst">${esc(x?stateName(x):'מתחבר...')}</div><div class="vsub">${esc([sub2,bat!=null?'סוללה '+pct(bat):''].filter(Boolean).join(' · '))}</div>
+      ${bat!=null?`<div class="vbat${bat<=20?' low':''}"><i style="width:${bat}%"></i></div>`:''}${stats?`<div class="vstat">${esc(stats)}</div>`:''}</div></div>`);
   part('pErr',x&&(x.error||x.has_error)?`<div class="err" role="alert"><span>${esc(ERR_HE[x.error]||('השואב מדווח על תקלה'+(x.error?' (קוד '+x.error+')':'')))}</span><button data-a="clear">הבנתי</button></div>`:'');
-  const n=sel.size,names=[...sel].map(id=>((D&&D.rooms||[]).find(r=>r.id===id)||{}).name).filter(Boolean);
+  /* the map: tap rooms to pick them; the corner button opens it big, with editing */
+  const rooms=(D&&D.rooms)||[],pins=mapD&&mapD.rooms&&mapD.rooms.length?mapD.rooms:null;
+  part('pMap',mapD?`<div class="mcard" id="mcard"><div class="mwrap"><img src="data:image/png;base64,${mapD.png}" alt="מפת הבית${rooms.length?', '+rooms.length+' חדרים':''}">
+      ${pins?pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join(''):''}</div>
+      <button class="mbig" data-open="mapview" aria-label="הגדלת המפה ועריכה">${I.expand}</button>
+      ${sel.size?`<span class="mpill" aria-hidden="true">${sel.size===1?'חדר אחד נבחר':sel.size+' חדרים נבחרו'}</span>`:''}</div>`
+    :rooms.length?`<h2 id="hRooms">חדרים</h2><div class="row" role="group" aria-labelledby="hRooms">${rooms.map(r=>`<button class="chip" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${sel.has(r.id)?'✓ ':''}${esc(r.name)}</button>`).join('')}</div>`:'');
+  const n=sel.size,names=[...sel].map(id=>(rooms.find(r=>r.id===id)||{}).name).filter(Boolean);
   const main=busy?{a:'pause',t:'השהיה',i:I.pause,on:1}:paused?{a:'start',t:'המשך ניקוי',i:I.power}:n?{a:'rooms',t:'ניקוי '+(n===1?names[0]:n+' חדרים'),i:I.power}:{a:'start',t:'ניקוי כל הבית',i:I.power};
-  part('pMain',`<div class="mainrow"><button class="sq" data-a="dock"${home?' disabled':''} aria-label="חזרה לעמדה">${I.dock}<span aria-hidden="true">לעמדה</span></button>
-    <button class="pw${main.on?' on':''}" data-a="${main.a}" aria-pressed="${!!main.on}">${main.i}<span>${esc(main.t)}</span></button></div>`);
-  /* rooms as chips; the map opens in a window */
-  const rooms=(D&&D.rooms)||[];
-  part('pRooms',rooms.length?`<h2 id="hRooms">חדרים</h2><div class="row" role="group" aria-labelledby="hRooms">
-    <button class="chip" data-open="map" aria-label="מפה - בחירת חדרים במפה">${I.map}מפה</button>
-    ${rooms.map(r=>`<button class="chip" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${sel.has(r.id)?'✓ ':''}${esc(r.name)}</button>`).join('')}</div>`:'');
-  /* quick actions */
+  part('pMain',`<button class="pw${main.on?' on':''}" data-a="${main.a}" aria-pressed="${!!main.on}">${main.i}<span>${esc(main.t)}</span></button>`);
+  /* round buttons */
   const cn=(D&&D.can)||{},q=[];
-  q.push(`<button class="chip" data-a="stop"${!busy&&!paused?' disabled':''}>${I.stop}עצירה</button>`);
-  q.push(`<button class="chip" data-a="locate" aria-label="איתור, השואב משמיע צליל">${I.bell}איתור</button>`);
-  if(cn.empty)q.push(`<button class="chip${x&&x.emptying?' busy':''}" data-a="empty">${I.trash}${x&&x.emptying?'מרוקן...':'ריקון אבק'}</button>`);
-  if(cn.washing)q.push(`<button class="chip${x&&x.washing?' busy':''}" data-a="wash">${I.drop}${x&&x.washing?'עצירת שטיפה':'שטיפת מגבים'}</button>`);
-  if(cn.drying)q.push(`<button class="chip${x&&x.drying?' busy':''}" data-a="dry">${I.sun}${x&&x.drying?'עצירת ייבוש':'ייבוש מגבים'}</button>`);
-  part('pQuick',D?`<h2 id="hQ">פעולות</h2><div class="row" role="group" aria-labelledby="hQ">${q.join('')}</div>`:'');
+  const rb=(a,ic,t,dis,lab,cls)=>`<button class="rb${cls?' '+cls:''}" data-a="${a}"${dis?' disabled':''}${lab?` aria-label="${lab}"`:''}><span aria-hidden="true">${ic}</span>${t}</button>`;
+  q.push(rb('dock',I.dock,'לעמדה',home,'חזרה לעמדה'));
+  q.push(rb('stop',I.stop,'עצירה',!busy&&!paused));
+  q.push(rb('locate',I.bell,'איתור',0,'איתור, השואב משמיע צליל'));
+  if(cn.empty)q.push(rb('empty',I.trash,x&&x.emptying?'מרוקן':'ריקון',0,'ריקון אבק',x&&x.emptying?'busy':''));
+  if(cn.washing)q.push(rb('wash',I.drop,x&&x.washing?'עצור':'שטיפה',0,x&&x.washing?'עצירת שטיפת המגבים':'שטיפת מגבים',x&&x.washing?'busy':''));
+  part('pQuick',D?`<div class="rbs" role="group" aria-label="פעולות">${q.join('')}</div>`:'');
   /* more settings - each opens its own window */
   if(D){const cons=D.consumables||[],due=cons.filter(c=>c.pct<=15).length,sch=D.schedules||[],dnd=x.dnd;
     const items=[
       ['mode',I.sliders,'מצב ניקוי מתקדם','מים, לחות מגבים, CleanGenius'],
+      (D.rooms||[]).length&&['roomsl',I.map,'חדרים','שמות, סדר ניקוי ועריכת המפה'],
       (cn.station||cn.empty)&&['station',I.station,'העמדה',stationLine(x)],
       cons.length&&['cons',I.wrench,'תחזוקה',due?due+' חלקים להחלפה':'הכול תקין',due],
       ['settings',I.gear,'הגדרות','שטיחים, נעילת ילדים, ייבוש ועוד'],
@@ -266,7 +309,7 @@ function drawLogin(){if($('login'))return;sig={};
 
 /* ---------- windows (sheets) ---------- */
 let SH=null,lastFocus=null;
-function sheet(kind){closeSheet(true);lastFocus=document.activeElement;
+function sheet(kind){closeSheet(true);if(kind==='order')ORDER=null;lastFocus=document.activeElement;
   const s=document.createElement('div');s.className='scrim';s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh-h"><h3 id="shT" tabindex="-1"></h3><button class="circ" data-x aria-label="סגירה">${I.x}</button></div><div id="shB"></div></div>`;
   s.addEventListener('click',e=>{if(e.target===s)closeSheet()});s.querySelector('[data-x]').onclick=()=>closeSheet();
   s.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
@@ -310,6 +353,17 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
   else if(k==='hist'){t='היסטוריה';const tt=x.totals||{},hs=D.history||[];
     h=`${tt.count!=null?`<div class="tot"><div><b>${tt.count}</b>ניקויים</div><div><b>${tt.m2!=null?tt.m2:'-'}</b>מ״ר בסך הכול</div><div><b>${tt.minutes!=null?Math.round(tt.minutes/60):'-'}</b>שעות</div></div>`:''}
       ${hs.length?`<div class="grp">${hs.slice(0,15).map(r=>{const d=new Date(r.t*1000);return `<div class="it"><span class="g"><span class="t">${d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'})} ${d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</span><span class="s">${r.m2!=null?r.m2+' מ״ר':''}${r.min!=null?' · '+r.min+' דק׳':''}${r.done===false?' · לא הושלם':''}</span></span></div>`}).join('')}</div>`:'<p class="note">אין עדיין היסטוריה.</p>'}`}
+  else if(k==='roomsl'){t='חדרים';h=`<div class="grp">${(D.rooms||[]).map(r=>`<button class="it" data-ren="${r.id}"><span class="g"><span class="t">${esc(r.name)}</span><span class="s">שינוי שם</span></span></button>`).join('')}</div>
+      <div style="display:flex;flex-direction:column;gap:10px"><button class="wide sec" data-open="order">סדר ניקוי</button><button class="wide sec" data-open="mapview">עריכת המפה (איחוד, חלוקה, אזורים אסורים)</button></div>`}
+  else if(k==='rename'){const r=(D.rooms||[]).find(r=>r.id===RENAME)||{};t='שם לחדר';
+    if(SH.sig&&SH.sig.startsWith(t))return;
+    h=`<div class="login"><label for="rnN">שם החדר</label><input id="rnN" type="text" maxlength="24" value="${esc(r.name||'')}" style="font-size:1.1rem">
+      <div class="lbl" id="rnL" style="margin:6px 0 0">סוג החדר (קובע את האייקון)</div><div class="seg" role="group" aria-labelledby="rnL">${RTYPES.map(([v,n])=>`<button data-rtype="${v}" aria-pressed="${(r.type||0)===v}" style="flex-basis:30%;min-height:48px">${n}</button>`).join('')}</div>
+      <button class="wide" id="rnSave">שמירה</button></div>`}
+  else if(k==='order'){t='סדר ניקוי';if(!ORDER)ORDER=(D.rooms||[]).map(r=>r.id);const R=id=>(D.rooms||[]).find(r=>r.id===id)||{name:'חדר '+id};
+    h=`<p class="note">השואב ינקה את החדרים בסדר הזה.</p><div class="grp">${ORDER.map((id,i)=>`<div class="it"><span class="g t">${i+1}. ${esc(R(id).name)}</span>
+      <button class="circ" style="background:#3a3a3c" data-up="${i}"${i?'':' disabled'} aria-label="${esc(R(id).name)} מוקדם יותר">↑</button><button class="circ" style="background:#3a3a3c" data-down="${i}"${i<ORDER.length-1?'':' disabled'} aria-label="${esc(R(id).name)} מאוחר יותר">↓</button></div>`).join('')}</div>
+      <button class="wide" id="orSave">שמירת הסדר</button>`}
   else if(k==='device'){t='השואב';const w=HO.wifi()||{};
     h=`<div class="grp">
       <button class="it" id="dvRoom"><span class="g"><span class="t">חדר</span><span class="s">${esc(HO.roomOf(HO.MOVA)||'בלי חדר')}</span></span></button>
@@ -323,15 +377,114 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
   const key=inside?(a.id?'#'+a.id:a.dataset.q?`[data-q="${a.dataset.q}"][data-v="${a.dataset.v}"]`:a.dataset.room?`[data-room="${a.dataset.room}"]`:a.dataset.k?`[data-k="${a.dataset.k}"]`:a.dataset.times?`[data-times="${a.dataset.times}"]`:a.dataset.reset?`[data-reset="${a.dataset.reset}"]`:a.dataset.num?`[data-num="${a.dataset.num}"][data-d="${a.dataset.d}"]`:null):null;
   SH.el.querySelector('#shT').textContent=t;box.innerHTML=h;SH.sig=t+h;if(key){const n=box.querySelector(key);n&&n.focus({preventScroll:true})}}
 
+/* ---------- the big map: zoom, pick rooms, and edit (names, merge, split, no-go zones, walls, order) ---------- */
+let MVW=null;
+const RTYPES=[[1,'סלון'],[2,'חדר שינה'],[3,'חדר עבודה'],[4,'מטבח'],[5,'פינת אוכל'],[6,'שירותים'],[7,'מרפסת'],[8,'מסדרון'],[9,'חדר שירות'],[10,'ארון'],[13,'חדר כושר'],[14,'חדר משחקים'],[0,'אחר']];
+const TOOLS=[['rename','שינוי שם'],['merge','איחוד חדרים'],['split','חלוקת חדר'],['nogo','אזור אסור'],['nomop','בלי שטיפה'],['wall','קיר וירטואלי'],['zones','האזורים שלי'],['order','סדר ניקוי']];
+const HINT={rename:'לוחצים על חדר כדי לשנות לו שם',merge:'בוחרים שני חדרים צמודים',split:'בוחרים חדר, ואז שתי נקודות לקו החלוקה',nogo:'לוחצים על שתי פינות של האזור',nomop:'לוחצים על שתי פינות של האזור',wall:'לוחצים על שתי נקודות לקיר',zones:'',order:''};
+function openMapView(){if(!mapD){loadMap(true);return toast('טוען מפה...')}
+  closeSheet(true);const el=document.createElement('div');el.className='mv';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','מפה');
+  document.body.append(el);$('app').setAttribute('aria-hidden','true');$('bar').hidden=true;
+  MVW={el,mode:'clean',tool:null,picks:[],pts:[],z:1,tx:0,ty:0,zones:JSON.parse(JSON.stringify(mapD.zones||{walls:[],nogo:[],nomop:[]})),built:false};
+  mvDraw();setTimeout(()=>{mvFitView();el.querySelector('#mvT').focus()},30);loadMap(true)}
+function closeMapView(){if(!MVW)return;MVW.el.remove();MVW=null;$('app').removeAttribute('aria-hidden');draw();setTimeout(fit,30);try{document.querySelector('[data-open="mapview"]').focus()}catch(e){}}
+function mvFitView(){if(!MVW)return;const st=MVW.el.querySelector('.mv-stage');if(!st||!mapD)return;const W=st.clientWidth,H=st.clientHeight,ar=(mapD.h||1)/(mapD.w||1);
+  const w=Math.min(W,H/ar);MVW.base=w;MVW.z=1;MVW.tx=(W-w)/2;MVW.ty=(H-w*ar)/2;mvApply()}
+function mvApply(){const inn=MVW&&MVW.el.querySelector('.mv-in');if(!inn)return;inn.style.width=(MVW.base*MVW.z)+'px';inn.style.transform=`translate(${MVW.tx}px,${MVW.ty}px)`;inn.style.setProperty('--inv',Math.max(.6,1/Math.sqrt(MVW.z)))}
+function mvZoom(f,cx,cy){const st=MVW.el.querySelector('.mv-stage');if(cx==null){cx=st.clientWidth/2;cy=st.clientHeight/2}
+  const z=Math.max(1,Math.min(6,MVW.z*f)),k=z/MVW.z;MVW.tx=cx-(cx-MVW.tx)*k;MVW.ty=cy-(cy-MVW.ty)*k;MVW.z=z;if(z===1)return mvFitView();mvApply()}
+function zoneSvg(){const Z=MVW.zones,r=(q,c,f)=>{const x=Math.min(q[0],q[2]),y=Math.min(q[1],q[3]);return `<rect x="${x}" y="${y}" width="${Math.abs(q[2]-q[0])}" height="${Math.abs(q[3]-q[1])}" fill="${f}" stroke="${c}" stroke-width=".5" vector-effect="non-scaling-stroke"/>`};
+  let h=(Z.nogo||[]).map(q=>r(q,'#ff453a','#ff453a33')).join('')+(Z.nomop||[]).map(q=>r(q,'#64d2ff','#64d2ff33')).join('')+(Z.walls||[]).map(q=>`<line x1="${q[0]}" y1="${q[1]}" x2="${q[2]}" y2="${q[3]}" stroke="#ff453a" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linecap="round"/>`).join('');
+  const P=MVW.pts;if(P.length){const t=MVW.tool;
+    if(P.length===2&&(t==='nogo'||t==='nomop'))h+=r([P[0][0],P[0][1],P[1][0],P[1][1]],'#ff9a3d','#ff9a3d44');
+    if(P.length===2&&(t==='wall'||t==='split'))h+=`<line x1="${P[0][0]}" y1="${P[0][1]}" x2="${P[1][0]}" y2="${P[1][1]}" stroke="#ff9a3d" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"/>`;
+    h+=P.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="1.2" class="dot" vector-effect="non-scaling-stroke"/>`).join('')}
+  return h}
+function mvDraw(){if(!MVW)return;const m=MVW,el=m.el,pins=mapD&&mapD.rooms||[],t=m.tool,maps=mapD&&mapD.maps||[];
+  const picked=id=>m.mode==='clean'?sel.has(id):m.picks.includes(id);
+  const need=t==='merge'?m.picks.length===2:t==='split'?m.picks.length===1&&m.pts.length===2:(t==='nogo'||t==='nomop'||t==='wall')?m.pts.length===2:false;
+  const actLabel={merge:'איחוד שני החדרים',split:'חלוקת החדר',nogo:'הוספת האזור האסור',nomop:'הוספת אזור בלי שטיפה',wall:'הוספת הקיר'}[t];
+  const zl=[...(m.zones.nogo||[]).map((q,i)=>['nogo',i,'אזור אסור '+(i+1)]),...(m.zones.nomop||[]).map((q,i)=>['nomop',i,'בלי שטיפה '+(i+1)]),...(m.zones.walls||[]).map((q,i)=>['walls',i,'קיר '+(i+1)])];
+  const n=sel.size;
+  const bottom=m.mode==='clean'?`<div class="lbl" id="lT2" style="margin:0 4px">כמה פעמים</div><div class="seg" style="margin:0" role="group" aria-labelledby="lT2">${[1,2,3].map(v=>`<button data-times="${v}" aria-pressed="${times===v}" style="min-height:48px">${v===1?'פעם אחת':v===2?'פעמיים':'3 פעמים'}</button>`).join('')}</div>
+      <button class="wide" id="goRooms"${n?'':' disabled'}>${n?'ניקוי '+(n===1?esc((pins.find(r=>sel.has(r.id))||{}).name||'חדר'):n+' חדרים'):'בוחרים חדרים במפה'}</button>`
+    :`<div class="tools" role="group" aria-label="כלי עריכה">${TOOLS.map(([k,n])=>`<button class="chip" data-tool="${k}" aria-pressed="${t===k}">${n}</button>`).join('')}</div>
+      ${t==='zones'?(zl.length?`<div class="grp" style="background:var(--card);border-radius:18px;margin:0">${zl.map(([k,i,n])=>`<div class="it"><span class="g t">${n}</span><button class="chip" style="background:#3a3a3c" data-zdel="${k}:${i}" aria-label="מחיקת ${n}">מחיקה</button></div>`).join('')}</div>`:'<p class="note" style="margin:0">אין אזורים אסורים או קירות במפה.</p>'):''}
+      ${actLabel?`<button class="wide" id="mvDo"${need?'':' disabled'}>${actLabel}</button>`:''}`;
+  if(!m.built){m.built=true;
+    el.innerHTML=`<div class="mv-h"><button class="circ" id="mvX" aria-label="סגירת המפה">${I.x}</button><h2 id="mvT" tabindex="-1">מפה</h2></div>
+      <div id="mvMaps"></div>
+      <div class="mv-stage" id="mvS"><div class="mv-in" id="mvIn"><img alt="מפת הבית"><svg class="ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg><div id="mvPins"></div></div>
+        <div class="mv-hint" id="mvHint" role="status" hidden></div>
+        <div class="mv-zoom"><button id="zIn" aria-label="הגדלה">+</button><button id="zOut" aria-label="הקטנה">−</button></div></div>
+      <div class="mv-b"><div class="tabs2" role="group" aria-label="מצב המפה"><button data-mvmode="clean">ניקוי חדרים</button><button data-mvmode="edit">עריכת המפה</button></div><div id="mvBot" style="display:flex;flex-direction:column;gap:10px"></div></div>`;
+    mvPointer(el.querySelector('#mvS'))}
+  const img=el.querySelector('#mvIn img');const src='data:image/png;base64,'+(mapD&&mapD.png);if(img.getAttribute('src')!==src){img.src=src;img.onload=()=>{if(!m.base)mvFitView()}}
+  el.querySelector('svg.ov').innerHTML=zoneSvg();
+  const ph=pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${picked(r.id)}">${esc(r.name)}</button>`).join('');
+  const pw=el.querySelector('#mvPins');if(pw._h!==ph){pw.innerHTML=ph;pw._h=ph}
+  el.querySelectorAll('[data-mvmode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mvmode===m.mode));
+  const hint=m.mode==='edit'&&t?HINT[t]:'';const he=el.querySelector('#mvHint');he.hidden=!hint;he.textContent=hint;
+  const mp=maps.length>1?`<div class="tools" style="padding-bottom:8px" role="group" aria-label="מפות">${maps.map(x=>`<button class="chip" data-mapsel="${x.id}" aria-pressed="${!!x.current}">${esc(x.name)}</button>`).join('')}</div>`:'';
+  const mm=el.querySelector('#mvMaps');if(mm._h!==mp){mm.innerHTML=mp;mm._h=mp}
+  const bt=el.querySelector('#mvBot');if(bt._h!==bottom){const a=document.activeElement,key=bt.contains(a)?(a.id?'#'+a.id:a.dataset.tool?`[data-tool="${a.dataset.tool}"]`:a.dataset.times?`[data-times="${a.dataset.times}"]`:null):null;bt.innerHTML=bottom;bt._h=bottom;if(key){const q=bt.querySelector(key);q&&q.focus()}}}
+function mvPointer(st){const P=new Map();let start=null,pinch=null;
+  st.addEventListener('pointerdown',e=>{P.set(e.pointerId,{x:e.clientX,y:e.clientY});if(P.size===1){start={x:e.clientX,y:e.clientY,tx:MVW.tx,ty:MVW.ty};MVW.dragged=false}
+    if(P.size===2){const [a,b]=[...P.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:MVW.z}}});
+  st.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)||!MVW)return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(P.size===2&&pinch){const [a,b]=[...P.values()],d=Math.hypot(a.x-b.x,a.y-b.y),r=st.getBoundingClientRect();MVW.dragged=true;mvZoom(pinch.z*d/pinch.d/MVW.z,(a.x+b.x)/2-r.left,(a.y+b.y)/2-r.top);return}
+    if(P.size===1&&start){const dx=e.clientX-start.x,dy=e.clientY-start.y;if(Math.hypot(dx,dy)>8)MVW.dragged=true;if(MVW.dragged&&MVW.z>1){MVW.tx=start.tx+dx;MVW.ty=start.ty+dy;mvApply()}}});
+  const up=e=>{const was=P.has(e.pointerId);P.delete(e.pointerId);if(P.size<2)pinch=null;
+    if(was&&P.size===0&&MVW&&!MVW.dragged&&!e.target.closest('button')){mvTap(e)}if(P.size===0)start=null};
+  st.addEventListener('pointerup',up);st.addEventListener('pointercancel',e=>{P.delete(e.pointerId);pinch=null;start=null});
+  st.addEventListener('wheel',e=>{e.preventDefault();const r=st.getBoundingClientRect();mvZoom(e.deltaY<0?1.15:1/1.15,e.clientX-r.left,e.clientY-r.top)},{passive:false})}
+function mvTap(e){const m=MVW,t=m.tool;if(m.mode!=='edit'||!['nogo','nomop','wall','split'].includes(t))return;if(t==='split'&&!m.picks.length)return toast('קודם בוחרים את החדר');
+  const r=m.el.querySelector('#mvIn').getBoundingClientRect();const p=[+((e.clientX-r.left)/r.width*100).toFixed(2),+((e.clientY-r.top)/r.height*100).toFixed(2)];
+  if(p[0]<0||p[0]>100||p[1]<0||p[1]>100)return;if(m.pts.length>=2)m.pts=[];m.pts.push(p);buzz();mvDraw();say(m.pts.length===1?'נקודה ראשונה סומנה':'נקודה שנייה סומנה')}
+async function mvEdit(body,ok){buzz();const b=MVW&&MVW.el.querySelector('#mvDo');if(b){b.disabled=true;b.textContent='שולח...'}
+  try{const j=await api('/mova/edit',body);if(j.map){mapD=j.map;MV.map=j.map;mapAt=Date.now()}if(j.state){D=Object.assign({},D,j);delete D.sent;delete D.map;MV.d=D}
+    toast(ok);if(MVW){MVW.picks=[];MVW.pts=[];MVW.zones=JSON.parse(JSON.stringify(mapD.zones||MVW.zones))}mvDraw();draw();setTimeout(()=>loadMap(true),6000)}
+  catch(e){toast(e.message);mvDraw()}}
+function mvClick(b){const m=MVW;if(m.dragged&&b.closest('.mv-stage')){m.dragged=false;return true}
+  if(b.id==='mvX'){closeMapView();return true}
+  if(b.id==='zIn'){mvZoom(1.5);return true}if(b.id==='zOut'){mvZoom(1/1.5);return true}
+  if(b.dataset.mvmode){m.mode=b.dataset.mvmode;m.tool=null;m.picks=[];m.pts=[];mvDraw();return true}
+  if(b.dataset.tool){const k=b.dataset.tool;if(k==='order'){sheet('order');return true}m.tool=m.tool===k?null:k;m.picks=[];m.pts=[];mvDraw();if(m.tool&&HINT[k])say(HINT[k]);return true}
+  if(b.dataset.mapsel){mvEdit({op:'select_map',id:+b.dataset.mapsel},'עברנו מפה');return true}
+  if(b.dataset.room){const id=+b.dataset.room;
+    if(m.mode==='clean'){sel.has(id)?sel.delete(id):sel.add(id);buzz();mvDraw();draw();say(sel.has(id)?'נבחר':'בוטלה הבחירה');return true}
+    if(m.tool==='rename'){RENAME=id;sheet('rename');return true}
+    if(m.tool==='merge'){m.picks.includes(id)?m.picks=m.picks.filter(x=>x!==id):m.picks=[...m.picks,id].slice(-2);mvDraw();return true}
+    if(m.tool==='split'){m.picks=[id];m.pts=[];mvDraw();say('עכשיו שתי נקודות לקו');return true}
+    toast('בוחרים כלי עריכה למטה');return true}
+  if(b.dataset.zdel){const [k,i]=b.dataset.zdel.split(':');m.zones[k].splice(+i,1);mvEdit({op:'zones',zones:m.zones},'האזור נמחק');return true}
+  if(b.id==='mvDo'){const t=m.tool;
+    if(t==='merge')mvEdit({op:'merge',ids:m.picks},'החדרים אוחדו. המפה תתעדכן בעוד רגע');
+    if(t==='split')mvEdit({op:'split',id:m.picks[0],line:[...m.pts[0],...m.pts[1]]},'החדר חולק. המפה תתעדכן בעוד רגע');
+    if(t==='nogo'||t==='nomop'||t==='wall'){const k=t==='wall'?'walls':t;(m.zones[k]=m.zones[k]||[]).push([...m.pts[0],...m.pts[1]]);mvEdit({op:'zones',zones:m.zones},'נשמר')}
+    return true}
+  if(b.id==='goRooms'){const ids=[...sel];closeMapView();act('rooms','מנקה '+(ids.length===1?'חדר אחד':ids.length+' חדרים'),{rooms:ids,times});return true}
+  if(b.dataset.times){times=+b.dataset.times;mvDraw();return true}
+  return false}
+let RENAME=null,ORDER=null;
+addEventListener('resize',()=>{if(MVW)mvFitView()});
+
 /* ---------- taps ---------- */
 const MSG={start:'מתחיל לנקות',pause:'מושהה',dock:'חוזר לעמדה',stop:'נעצר',locate:'השואב משמיע צליל',clear:'ההתראה נוקתה',wash:'פקודה נשלחה',dry:'פקודה נשלחה',empty:'מרוקן אבק'};
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(MVW&&b.closest('.mv')&&mvClick(b))return;
   if(b.id==='back'){try{P.postMessage('unplug-close','*')}catch(_){}return}
-  if(b.dataset.open){return sheet(b.dataset.open)}
+  if(b.dataset.open){if(b.dataset.open==='mapview'){closeSheet(true);if(MVW){MVW.mode='edit';mvDraw();return}openMapView();if(b.closest('.sheet')&&MVW){MVW.mode='edit';mvDraw()}return}return sheet(b.dataset.open)}
   if(b.dataset.a){const a=b.dataset.a;
     if(a==='rooms'){const ids=[...sel];return act('rooms','מנקה '+(ids.length===1?'חדר אחד':ids.length+' חדרים'),{rooms:ids,times})}
     if(a==='start'&&D&&D.state&&(D.state.paused||D.state.state===3))return act('start','ממשיך לנקות');
     return act(a,MSG[a])}
+  if(b.dataset.ren){RENAME=+b.dataset.ren;return sheet('rename')}
+  if(b.dataset.rtype){SH.el.querySelectorAll('[data-rtype]').forEach(o=>o.setAttribute('aria-pressed',o===b));return}
+  if(b.id==='rnSave'){const name=$('rnN').value.trim(),tb=SH.el.querySelector('[data-rtype][aria-pressed="true"]'),type=tb?+tb.dataset.rtype:0;
+    if(!name&&!type)return toast('צריך שם או סוג חדר');closeSheet();return MVW?mvEdit({op:'rename',id:RENAME,name,type},'השם נשמר'):api('/mova/edit',{op:'rename',id:RENAME,name,type}).then(j=>{if(j.map)mapD=j.map;toast('השם נשמר');load()}).catch(e=>toast(e.message))}
+  if(b.dataset.up||b.dataset.down){const i=+(b.dataset.up||b.dataset.down),j=b.dataset.up?i-1:i+1;[ORDER[i],ORDER[j]]=[ORDER[j],ORDER[i]];SH.sig='';refreshSheet();const q=SH.el.querySelector(b.dataset.up?`[data-up="${j}"]`:`[data-down="${j}"]`)||SH.el.querySelector(`[data-up="${j}"],[data-down="${j}"]`);q&&q.focus();return}
+  if(b.id==='orSave'){const ids=ORDER.slice();ORDER=null;closeSheet();return MVW?mvEdit({op:'order',ids},'הסדר נשמר'):null}
   if(b.dataset.room){const id=+b.dataset.room;sel.has(id)?sel.delete(id):sel.add(id);buzz();draw();refreshSheet();say(sel.has(id)?'נבחר':'בוטלה הבחירה');return}
   if(b.dataset.times){times=+b.dataset.times;refreshSheet();return}
   if(b.id==='goRooms'){const ids=[...sel];closeSheet();return act('rooms','מנקה '+(ids.length===1?'חדר אחד':ids.length+' חדרים'),{rooms:ids,times})}
@@ -353,9 +506,9 @@ document.addEventListener('change',e=>{const t=e.target;
 
 /* ---------- fit on one screen, like the AC page ---------- */
 const app=$('app');
-function fit(){if(linked===false)return;const bar=$('bar');const pb=bar.hidden?24:Math.ceil(innerHeight-bar.getBoundingClientRect().top+16);app.style.paddingBottom=pb+'px';
-  const dl=document.querySelector('.dial'),hero=document.querySelector('.hero'),more=$('moreDet');app.style.overflowY='hidden';
-  if(dl&&hero&&!(more&&more.open)){let w=Math.min(300,hero.clientWidth-60);dl.style.width=w+'px';while(w>170&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
+function fit(){if(linked===false||MVW)return;const bar=$('bar');const pb=bar.hidden?24:Math.ceil(innerHeight-bar.getBoundingClientRect().top+16);app.style.paddingBottom=pb+'px';
+  const mc=$('mcard'),more=$('moreDet');app.style.overflowY='hidden';
+  if(mc&&!(more&&more.open)){let h=Math.round(innerHeight*.5);mc.style.setProperty('--mh',h+'px');while(h>150&&app.scrollHeight>app.clientHeight+1){h-=12;mc.style.setProperty('--mh',h+'px')}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
 addEventListener('resize',fit);
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
