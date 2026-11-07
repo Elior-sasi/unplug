@@ -1,4 +1,4 @@
-/* Unplug smart features: free-Hebrew commands, house guard, leave/arrive automations.
+/* HomeOn smart features: free-Hebrew commands, house guard, leave/arrive automations.
    Loaded after the main script and extras.js; uses their globals. */
 'use strict';
 
@@ -65,7 +65,7 @@ async function runCommand(p){
       else{await send(a.d,a.cmds);ok++}
     }catch(e){bad++}
   }
-  if(p.when)loadSched();
+  if(p.when)loadSched().catch(()=>{});
   addLog('פקודה',p.text);
   toast(bad?`בוצעו ${ok}, נכשלו ${bad}`:p.when?`נקבע ל-${hm(p.when)}`:'בוצע');
 }

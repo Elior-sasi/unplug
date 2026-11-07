@@ -1,4 +1,4 @@
-/* Unplug extras: device groups, quick actions (long-press), Shabbat mode, drag-to-reorder.
+/* HomeOn extras: device groups, quick actions (long-press), Shabbat mode, drag-to-reorder.
    Loaded after the main script; uses its globals (META, DEVS, api, send, sheet, svg, toast, render...). */
 'use strict';
 META.groups=META.groups||[];META.order=META.order||{};
@@ -85,7 +85,7 @@ function bindLongPress(v){
    Use an in-page dialog instead of prompt() so iOS WebView keyboard works reliably. */
 function renameCard(d){
   const original=d.name||'מכשיר';
-  sheet('שינוי שם',`<p>השם החדש יופיע ב־Unplug בלבד. שם המכשיר באפליקציה המקורית לא ישתנה.</p>
+  sheet('שינוי שם',`<p>השם החדש יופיע ב־HomeOn בלבד. שם המכשיר באפליקציה המקורית לא ישתנה.</p>
     <div class="field"><label for="cardName">שם המכשיר</label><input id="cardName" type="text" dir="auto" autocomplete="off" maxlength="60" value="${esc(dname(d))}" placeholder="שם המכשיר" style="min-width:0;flex:1;font-size:18px"></div>
     <div class="err" id="nameError" role="alert"></div>
     <div class="btns"><button class="btn" id="nameCancel">ביטול</button><button class="btn pri" id="nameSave">שמור שם</button></div>
@@ -250,7 +250,7 @@ async function syncShabbat(force){
       const base=a.when==='in'?inT:outT,t=new Date(base.getTime()+(+a.off||0)*60000);
       if(t<new Date())continue;
       try{const j=await api('/schedules/save',{device:d.id,time:hm(t),days:[t.getDay()],cmds:[{code:pc,value:a.to==='on'}],label:'שבת',enabled:true,once:true});c.ids.push(j.id)}catch(e){}}}
-  c.week=c.on?wk:'';LSset('unplug_shabbat',JSON.stringify(c));loadSched();
+  c.week=c.on?wk:'';LSset('unplug_shabbat',JSON.stringify(c));loadSched().catch(()=>{});
 }
 function shTimes(city){const {inT,outT}=nextShabbat(city);return `<div class="k">השבת הקרובה ב${esc((CITIES[city]||CITIES.ta)[0])}</div><div class="n" style="font-size:1.1rem">כניסה ${esc(fmtDay(inT))}<br>יציאה ${esc(fmtDay(outT))}</div>`}
 function openShabbat(){
@@ -281,7 +281,7 @@ function openShabbat(){
       /* the server runs Shabbat and holidays (Hebcal); the old way was one-off schedules from the phone */
       if(typeof homeLoad==='function'&&await homeLoad()){const [,lat,lng,candle]=CITIES[c.city]||CITIES.ta;
         HOME.shabbat={on:c.on,lat,lon:lng,candle,city:c.city,acts:c.acts.map(a=>{const d=DEVS.find(x=>x.id===a.device);return {...a,pcode:(d&&powerCode(d))||'switch'}})};
-        if(await homeSave()&&await homeLoad()&&HOME.shabbat){for(const id of c.ids||[])await api('/schedules/delete',{id}).catch(()=>{});c.ids=[];c.server=true;c.week='';LSset('unplug_shabbat',JSON.stringify(c));loadSched();return done()}}
+        if(await homeSave()&&await homeLoad()&&HOME.shabbat){for(const id of c.ids||[])await api('/schedules/delete',{id}).catch(()=>{});c.ids=[];c.server=true;c.week='';LSset('unplug_shabbat',JSON.stringify(c));loadSched().catch(()=>{});return done()}}
       c.server=false;LSset('unplug_shabbat',JSON.stringify(c));await syncShabbat(true);done()};
     el.querySelector('#shOn').onclick=()=>{const b=el.querySelector('#shOn');b.setAttribute('aria-checked',b.getAttribute('aria-checked')!=='true');doSave(false)};
     el.querySelector('#shC').onchange=()=>{el.querySelector('#shT').innerHTML=shTimes(el.querySelector('#shC').value);doSave(false)};

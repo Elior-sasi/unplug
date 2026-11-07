@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#0c0f16">
 <title>HomeOn</title>
 <style>
-/* Unplug - same family as Unbox: black base, one accent (amber), Rubik, glass pill nav, cards with soft top light. */
+/* HomeOn - same family as Unbox: black base, one accent (amber), Rubik, glass pill nav, cards with soft top light. */
 @font-face{font-family:Rubik;src:url(fonts/rubik-hebrew-400-normal.woff2) format('woff2');font-weight:400;font-display:swap;unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
 @font-face{font-family:Rubik;src:url(fonts/rubik-hebrew-500-normal.woff2) format('woff2');font-weight:500 600;font-display:swap;unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
 @font-face{font-family:Rubik;src:url(fonts/rubik-hebrew-700-normal.woff2) format('woff2');font-weight:700 800;font-display:swap;unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
@@ -303,7 +303,7 @@ nav.bar button[aria-current="page"] svg{stroke-width:2.4}
 @media (prefers-contrast: more){.card,.icbtn,nav.bar,.list,.chip,.pill,.sheet{border-color:rgba(255,255,255,.55)!important}.row .s,.card .st{color:#fff}.card.is-on .st{color:#000}}
 .glassSlider{width:100%;accent-color:var(--sys-blue);height:44px;direction:ltr}
 
-/* ---- v4: TAB family - calm dark base, opaque cards, Unplug orange as the only accent; glass only on the bar and sheets ---- */
+/* ---- v4: TAB family - calm dark base, opaque cards, HomeOn orange as the only accent; glass only on the bar and sheets ---- */
 :root{--gold:#ff9a3d;--gold2:#ff7a2b;--gold-txt:#ffc48a;--bg:#0c0f16}
 body{background:var(--bg)}
 body::before{display:none}
@@ -684,11 +684,11 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const CFG={api:LS('kor_api')||API_DEFAULT,key:LS('unplug_key')||LS('kor_key')||''};
 let DEVS=LSj('unplug_devs',[]).map(d=>(d.online=true,d)), SCHED=[], TAB='devices', ROOM='all', busy=false;
 const META=LSj('unplug_meta',{names:{},rooms:{},roomList:[]});   // local names, rooms & homes
-META.homes=META.homes&&META.homes.length?META.homes:[{id:'h1',name:'דירה'}];META.devHome=META.devHome||{};META.roomHome=META.roomHome||{};
+META.names=META.names||{};META.rooms=META.rooms||{};META.roomList=Array.isArray(META.roomList)?META.roomList:[];META.fav=META.fav||{};META.homes=META.homes&&META.homes.length?META.homes:[{id:'h1',name:'דירה'}];META.devHome=META.devHome||{};META.roomHome=META.roomHome||{};
 if(!META.homes.some(h=>h.id===META.home))META.home=META.homes[0].id;
-// Devices without an explicit home stay in the default home; switching homes must not move virtual devices.
-// HomeOn-only devices belong to the Elior apartment, never to a Smart Life home such as Shuva.
-const APARTMENT_DEVICES=new Set(['router','mova-e30-ultra','oralb-io2','ember']);
+// Smart Life devices go to the home Smart Life reports for them; without one they wait in "לא משויכים".
+// HomeOn-only devices (heater, router, TV/projector, vacuum, toothbrush) belong to the apartment, never to a Smart Life home such as Shuva.
+const APARTMENT_DEVICES=new Set(['router','mova-e30-ultra','oralb-io2','ember','gtv']);
 const UNASSIGNED_HOME='h_unassigned';
 if(!META.homes.some(h=>h.id===UNASSIGNED_HOME))META.homes.push({id:UNASSIGNED_HOME,name:'לא משויכים'});
 const homeOf=d=>{
@@ -1073,7 +1073,7 @@ function openMova(){
       <button class="row row-btn" id="movaRoom"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(MOVA)||'בלי חדר')}</span></span>${svg('chev')}</button>
       <button class="row row-btn" id="movaHelp"><span class="grow"><span class="t">חיבור מתקדם לשואב</span><br><span class="s">מידע על אינטגרציה נתמכת ל־MOVA E30 Ultra דרך Home Assistant</span></span>${svg('chev')}</button>
       <button class="row row-btn" id="movaOfficial"><span class="grow"><span class="t">MOVAhome</span><br><span class="s">עמוד האפליקציה הרשמית ב־App Store</span></span>${svg('chev')}</button>
-      <button class="row row-btn" id="movaHide"><span class="grow"><span class="t">הסר את כרטיס השואב מ־Unplug</span><br><span class="s">לא מוחק את השואב מ־MOVAhome</span></span>${svg('close')}</button>
+      <button class="row row-btn" id="movaHide"><span class="grow"><span class="t">הסר את כרטיס השואב מ־HomeOn</span><br><span class="s">לא מוחק את השואב מ־MOVAhome</span></span>${svg('close')}</button>
     </div>`,(el,close)=>{
       const cloudState=el.querySelector('#movaCloudState');
       el.querySelector('#movaCheckCloud').onclick=()=>checkMovaCloudStatus(cloudState);
@@ -1082,7 +1082,7 @@ function openMova(){
       el.querySelector('#movaRoom').onclick=()=>pickRoom(MOVA,()=>render());
       el.querySelector('#movaHelp').onclick=()=>location.href='https://dv.tasshack.com/installation';
       el.querySelector('#movaOfficial').onclick=()=>location.href='https://apps.apple.com/app/movahome/id6499421624';
-      el.querySelector('#movaHide').onclick=()=>{META.mova=false;saveMeta();close();render();toast('כרטיס MOVA הוסר מ־Unplug, השואב נשאר ב־MOVAhome')};
+      el.querySelector('#movaHide').onclick=()=>{META.mova=false;saveMeta();close();render();toast('כרטיס MOVA הוסר מ־HomeOn, השואב נשאר ב־MOVAhome')};
   });
 }
 function openRouter(){
@@ -1139,7 +1139,7 @@ function openEmber(){
       const on=linked?HEATER_LINK.on:null, left=linked?Math.ceil(HEATER_LINK.left/60):0;
       const state=linked?(on?'דולק':'כבוי'):checking?'בודק חיבור...':IN_APP?'לא מחובר':'חיבור דרך Ember';
       const sub=linked?(on?(left?'עוד '+left+' דק׳':'ללא טיימר'):'הדוד כבוי'):
-        IN_APP?'Switcher V4 טרם אומת ב־Unplug. יש לחבר אותו מחדש דרך הרשת הביתית.':
+        IN_APP?'Switcher V4 טרם אומת ב־HomeOn. יש לחבר אותו מחדש דרך הרשת הביתית.':
         'השליטה הישירה ב־Switcher זמינה באפליקציית HomeOn המותקנת באייפון.';
       body.innerHTML=`<div class="dhero${on?' on':''}"><div class="dh-art" aria-hidden="true">${devArt(EMBER,1.5)}</div><div class="dh-state" role="status">${esc(state)}</div><div class="dh-sub">${esc(sub)}</div></div>
         ${linked||!IN_APP?`<button class="dpw" id="emPw" aria-pressed="${!!on}">${svg('power')}<span>${on?'כבה':'הדלק'}</span></button>`:''}
@@ -1149,7 +1149,7 @@ function openEmber(){
         <div class="list">
           <button class="row row-btn" data-emp="open"><span class="grow"><span class="t">${IN_APP?'מסך הדוד המלא':'פתיחת Ember'}</span><br><span class="s">זמן שנשאר, תזמונים וסטטיסטיקה</span></span>${svg('chev')}</button>
           <button class="row row-btn" id="emR"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(EMBER)||'בלי חדר')}</span></span>${svg('chev')}</button>
-          <button class="row row-btn" id="emH"><span class="grow"><span class="t">הסתרת הדוד מ־Unplug</span></span>${svg('close')}</button>
+          <button class="row row-btn" id="emH"><span class="grow"><span class="t">הסתרת הדוד מ־HomeOn</span></span>${svg('close')}</button>
         </div>
         <p class="s" style="font-size:.9rem">${IN_APP?'חיבור מקומי בלבד: האייפון וה־Switcher צריכים להיות באותה רשת. לא יישלחו פקודות אם החיבור אינו מאומת.':'שליטה ישירה אינה זמינה בדפדפן. נדרשת גרסת HomeOn המעודכנת לאייפון.'}</p>`;
       const power=body.querySelector('#emPw');
@@ -1176,7 +1176,7 @@ function openEmber(){
     const go=async(p,description='')=>{
       if(p==='open'){close();return emberGo(p)}
       if(IN_APP){
-        if(!HEATER_LINK.connected){toast('הדוד עדיין לא מחובר ל־Unplug');return}
+        if(!HEATER_LINK.connected){toast('הדוד עדיין לא מחובר ל־HomeOn');return}
         const cmd=p.split('?')[0],m=+((p.match(/m=(\d+)/)||[])[1]||0);
         try{
           const raw=await nativeCall({action:'heater',cmd,m});
@@ -1205,7 +1205,7 @@ function card(d){
       ${favButton(d)}</div>`}
   if(d.id==='mova-e30-ultra'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
-      <button class="open" aria-label="${cardLabel(d)}, שואב שוטף, עדיין לא מחובר ל־Unplug. פרטים וחיבור"></button>
+      <button class="open" aria-label="${cardLabel(d)}, שואב שוטף, עדיין לא מחובר ל־HomeOn. פרטים וחיבור"></button>
       <div class="ic">${devArt(d)}</div>
       <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}
       <div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${META.movaMac?(MOVA_WIFI.checked?(MOVA_WIFI.visible?'זוהה ברשת · ללא שליטה':'לא זוהה ברשת'):'בודק נוכחות ברשת'):'ממתין לחיבור'}</div>
@@ -1250,7 +1250,7 @@ function sheet(title,html,init){
   s.querySelector('#shT').focus();init&&init(s.querySelector('.sheet'),close);return close;
 }
 
-/* ---------- AC: the full Breeze remote, inside Unplug ---------- */
+/* ---------- AC: the full Breeze remote, inside HomeOn ---------- */
 function openBreeze(d){
   if(!LS('kor_key'))LSset('kor_key',CFG.key);
   LSset('kor_dev',d.id);
@@ -1261,7 +1261,7 @@ function openToaster(d){LSset('toaster_key',CFG.key);LSset('toaster_dev',d.id);o
 function openFrame(d,src,what){
   const w=document.createElement('div');w.className='breeze';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label',dname(d));
   w.innerHTML=`<iframe src="${src}${src.includes('?')?'&':'?'}v=${Math.floor(Date.now()/60000)}" title="${esc(what)} - שליטה ב${esc(dname(d))}" allow="clipboard-write"></iframe>`;
-  const close=()=>{w.remove();document.querySelector('.app').removeAttribute('aria-hidden');refreshOne(d.id);loadSched()};
+  const close=()=>{w.remove();document.querySelector('.app').removeAttribute('aria-hidden');refreshOne(d.id);loadSched().catch(()=>{})};
   const onMsg=e=>{if(e.data==='unplug-close'){removeEventListener('message',onMsg);close()}};addEventListener('message',onMsg);
   w.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
   document.body.append(w);document.querySelector('.app').setAttribute('aria-hidden','true');w.querySelector('iframe').focus();
@@ -1616,7 +1616,7 @@ async function syncSceneSched(s,at,days){
   for(const id of s.schedIds||[])await api('/schedules/delete',{id}).catch(()=>{});
   s.schedIds=[];s.at=at||'';s.days=days;
   if(at)for(const a of s.acts){const j=await api('/schedules/save',{device:a.device,time:at,days,cmds:[a.cmd],label:'סצנה: '+s.name,enabled:true,once:false});s.schedIds.push(j.id)}
-  loadSched();
+  loadSched().catch(()=>{});
 }
 function openSceneObj(i){const keep=SCENES_TMP;SCENES_TMP=null;if(i==null){SCENES.push(keep);openScene(SCENES.length-1);SCENES.pop()}else{const o=SCENES[i];SCENES[i]=keep;openScene(i);SCENES[i]=o}}
 
@@ -1667,7 +1667,7 @@ function pushStatus(){if(typeof IN_APP!=='undefined'&&IN_APP)return 'מגיעו�
 function b64u2u8(b){const p='='.repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))}
 async function enablePush(){
   if(IN_APP){sheet('התראות',`<p>באפליקציה המותקנת אין התראות בלי חשבון מפתח בתשלום. ההתראות מגיעות דרך גרסת ה-Safari של HomeOn: מפעילים אותן שם פעם אחת, ואפשר להעביר אותה לספריית היישומים.</p>`);return}
-  if(!('serviceWorker' in navigator)||!('PushManager' in window)){sheet('התראות',`<p>${standalone()?'הטלפון לא תומך בהתראות מאתר.':'באייפון התראות עובדות רק מהאפליקציה שעל מסך הבית.'}</p>${standalone()?'':`<ol><li>ב-Safari לחץ <b>שיתוף</b></li><li><b>הוסף למסך הבית</b></li><li>פתח את Unplug ממסך הבית וחזור לכאן</li></ol>`}`);return}
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){sheet('התראות',`<p>${standalone()?'הטלפון לא תומך בהתראות מאתר.':'באייפון התראות עובדות רק מהאפליקציה שעל מסך הבית.'}</p>${standalone()?'':`<ol><li>ב-Safari לחץ <b>שיתוף</b></li><li><b>הוסף למסך הבית</b></li><li>פתח את HomeOn ממסך הבית וחזור לכאן</li></ol>`}`);return}
   try{const reg=await navigator.serviceWorker.register('sw.js');const perm=await Notification.requestPermission();if(perm!=='granted')return toast('ההתראות לא אושרו');
     const {key}=await api('/push/key');const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u2u8(key)});
     await api('/push/subscribe',{sub:sub.toJSON()});LSset('unplug_push','1');toast('התראות הופעלו');render()}catch(e){toast('לא הצלחתי: '+e.message)}
@@ -1837,8 +1837,8 @@ function openHomes(){
 function openAdd(){
   if(META.ember===false&&confirm('להחזיר את הדוד (Ember) ל-HomeOn?')){delete META.ember;saveMeta();render();return}
   if(META.router===false&&confirm('להחזיר את הראוטר ל-HomeOn?')){delete META.router;saveMeta();render();return}
-  if(META.mova===false&&confirm('להחזיר את MOVA E30 Ultra ל־Unplug?')){delete META.mova;saveMeta();render();return}
-  if(META.oralb===false&&confirm('להחזיר את Oral-B iO2 ל־Unplug?')){delete META.oralb;saveMeta();render();return}
+  if(META.mova===false&&confirm('להחזיר את MOVA E30 Ultra ל־HomeOn?')){delete META.mova;saveMeta();render();return}
+  if(META.oralb===false&&confirm('להחזיר את Oral-B iO2 ל־HomeOn?')){delete META.oralb;saveMeta();render();return}
   const before=new Set(DEVS.map(d=>d.id));
   sheet('הוספת מכשיר',`<p>את הצימוד עצמו עושים פעם אחת ב-Smart Life, כי אייפון לא מאפשר לאפליקציית רשת להעביר למכשיר את סיסמת ה-WiFi.</p>
     <button class="btn pri wide" id="aO">${svg('plus')}פתיחת Smart Life להוספה</button>
@@ -1898,8 +1898,8 @@ function showQR(uc,j){
 
 /* ---------- boot ---------- */
 function applyPrefs(){document.documentElement.style.setProperty('--ts',(LS('unplug_ts')||'100')+'%');document.documentElement.style.setProperty('--g',(+(LS('unplug_glass')??55))/100)}
-document.querySelectorAll('nav.bar button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();if(TAB==='sched')loadSched().then(render);window.document.querySelector('.app').scrollTo(0,0)});
-$('refBtn').onclick=async()=>{await loadDevices();await importTuya(false);loadSched()};
+document.querySelectorAll('nav.bar button').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();if(TAB==='sched')loadSched().catch(()=>{}).then(render);window.document.querySelector('.app').scrollTo(0,0)});
+$('refBtn').onclick=async()=>{await loadDevices();await importTuya(false);loadSched().catch(()=>{})};
 $('homeBtn').onclick=openHomes;
 $('menuBtn').onclick=()=>{
   const old=document.getElementById('dropMenu');if(old){old.remove();$('menuBtn').setAttribute('aria-expanded','false');return}
@@ -1924,12 +1924,12 @@ applyPrefs();try{render()}catch(e){console.error(e)}
 function openFromHash(){const m=location.hash.match(/dev=([^&]+)/);if(!m)return;const id=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname);
   const go=()=>{const d=DEVS.find(x=>x.id===id);if(d){TAB='devices';render();openDevice(d)}};DEVS.length?go():setTimeout(go,2500)}
 addEventListener('hashchange',openFromHash);setTimeout(openFromHash,600);
-if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched()}else openConnect();
+if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched().catch(()=>{})}else openConnect();
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active')&&!(typeof REORDER!=='undefined'&&REORDER))loadDevices()},30000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched()}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched().catch(()=>{})}});
 </script>
-<script src="extras.js?v=24"></script>
-<script src="smart.js?v=2"></script>
+<script src="extras.js?v=25"></script>
+<script src="smart.js?v=3"></script>
 <script src="motion.js?v=3"></script>
 <script src="washer.js?v=2"></script>
 <script src="acplug.js?v=2"></script>

@@ -349,7 +349,7 @@ $('#wMain').addEventListener('click', e => {
 sw($('#wMlo'), (v, el) => { if (LIVE) { el.setAttribute('aria-checked', !v); soon(); return; } toast(v ? 'MLO הופעל' : 'MLO כובה'); });
 function setGuest(v) { $('#wGuest').setAttribute('aria-checked', v); $('#guestBtn').setAttribute('aria-pressed', v); $('#gSub').textContent = LIVE?(guestKnown?(v?'פעילה לפי הנתב':'כבויה לפי הנתב'):'סטטוס לא ידוע'):(v?(gDur?`פעילה · נכבית בעוד ${gDur} שעות`:'פעילה · ללא הגבלה'):'כבויה'); }
 sw($('#wGuest'), (v, el) => { if (LIVE) { el.setAttribute('aria-checked', !v); soon(); return; } setGuest(v); toast(v ? 'רשת האורחים הופעלה' : 'רשת האורחים כובתה'); });
-$('#guestBtn').onclick = () => { if (LIVE) { toast('מצב הרשת מוצג למטה. לשינוי פתח את ממשק Xiaomi.');$('#wGuest').scrollIntoView({behavior:'smooth',block:'center'});return; } const v = $('#guestBtn').getAttribute('aria-pressed') !== 'true'; setGuest(v); toast(v ? 'רשת האורחים הופעלה' : 'רשת האורחים כובתה'); };
+$('#guestBtn').onclick = () => { if (LIVE) { toast(guestKnown?('רשת האורחים '+($('#guestBtn').getAttribute('aria-pressed')==='true'?'פעילה':'כבויה')+' לפי הנתב. שינוי דרך ממשק Xiaomi.'):'מצב רשת האורחים לא דווח מהנתב.');return; } const v = $('#guestBtn').getAttribute('aria-pressed') !== 'true'; setGuest(v); toast(v ? 'רשת האורחים הופעלה' : 'רשת האורחים כובתה'); };
 $('#pwShow').onclick = e => { shown = !shown; renderWifi(); e.target.textContent = shown ? 'הסתר' : 'הצג'; };
 $('#pwCopy').onclick = () => copy(wifi.pw);
 function qrSvg(text) {
