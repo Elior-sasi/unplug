@@ -114,7 +114,8 @@ window.openMova=function(){
         if(cn.drying)st.push(`<button class="btn" data-a="dry">${x.drying?'עצירת ייבוש':'ייבוש מגבים עכשיו'}</button>`);
         if(cn.empty)st.push(`<button class="btn" data-a="empty">ריקון אבק עכשיו</button>`);
         const tanks=[['clean_tank','מיכל מים נקיים'],['dirty_tank','מיכל מים מלוכלכים'],['dust_bag','שקית אבק'],['detergent','נוזל ניקוי']].filter(([k])=>x[k]&&x[k]!=='unknown');
-        sec('mvStation',st.length||tanks.length?`<h3>העמדה</h3>${st.length?`<div class="btns" style="flex-wrap:wrap">${st.join('')}</div>`:''}
+        st.forEach((h,i)=>st[i]=h.replace('class="btn"','class="btn wide"'));
+        sec('mvStation',st.length||tanks.length?`<h3>העמדה</h3>${st.length?`<div style="display:flex;flex-direction:column;gap:8px">${st.join('')}</div>`:''}
           ${tanks.length?`<div class="list">${tanks.map(([k,t])=>`<div class="row"><span class="grow t">${t}</span><span class="s">${esc(TANK_HE[x[k]]||x[k].replace(/_/g,' '))}</span></div>`).join('')}</div>`:''}`:'')}
       /* maintenance */
       if(D&&D.consumables&&D.consumables.length)sec('mvCons',`<h3>תחזוקה</h3><div class="list">${D.consumables.map(c=>`<div class="row" style="flex-wrap:wrap"><span class="grow"><span class="t">${esc(c.t)}</span>
@@ -148,7 +149,7 @@ window.openMova=function(){
       drawMore(false);
       wire()}
 
-    function segHtml(s){return `<div class="ctl"><div class="ctl-h"><span class="t" id="mvQ_${s.k}">${esc(s.t)}</span></div><div class="seg" style="flex-wrap:${s.o.length>4?'wrap':'nowrap'}" role="group" aria-labelledby="mvQ_${s.k}">${s.o.map(o=>`<button data-q="${s.k}" data-v="${esc(o.v)}" style="flex:1 1 ${s.o.length>4?'30%':'0'};padding-inline:4px" aria-pressed="${o.v===s.cur}">${esc(o.t)}</button>`).join('')}</div></div>`}
+    function segHtml(s){const wrap=s.o.length>4||(s.o.length>3&&s.o.some(o=>o.t.length>6));return `<div class="ctl"><div class="ctl-h"><span class="t" id="mvQ_${s.k}">${esc(s.t)}</span></div><div class="seg" style="flex-wrap:${wrap?'wrap':'nowrap'};${wrap?'border-radius:22px':''}" role="group" aria-labelledby="mvQ_${s.k}">${s.o.map(o=>`<button data-q="${s.k}" data-v="${esc(o.v)}" style="flex:1 1 ${wrap?(s.o.length>4?'30%':'45%'):'0'};padding-inline:4px" aria-pressed="${o.v===s.cur}">${esc(o.t)}</button>`).join('')}</div></div>`}
 
     function drawRooms(){const D=MV.d;if(!D)return;const rooms=D.rooms||[];
       [...MV.sel].forEach(id=>{if(!rooms.some(r=>r.id===id))MV.sel.delete(id)});
