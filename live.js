@@ -54,8 +54,8 @@ function bindLive(v){v.querySelectorAll('[data-live]').forEach(b=>b.onclick=()=>
 })}
 document.head.insertAdjacentHTML('beforeend',`<style>
 .live{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 12px;padding:0 16px}.live::-webkit-scrollbar{display:none}
-.livePill{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border-radius:999px;background:#2c2c2e;color:#fff;font:inherit;font-size:.95rem;font-weight:600;border:1px solid #ff9a3d55;white-space:nowrap}
-.livePill span{color:#ffd2a8}
+.livePill{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border-radius:999px;background:#2c2c2e;color:#fff;font:inherit;font-size:.95rem;font-weight:600;border:1px solid #3d8bff55;white-space:nowrap}
+.livePill span{color:#b7d3ff}
 </style>`);
 
 /* ---------- home-screen widget (Scriptable) ---------- */
