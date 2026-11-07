@@ -885,7 +885,7 @@ function toast(t){document.querySelector('.toast')?.remove();const e=document.cr
 async function loadDevices(){
   pullMeta();
   if(!CFG.key||busy)return;busy=true;$('refBtn').setAttribute('aria-busy','true');
-  try{const knownIds=new Set(DEVS.map(d=>d.id));const j=await api('/devices');DEVS=(j.devices||[]).map(norm);LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300);setTimeout(()=>typeof syncShabbat==='function'&&syncShabbat(false),1500);setTimeout(()=>importTuya(false),800)}
+  try{const knownIds=new Set(DEVS.map(d=>d.id));const j=await api('/devices');DEVS=(j.devices||[]).map(x=>applyPending(norm(x)));LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300);setTimeout(()=>typeof syncShabbat==='function'&&syncShabbat(false),1500);setTimeout(()=>importTuya(false),800)}
   catch(e){if(CFG.key)toast(e.message)}
   finally{busy=false;$('refBtn').removeAttribute('aria-busy')}
 }
@@ -894,14 +894,18 @@ async function loadSched(){if(!CFG.key)throw new Error('אין חיבור לחש
    reachable unless a command to it actually failed. */
 const FAIL={};
 const norm=d=>{if(!d)return d;d.cloudOnline=d.online;d.online=!FAIL[d.id];return d};
+/* The cloud reports a new state a few seconds late; for a short while after a command, what was sent wins over a stale report,
+   so a switch doesn't flip back and forth. */
+const PENDING={};
+function applyPending(x){const p=PENDING[x.id];if(p){if(Date.now()-p.at<8000)Object.assign(x.status,p.vals);else delete PENDING[x.id]}return x}
 async function send(d,cmds){
   if(typeof washGuardOff==='function'&&!washGuardOff(d,cmds))return;
   if(typeof acGuardOn==='function'&&!acGuardOn(d,cmds))return;
   const old={...d.status};cmds.forEach(c=>d.status[c.code]=c.value);refreshOpen(d);render();
-  try{await api('/command',{id:d.id,commands:cmds});if(FAIL[d.id]){delete FAIL[d.id];d.online=true}addLog(dname(d),cmdsText({device:d.id,cmds}));LSset('unplug_devs',JSON.stringify(DEVS));setTimeout(()=>refreshOne(d.id),1800)}
+  try{await api('/command',{id:d.id,commands:cmds});PENDING[d.id]={at:Date.now(),vals:Object.fromEntries(cmds.map(c=>[c.code,c.value]))};if(FAIL[d.id]){delete FAIL[d.id];d.online=true}addLog(dname(d),cmdsText({device:d.id,cmds}));LSset('unplug_devs',JSON.stringify(DEVS));setTimeout(()=>refreshOne(d.id),1800);setTimeout(()=>refreshOne(d.id),9000)}
   catch(e){d.status=old;if(/offline|not online|device is offline|1106|2008|נותק|מנותק/i.test(e.message)){FAIL[d.id]=Date.now();d.online=false;toast(dname(d)+' לא מגיב - בדוק שהוא מחובר לחשמל ול-WiFi')}else toast('לא בוצע: '+e.message);refreshOpen(d);render()}
 }
-async function refreshOne(id){try{const j=await api('/device',{id});if(!j.device)return;const i=DEVS.findIndex(x=>x.id===id);if(i>=0){DEVS[i]=norm(j.device);refreshOpen(DEVS[i]);render()}}catch(e){}}
+async function refreshOne(id){try{const j=await api('/device',{id});if(!j.device)return;const i=DEVS.findIndex(x=>x.id===id);if(i>=0){DEVS[i]=applyPending(norm(j.device));refreshOpen(DEVS[i]);render()}}catch(e){}}
 
 /* ---------- render ---------- */
 function render(){
@@ -1525,14 +1529,15 @@ function openSchedEdit(s,d){
           const label=el.querySelector('#sL').value.trim();
           const existing=await loadSched();
           const normalizeDays=a=>(Array.isArray(a)?a:[]).map(Number).sort((a,b)=>a-b).join(',');
-          const conflicts=existing.filter(x=>String(x.device)===String(d.id)&&
-            ((String(x.time).slice(0,5)===t&&x.cmds?.some(y=>y.code===pc&&y.value===true))||
-             (String(x.time).slice(0,5)===off&&x.cmds?.some(y=>y.code===pc&&y.value===false)))&&
-            normalizeDays(x.days)===normalizeDays(ds)&&!!x.once===once);
+          /* off earlier than on (e.g. on 23:00, off 07:00) means the next day */
+          const offDays=off<t?ds.map(x=>(x+1)%7):ds;
+          const conflicts=existing.filter(x=>String(x.device)===String(d.id)&&!!x.once===once&&
+            ((String(x.time).slice(0,5)===t&&x.cmds?.some(y=>y.code===pc&&y.value===true)&&normalizeDays(x.days)===normalizeDays(ds))||
+             (String(x.time).slice(0,5)===off&&x.cmds?.some(y=>y.code===pc&&y.value===false)&&normalizeDays(x.days)===normalizeDays(offDays))));
           if(conflicts.length)throw new Error('כבר קיים תזמון זהה לאחת השעות. לא נשמר דבר נוסף');
           const verify=async(time,value)=>{const list=await loadSched();return list.some(x=>String(x.device)===String(d.id)&&String(x.time).slice(0,5)===time&&x.cmds?.some(y=>y.code===pc&&String(y.value)===String(value)))};
-          const saveOne=async(time,value)=>{await api('/schedules/save',{device:d.id,time,days:ds,cmds:[{code:pc,value}],label,enabled:true,once});if(!await verify(time,value))throw new Error('התזמון בשעה '+time+' לא אומת בשרת')};
-          await saveOne(t,true);await saveOne(off,false);
+          const saveOne=async(time,value,days)=>{await api('/schedules/save',{device:d.id,time,days,cmds:[{code:pc,value}],label,enabled:true,once});if(!await verify(time,value))throw new Error('התזמון בשעה '+time+' לא אומת בשרת')};
+          await saveOne(t,true,ds);await saveOne(off,false,offDays);
           close();render();refreshOpen(d);toast('שעות ההפעלה והכיבוי נשמרו');
         }catch(e){err.textContent=e.message+' — ייתכן שאחת הפעולות כבר נשמרה. בדוק ברשימת התזמונים לפני ניסיון נוסף'}
         finally{btn.disabled=false}
