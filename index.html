@@ -1045,50 +1045,65 @@ function openMovaWifiSetup(){
     load();
   });
 }
-async function checkMovaCloudStatus(output){
-  if(!output)return;
-  output.textContent='בודק אם מחבר MOVA מאובטח זמין...';
-  try{
-    const response=await fetch('/api/mova/connection',{method:'GET',credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store',signal:AbortSignal.timeout(8000)});
-    const type=response.headers.get('content-type')||'';
-    if(!response.ok||!type.includes('application/json'))throw Error('unavailable');
-    const data=await response.json();
-    if(typeof data.connected!=='boolean')throw Error('invalid response');
-    output.textContent=data.connected?'מחבר הענן מדווח שהחשבון מחובר. עדיין יש לאמת את זיהוי השואב.':'מחבר הענן זמין, אך חשבון MOVA עדיין אינו מחובר.';
-  }catch(e){
-    output.textContent='לא ניתן לבדוק את שרת MOVA מתוך גרסה זו של HomeOn. נדרש חיבור מאובטח בין האפליקציה לשרת הענן; לא נשלחו פרטי חשבון או פקודות לשואב.';
-  }
-}
+/* MOVA E30 Ultra through the MOVAhome cloud (our server logs in like the MOVAhome app).
+   The password is sent once to log in and is not stored; the server keeps a refresh token. */
+const MOVA_ST={linked:null,s:null,at:0,err:''};
+const MOVA_STATE={1:'שואב',2:'ממתין',3:'מושהה',4:'שגיאה',5:'חוזר לעמדה',6:'בטעינה',7:'שוטף',8:'מייבש מגבים',9:'שוטף מגבים',10:'חוזר לשטיפת מגבים',11:'ממפה',12:'שואב ושוטף',13:'טעון',14:'מתעדכן',15:'ניקוי נקודתי',16:'איפוס עמדה',21:'שטיפה מושהית',22:'מרוקן אבק',23:'שלט',24:'טעינה חכמה',25:'ניקוי חוזר',27:'ניקוי נקודתי'};
+const MOVA_BUSY=new Set([1,5,7,9,10,11,12,15,25,27]);
+function movaCardText(){if(MOVA_ST.linked===false)return 'לא מחובר - לחיצה לחיבור';const x=MOVA_ST.s;if(!x)return MOVA_ST.linked?'מתחבר...':'בודק חיבור...';
+  return (MOVA_STATE[x.state]||'מוכן')+(x.battery!=null?' · \u2066'+x.battery+'%\u2069':'')}
+async function movaLoad(){try{const j=await api('/mova/state');MOVA_ST.linked=true;MOVA_ST.s=j.state;MOVA_ST.err='';MOVA_ST.at=Date.now()}
+  catch(e){const m=String(e.message||e);if(/לא מחובר|פג|עדכון/.test(m)){MOVA_ST.linked=false;MOVA_ST.s=null}MOVA_ST.err=m}
+  if(TAB==='devices')render();return MOVA_ST}
+setTimeout(()=>{if(CFG.key&&META.mova!==false)movaLoad()},2200);
+setInterval(()=>{if(CFG.key&&META.mova!==false&&MOVA_ST.linked!==false&&document.visibilityState==='visible')movaLoad()},60000);
 function openMova(){
-  sheet('MOVA E30 Ultra',`<div style="display:grid;place-items:center;margin:8px 0 12px"><div style="width:160px;height:160px;max-width:100%;overflow:hidden;display:grid;place-items:center"><div style="width:100%;height:100%;overflow:hidden;display:grid;place-items:center">${devArt(MOVA)}</div></div></div>
-    <div class="list"><div class="row"><span class="grow"><span class="t">שליטה בניקוי עדיין לא מחוברת</span><br><span class="s">חיבור MOVAhome נדרש להצגת מצב הניקוי והסוללה</span></span></div></div>
-    <div class="sec-h"><h2>חיבור ענן MOVA</h2></div>
-    <div class="list"><div class="row"><span class="grow"><span class="t">מצב המחבר</span><br><span class="s" id="movaCloudState" role="status" aria-live="polite">טרם נבדק</span></span></div>
-    <button class="btn wide" id="movaCheckCloud" type="button">בדוק חיבור ענן</button></div>
-    <div class="sec-h"><h2>מפת הבית וחדרים</h2></div>
-    <div class="list"><div class="row"><span class="grow"><span class="t">המפה עדיין לא זמינה</span><br><span class="s">תוצג כאן לאחר חיבור מאומת ל־MOVAhome</span></span></div></div>
-    <div class="sec-h"><h2>ניקוי ושליטה</h2></div>
-    <div class="list">
-      <div class="row"><span class="grow"><span class="t">הפעלה · השהיה · חזרה לעמדה</span><br><span class="s">ממתין לחיבור מאומת — אין פקודות פעילות</span></span></div>
-      <div class="row"><span class="grow"><span class="t">עוצמת שאיבה · כמות מים · מצבי שטיפה</span><br><span class="s">הערכים ייטענו מהשואב, ולא יומצאו</span></span></div>
-    </div>
-    <div class="sec-h"><h2>תחנת עגינה ותחזוקה</h2></div>
-    <div class="list"><div class="row"><span class="grow"><span class="t">סוללה · שטיפת מגבים · ייבוש · חומרים מתכלים</span><br><span class="s">ממתין לנתונים אמיתיים מחיבור MOVA</span></span></div></div>
-    <div class="list">
-      ${IN_APP?`<button class="row row-btn" id="movaPair"><span class="grow"><span class="t">זהה את השואב בראוטר</span><br><span class="s">בחירת מכשיר לרישום נוכחות ברשת, ללא שליטה בניקוי</span></span>${svg('chev')}</button>`:''}
-      <button class="row row-btn" id="movaRoom"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(MOVA)||'בלי חדר')}</span></span>${svg('chev')}</button>
-      <button class="row row-btn" id="movaHelp"><span class="grow"><span class="t">חיבור מתקדם לשואב</span><br><span class="s">מידע על אינטגרציה נתמכת ל־MOVA E30 Ultra דרך Home Assistant</span></span>${svg('chev')}</button>
-      <button class="row row-btn" id="movaOfficial"><span class="grow"><span class="t">MOVAhome</span><br><span class="s">עמוד האפליקציה הרשמית ב־App Store</span></span>${svg('chev')}</button>
-      <button class="row row-btn" id="movaHide"><span class="grow"><span class="t">הסר את כרטיס השואב מ־HomeOn</span><br><span class="s">לא מוחק את השואב מ־MOVAhome</span></span>${svg('close')}</button>
-    </div>`,(el,close)=>{
-      const cloudState=el.querySelector('#movaCloudState');
-      el.querySelector('#movaCheckCloud').onclick=()=>checkMovaCloudStatus(cloudState);
-      checkMovaCloudStatus(cloudState);
-      const pair=el.querySelector('#movaPair');if(pair)pair.onclick=openMovaWifiSetup;
-      el.querySelector('#movaRoom').onclick=()=>pickRoom(MOVA,()=>render());
-      el.querySelector('#movaHelp').onclick=()=>location.href='https://dv.tasshack.com/installation';
-      el.querySelector('#movaOfficial').onclick=()=>location.href='https://apps.apple.com/app/movahome/id6499421624';
-      el.querySelector('#movaHide').onclick=()=>{META.mova=false;saveMeta();close();render();toast('כרטיס MOVA הוסר מ־HomeOn, השואב נשאר ב־MOVAhome')};
+  sheet(esc(dname(MOVA)),`<div id="mvB" style="display:flex;flex-direction:column;gap:14px"></div>`,(el,close)=>{
+    const body=el.querySelector('#mvB');let iv;
+    const seg=(k,opts,cur)=>`<div class="ctl"><div class="ctl-h"><span class="t" id="mv_${k}">${{suction:'עוצמת שאיבה',water:'כמות מים',mode:'מצב ניקוי'}[k]}</span></div><div class="seg" style="flex-wrap:nowrap" role="group" aria-labelledby="mv_${k}">${opts.map(([v,t])=>`<button data-mset="${k}" data-v="${v}" style="flex:1 1 0;padding-inline:4px" aria-pressed="${cur===v}">${t}</button>`).join('')}</div></div>`;
+    const draw=()=>{const x=MOVA_ST.s;
+      if(MOVA_ST.linked===false){body.innerHTML=`<div class="dhero"><div class="dh-art" aria-hidden="true">${devArt(MOVA,1.5)}</div><div class="dh-state">חיבור לשואב</div><div class="dh-sub">עם חשבון MOVAhome שלך</div></div>
+          <div class="field"><label for="mvE">אימייל של MOVAhome</label><input id="mvE" type="email" autocomplete="username" dir="ltr" style="min-width:0;flex:1;font-size:17px"></div>
+          <div class="field"><label for="mvP">סיסמה</label><input id="mvP" type="password" autocomplete="current-password" dir="ltr" style="min-width:0;flex:1;font-size:17px"></div>
+          <div class="err" id="mvErr" role="alert">${MOVA_ST.err&&!/לא מחובר/.test(MOVA_ST.err)?esc(MOVA_ST.err):''}</div>
+          <button class="btn pri wide" id="mvIn">התחברות</button>
+          <p class="s">הסיסמה נשלחת פעם אחת לשרת של HomeOn כדי להתחבר, ולא נשמרת. אם נרשמת ל-MOVAhome עם Apple, קודם קובעים סיסמה באפליקציית MOVAhome (פרופיל ← חשבון).</p>`;
+        const go=async()=>{const e=body.querySelector('#mvE').value.trim(),p=body.querySelector('#mvP').value,er=body.querySelector('#mvErr'),b=body.querySelector('#mvIn');
+          if(!e||!p){er.textContent='צריך אימייל וסיסמה';return}
+          b.disabled=true;b.textContent='מתחבר...';er.textContent='';
+          try{const j=await api('/mova/login',{email:e,password:p});MOVA_ST.linked=true;toast('השואב מחובר: '+(j.mova&&j.mova.name||'MOVA'));await movaLoad();draw()}
+          catch(ex){er.textContent=ex.message;b.disabled=false;b.textContent='התחברות'}};
+        body.querySelector('#mvIn').onclick=go;body.querySelector('#mvP').onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();go()}};
+        rest();return}
+      const busy=x&&MOVA_BUSY.has(x.state),paused=x&&x.state===3,home=x&&[2,6,13,24].includes(x.state);
+      body.innerHTML=`<div class="dhero${busy?' on':''}"><div class="dh-art" aria-hidden="true">${devArt(MOVA,1.5)}</div>
+          <div class="dh-state" role="status">${x?esc(MOVA_STATE[x.state]||'מוכן'):'מתחבר...'}</div>
+          <div class="dh-sub">${x?[x.battery!=null?'סוללה \u2066'+x.battery+'%\u2069':'',x.area?x.area+' מ״ר':'',x.time?x.time+' דק׳':''].filter(Boolean).join(' · '):esc(MOVA_ST.err||'')}</div></div>
+        <button class="dpw" id="mvMain" aria-pressed="${!!busy}">${svg('power')}<span>${busy?'השהיה':paused?'המשך ניקוי':'התחל ניקוי'}</span></button>
+        <div class="btns"><button class="btn" data-mact="dock"${home?' disabled':''} aria-label="חזרה לעמדה">לעמדה</button><button class="btn" data-mact="stop"${!busy&&!paused?' disabled':''}>עצירה</button><button class="btn" data-mact="locate" aria-label="איתור השואב, משמיע צליל">איתור</button></div>
+        ${x?`<div class="list">${seg('mode',[[0,'שאיבה'],[2,'שניהם'],[1,'שטיפה']],x.mode)}${seg('suction',[[0,'שקט'],[1,'רגיל'],[2,'חזק'],[3,'טורבו']],x.suction)}${seg('water',[[1,'מעט'],[2,'בינוני'],[3,'הרבה']],x.water)}</div>`:''}
+        ${x&&x.error?`<div class="empty" role="alert"><b>השואב מדווח על תקלה (${esc(x.error)})</b>פתח את MOVAhome לפרטים.</div>`:''}`;
+      body.querySelector('#mvMain').onclick=()=>act(busy?'pause':'start');
+      body.querySelectorAll('[data-mact]').forEach(b=>b.onclick=()=>act(b.dataset.mact));
+      body.querySelectorAll('[data-mset]').forEach(b=>b.onclick=async()=>{const k=b.dataset.mset,v=+b.dataset.v;
+        body.querySelectorAll(`[data-mset="${k}"]`).forEach(o=>o.setAttribute('aria-pressed',o===b));
+        try{await api('/mova/set',{k,v});if(MOVA_ST.s)MOVA_ST.s[k]=v}catch(e){toast(e.message);movaLoad().then(draw)}});
+      rest()};
+    const act=async a=>{try{await api('/mova/act',{a});toast({start:'מתחיל לנקות',pause:'מושהה',dock:'חוזר לעמדה',stop:'נעצר',locate:'השואב משמיע צליל'}[a]);setTimeout(()=>movaLoad().then(()=>document.body.contains(body)&&draw()),2500)}catch(e){toast(e.message)}};
+    const rest=()=>{body.insertAdjacentHTML('beforeend',`<div class="list">
+        ${IN_APP?`<button class="row row-btn" id="movaPair"><span class="grow"><span class="t">זיהוי השואב בראוטר</span><br><span class="s">${META.movaMac?(MOVA_WIFI.visible?'מחובר לרשת הבית':'לא נראה ברשת כרגע'):'לא הוגדר'}</span></span>${svg('chev')}</button>`:''}
+        <button class="row row-btn" id="movaRoom"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(MOVA)||'בלי חדר')}</span></span>${svg('chev')}</button>
+        <button class="row row-btn" id="movaOfficial"><span class="grow"><span class="t">MOVAhome</span><br><span class="s">מפה, חדרים ותחזוקה - באפליקציה הרשמית</span></span>${svg('chev')}</button>
+        ${MOVA_ST.linked?`<button class="row row-btn" id="movaOut"><span class="grow t">ניתוק החשבון מ-HomeOn</span>${svg('close')}</button>`:''}
+        <button class="row row-btn" id="movaHide"><span class="grow"><span class="t">הסתרת השואב מ-HomeOn</span><br><span class="s">לא מוחק אותו מ-MOVAhome</span></span>${svg('close')}</button></div>`);
+      const pair=body.querySelector('#movaPair');if(pair)pair.onclick=openMovaWifiSetup;
+      body.querySelector('#movaRoom').onclick=()=>pickRoom(MOVA,()=>render());
+      body.querySelector('#movaOfficial').onclick=()=>location.href='https://apps.apple.com/app/movahome/id6499421624';
+      const out=body.querySelector('#movaOut');if(out)out.onclick=async()=>{if(!confirm('לנתק את חשבון MOVAhome מ-HomeOn?'))return;try{await api('/mova/logout');MOVA_ST.linked=false;MOVA_ST.s=null;render();draw()}catch(e){toast(e.message)}};
+      body.querySelector('#movaHide').onclick=()=>{META.mova=false;saveMeta();close();render();toast('השואב הוסתר. מחזירים מ-⋯ ← הוספת מכשיר')}};
+    draw();
+    movaLoad().then(()=>document.body.contains(body)&&draw());
+    iv=setInterval(()=>{if(!document.body.contains(body))return clearInterval(iv);if(MOVA_ST.linked)movaLoad().then(()=>document.body.contains(body)&&draw())},10000);
   });
 }
 function openRouter(){
@@ -1211,10 +1226,10 @@ function card(d){
       ${favButton(d)}</div>`}
   if(d.id==='mova-e30-ultra'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
-      <button class="open" aria-label="${cardLabel(d)}, שואב שוטף, עדיין לא מחובר ל־HomeOn. פרטים וחיבור"></button>
+      <button class="open" aria-label="${cardLabel(d)}, שואב שוטף, ${esc(movaCardText())}. פתיחה"></button>
       <div class="ic">${devArt(d)}</div>
       <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}
-      <div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${META.movaMac?(MOVA_WIFI.checked?(MOVA_WIFI.visible?'זוהה ברשת · ללא שליטה':'לא זוהה ברשת'):'בודק נוכחות ברשת'):'ממתין לחיבור'}</div>
+      <div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${esc(movaCardText())}</div>
       ${favButton(d)}</div>`}
   if(d.id==='gtv'){const nm=esc(dname(d));
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="gtv">
