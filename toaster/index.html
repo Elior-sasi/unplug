@@ -318,7 +318,7 @@ body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none
 @keyframes sheetIn{from{transform:translateY(40px);opacity:0}}
 .sheet h3{font-size:20px;font-weight:700}
 .btn{border-radius:14px}
-.btn.pri{background:var(--accent)!important;color:#031026;border:0!important}
+.btn.pri{background:var(--accent)!important;color:#1a0d00;border:0!important}
 .pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .pk{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:18px;font-size:14px}
 .pk svg{width:34px;height:38px}
@@ -456,8 +456,7 @@ html.in-unplug,html.in-unplug body{overscroll-behavior:none}
 .in-unplug .app.is-on .hoImg{filter:drop-shadow(0 10px 26px #ff9a3d88)}
 .in-unplug .hoTime{font-size:min(3rem,7vh);font-weight:700;line-height:1;letter-spacing:-.02em;direction:ltr;font-variant-numeric:tabular-nums;color:#fff}
 .in-unplug .status .state{font-size:1.15rem!important}
-.in-unplug{--accent:#4f97ff;--accent-soft:rgba(79,151,255,.15)}
-.in-unplug .power{background:#3d8bff!important;color:#031026!important;border:0!important;border-radius:999px!important;min-height:62px;font-size:1.3rem!important;font-weight:700!important}
+.in-unplug .power{background:#ff9a3d!important;color:#1a0c04!important;border:0!important;border-radius:999px!important;min-height:62px;font-size:1.3rem!important;font-weight:700!important}
 .in-unplug .app.is-on .power{background:#3d8bff!important;color:#fff!important;box-shadow:none!important}
 .in-unplug .ext{background:#1c1c1e!important;border:0!important;border-radius:999px!important;color:#fff!important}
 .in-unplug .ext:disabled{opacity:.45}
@@ -972,7 +971,7 @@ function drawClock(){
   const h=$('hero');h.style.setProperty('--crumb',rgb(crumb));h.style.setProperty('--crust',rgb(crust));
 }
 function setAccent(){
-  const p=S.prof>=0?S.profiles[S.prof]:null,c=(p&&HUE[p.ic])||(window.IN_HOMEON?'#4f97ff':'#ff9f0a');
+  const p=S.prof>=0?S.profiles[S.prof]:null,c=(p&&HUE[p.ic])||'#ff9f0a';
   const rgb=c.match(/\w\w/g).map(h=>parseInt(h,16));
   document.documentElement.style.setProperty('--accent',c);
   document.documentElement.style.setProperty('--accent-soft',`rgba(${rgb},.15)`);
