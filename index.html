@@ -633,11 +633,11 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .reordering .card .editActions{display:contents}
 .reordering .card .edCorner{position:absolute!important;width:34px!important;height:34px!important;bottom:auto!important;right:auto!important;transform:none!important;z-index:5}
 /* edit mode like Smart Life: a small minus in one corner, a small resize in the other, tap a card for the rest */
-.reordering .card .edCorner,.reordering .card .edCorner.edDel{width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;border-radius:50%}
-.reordering .card .edCorner svg{width:15px;height:15px}
-.reordering .card .edCorner::before{content:"";position:absolute;inset:-8px;border-radius:50%}
-.reordering .card .edDel{top:6px!important;left:6px!important;background:#636366!important;color:#fff!important}
-.reordering .card .edSize{top:auto!important;bottom:6px!important;left:6px!important;background:#48484a!important;color:#fff!important}
+.reordering .card .edCorner,.reordering .card .edCorner.edDel{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;border-radius:50%}
+.reordering .card .edCorner svg{width:16px;height:16px}
+.reordering .card .edCorner::before{content:"";position:absolute;inset:-6px;border-radius:50%}
+.reordering .card .edDel{top:8px!important;left:8px!important;background:#3a3f4b!important;color:#fff!important}
+.reordering .card .edSize{top:auto!important;bottom:8px!important;left:8px!important;background:#e9edf3!important;color:#1a2635!important}
 .reordering .card .edFav,.reordering .card .edIcon{width:1px!important;height:1px!important;min-width:0!important;min-height:0!important;overflow:hidden;clip-path:inset(50%);top:0!important;left:0!important}
 .reordering .card .edFav:focus-visible,.reordering .card .edIcon:focus-visible{width:28px!important;height:28px!important;clip-path:none}
 
@@ -1926,7 +1926,7 @@ if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched().catch(()=>{})}
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active')&&!(typeof REORDER!=='undefined'&&REORDER))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched().catch(()=>{})}});
 </script>
-<script src="extras.js?v=28"></script>
+<script src="extras.js?v=29"></script>
 <script src="smart.js?v=3"></script>
 <script src="motion.js?v=3"></script>
 <script src="washer.js?v=2"></script>
