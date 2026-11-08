@@ -110,6 +110,11 @@ details.more[open] summary svg{transform:rotate(180deg)}
 .tabs2 button{flex:1;min-height:44px;border-radius:999px;font-weight:700}
 .tabs2 button[aria-pressed="true"]{background:var(--card3)}
 .dot{fill:#fff;stroke:#ff9a3d;stroke-width:3}
+.pre{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}.pre::-webkit-scrollbar{display:none}
+.pre button{flex:none;min-height:44px;padding:0 16px;border-radius:999px;background:var(--card);border:1px solid #ff9a3d55;font-weight:700;white-space:nowrap}
+.pre button span{color:var(--acc)}
+.redo{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:18px;padding:8px 8px 8px 14px}.redo span{flex:1;font-weight:600}
+.redo button{min-height:44px;padding:0 14px;border-radius:999px;background:var(--acc);color:var(--ink);font-weight:800}
 .mv.nopins .mv-in .pin{pointer-events:none;opacity:.55}
 .obs{position:absolute;transform:translate(-50%,-50%) scale(var(--inv,1));width:34px;height:34px;border-radius:50%;background:#ffd60a;color:#1a1400;font-weight:900;font-size:1rem;border:2px solid #000;display:grid;place-items:center;box-shadow:0 2px 6px #0008}
 .obs.ign{background:#8e8e93}
@@ -312,6 +317,10 @@ function draw(){
       <button class="mbig" data-open="mapview" aria-label="הגדלת המפה ועריכה">${I.expand}</button>
       ${sel.size?`<span class="mpill" aria-hidden="true">${sel.size===1?'חדר אחד נבחר':sel.size+' חדרים נבחרו'}</span>`:''}</div>`
     :rooms.length?`<h2 id="hRooms">חדרים</h2><div class="row" role="group" aria-labelledby="hRooms">${rooms.map(r=>`<button class="chip" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${sel.has(r.id)?'✓ ':''}${esc(r.name)}</button>`).join('')}</div>`:'');
+  const PR=HO.META.movaPresets||[];
+  part('pPre',D&&PR.length?`<div class="pre" role="group" aria-label="ניקויים שמורים">${PR.map(p=>`<button data-pre="${esc(p.id)}" aria-label="ניקוי שמור: ${esc(p.name)}. ${esc(preLine(p))}"><span aria-hidden="true">▶ </span>${esc(p.name)}</button>`).join('')}</div>`:'');
+  const cnr=(D&&D.can)||{};
+  part('pRe',D&&cnr.reclean&&h0&&h0.done===false&&!busy&&!paused?`<div class="redo"><span>הניקוי האחרון לא הושלם</span><button data-a="reclean">להשלים</button></div>`:'');
   const n=sel.size,names=[...sel].map(id=>(rooms.find(r=>r.id===id)||{}).name).filter(Boolean);
   const main=busy?{a:'pause',t:'השהיה',i:I.pause,on:1}:paused?{a:'start',t:'המשך ניקוי',i:I.power}:n?{a:'rooms',t:'ניקוי '+(n===1?names[0]:n+' חדרים'),i:I.power}:{a:'start',t:'ניקוי כל הבית',i:I.power};
   part('pMain',`<button class="pw${main.on?' on':''}" data-a="${main.a}" aria-pressed="${!!main.on}">${main.i}<span>${esc(main.t)}</span></button>`);
@@ -333,6 +342,7 @@ function draw(){
       cons.length&&['cons',I.wrench,'תחזוקה',due?(due===1?'חלק אחד להחלפה':due+' חלקים להחלפה'):'הכול תקין',due],
       ['settings',I.gear,'הגדרות','שטיחים, נעילת ילדים, ייבוש ועוד'],
       dnd&&['dnd',I.moon,'שעות שקטות',dnd.on?`פעיל ${dnd.start||''}-${dnd.end||''}`:'כבוי'],
+      ['presets',I.power,'ניקויים שמורים',(HO.META.movaPresets||[]).length?((n=>n===1?'אחד שמור':n+' שמורים')(HO.META.movaPresets.length)+' · במסך הראשי'):'למשל "אחרי ארוחה" בלחיצה אחת'],
       ['hsch',I.clock,'ניקוי מתוזמן',HS.length?((n=>n===0?'כבוי':n===1?'אחד פעיל':n+' פעילים')(HS.filter(x=>x.enabled).length)):'לפי ימים, שעה וחדרים'],
       sch.length&&['sch',I.clock,'תזמונים ישנים בשואב',sch.length+' שמורים בשואב עצמו'],
       ['remote',I.move,'שלט רחוק','להזיז את השואב ידנית'],
@@ -369,7 +379,7 @@ function drawLogin(){if($('login'))return;sig={};
 
 /* ---------- windows (sheets) ---------- */
 let SH=null,lastFocus=null;
-function sheet(kind){closeSheet(true);if(kind==='order')ORDER=null;if(kind==='hsch')HSE=null;lastFocus=document.activeElement;
+function sheet(kind){closeSheet(true);if(kind==='order')ORDER=null;if(kind==='hsch')HSE=null;if(kind==='presets')PE=null;lastFocus=document.activeElement;
   const s=document.createElement('div');s.className='scrim';s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh-h"><h3 id="shT" tabindex="-1"></h3><button class="circ" data-x aria-label="סגירה">${I.x}</button></div><div id="shB"></div></div>`;
   s.addEventListener('click',e=>{if(e.target===s)closeSheet()});s.querySelector('[data-x]').onclick=()=>closeSheet();
   s.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
@@ -392,6 +402,8 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
     if(cn.washing)b.push(`<button class="wide sec" data-a="wash">${I.drop}${x.washing?'עצירת שטיפת מגבים':'שטיפת מגבים עכשיו'}</button>`);
     if(cn.drying)b.push(`<button class="wide sec" data-a="dry">${I.sun}${x.drying?'עצירת ייבוש':'ייבוש מגבים עכשיו'}</button>`);
     if(cn.empty)b.push(`<button class="wide sec" data-a="empty">${I.trash}ריקון אבק עכשיו</button>`);
+    if(cn.drain)b.push(`<button class="wide sec" data-a="drain">${I.drop}ניקוז מים מהעמדה</button>`);
+    if(cn.station_clean)b.push(`<button class="wide sec" data-a="station_clean">${I.station}ניקוי העמדה עצמה</button>`);
     const tk=[['clean_tank','מיכל מים נקיים'],['dirty_tank','מיכל מים מלוכלכים'],['dust_bag','שקית אבק'],['detergent','נוזל ניקוי']].filter(([k])=>x[k]&&x[k]!=='unknown');
     h=`${tk.length?`<div class="grp">${tk.map(([k,n])=>`<div class="it"><span class="g t">${n}</span><span class="s">${esc(TANK_HE[x[k]]||x[k].replace(/_/g,' '))}</span></div>`).join('')}</div>`:''}<div style="display:flex;flex-direction:column;gap:10px">${b.join('')}</div>`}
   else if(k==='cons'){t='תחזוקה';h=`<div class="grp">${(D.consumables||[]).map(c=>`<div class="it" style="flex-wrap:wrap"><span class="g"><span class="t">${esc(c.t)}</span><span class="s">${c.pct<=0?'להחליף עכשיו':c.pct<=15?'להחליף בקרוב':'נשאר '+pct(c.pct)}</span>
@@ -399,6 +411,8 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
       ${c.reset?`<button class="chip" style="background:#3a3a3c" data-reset="${esc(c.k)}" aria-label="החלפתי את ${esc(c.t)}, איפוס המונה">החלפתי</button>`:''}</div>`).join('')}</div><p class="note">אחרי שמחליפים או מנקים חלק, לוחצים "החלפתי" כדי לאפס את המונה.</p>`}
   else if(k==='settings'){t='הגדרות';const more=S.filter(s=>!QUICK.includes(s.k));let pushOn=false;try{pushOn=!!localStorage.getItem('unplug_push')}catch(e){}
     h=`<div class="grp"><div class="it"><span class="g"><span class="t" id="ntL">התראה לטלפון</span><span class="s">כשהשואב סיים לנקות או נתקע${pushOn?'':' · צריך גם להפעיל התראות בהגדרות של HomeOn'}</span></span><button class="sw" role="switch" id="mvNotify" aria-checked="${!!D.notify}" aria-labelledby="ntL"></button></div></div>${(D.switches||[]).length?`<div class="grp">${D.switches.map(s=>`<div class="it"><span class="g"><span class="t" id="sw_${s.k}">${esc(s.t)}</span>${s.h?`<span class="s">${esc(s.h)}</span>`:''}</span><button class="sw" role="switch" data-k="${s.k}" aria-checked="${!!s.on}" aria-labelledby="sw_${s.k}"></button></div>`).join('')}</div>`:''}
+      ${x.offpeak?`<div class="grp"><div class="it"><span class="g"><span class="t" id="opL">טעינה בשעות זולות</span><span class="s">השואב נטען בעיקר בשעות האלה</span></span><button class="sw" role="switch" id="opOn" aria-checked="${!!x.offpeak.on}" aria-labelledby="opL"></button></div>
+        <div class="it"><label class="g t" for="opS">מהשעה</label><input type="time" id="opS" value="${esc(x.offpeak.start||'22:00')}"></div><div class="it"><label class="g t" for="opE">עד השעה</label><input type="time" id="opE" value="${esc(x.offpeak.end||'08:00')}"></div></div>`:''}
       ${more.length?`<div class="grp">${more.map(s=>`<div class="it"><label class="g t" for="se_${s.k}">${esc(s.t)}</label><select id="se_${s.k}" data-sel="${s.k}">${s.o.map(o=>`<option value="${esc(o.v)}"${o.v===s.cur?' selected':''}>${esc(o.t)}</option>`).join('')}</select></div>`).join('')}</div>`:''}
       ${(D.numbers||[]).length?`<div class="grp">${D.numbers.map(n=>`<div class="it"><span class="g t" id="nm_${n.k}">${esc(n.t)}</span><div class="num" role="group" aria-labelledby="nm_${n.k}"><button data-num="${n.k}" data-d="${-n.step}" aria-label="פחות">−</button><output aria-live="polite">${n.u==='%'?pct(n.v):n.v+' '+esc(n.u)}</output><button data-num="${n.k}" data-d="${n.step}" aria-label="יותר">+</button></div></div>`).join('')}</div>`:''}`}
   else if(k==='dnd'){t='שעות שקטות';const d=x.dnd||{};
@@ -422,7 +436,8 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
       <button class="sw" role="switch" data-sch="${s.id}" aria-checked="${!!s.on}" aria-labelledby="sc_${s.id}"></button><button class="circ" style="background:#3a3a3c" data-schdel="${s.id}" aria-label="מחיקת התזמון של ${esc(s.time)}">${I.x}</button></div>`).join('')}</div>`}
   else if(k==='hist'){t='היסטוריה';const tt=x.totals||{},hs=D.history||[];
     h=`${tt.count!=null?`<div class="tot"><div><b>${tt.count}</b>ניקויים</div><div><b>${tt.m2!=null?tt.m2:'-'}</b>מ״ר בסך הכול</div><div><b>${tt.minutes!=null?Math.round(tt.minutes/60):'-'}</b>שעות</div></div>`:''}
-      ${hs.length?`<div class="grp">${hs.slice(0,15).map(r=>{const d=new Date(r.t*1000);return `<div class="it"><span class="g"><span class="t">${d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'})} ${d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</span><span class="s">${r.m2!=null?r.m2+' מ״ר':''}${r.min!=null?' · '+r.min+' דק׳':''}${r.done===false?' · לא הושלם':''}</span></span></div>`}).join('')}</div>`:'<p class="note">אין עדיין היסטוריה.</p>'}`}
+      ${(D.can||{}).reclean&&hs[0]&&hs[0].done===false?`<button class="wide" data-a="reclean" style="margin-bottom:12px">להשלים את מה שפוספס בניקוי האחרון</button>`:''}
+      ${hs.length?`<div class="grp">${hs.slice(0,15).map((r,i)=>{const d=new Date(r.t*1000);return `<button class="it" data-hr="${i}"><span class="g"><span class="t">${d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'})} ${d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</span><span class="s">${r.m2!=null?r.m2+' מ״ר':''}${r.min!=null?' · '+r.min+' דק׳':''}${r.done===false?' · לא הושלם':''}</span></span><span class="chev" aria-hidden="true">${I.chev.replace('m6 9 6 6 6-6','m15 6-6 6 6 6')}</span></button>`}).join('')}</div><p class="note">לוחצים על ניקוי כדי לראות במפה איפה השואב עבר.</p>`:'<p class="note">אין עדיין היסטוריה.</p>'}`}
   else if(k==='roomsl'){t='חדרים';h=`<div class="grp">${(D.rooms||[]).map(r=>`<button class="it" data-room1="${r.id}"><span class="g"><span class="t">${esc(r.name)}</span><span class="s">${esc(roomLine(r))}</span></span></button>`).join('')}</div>
       <div style="display:flex;flex-direction:column;gap:10px"><button class="wide sec" data-open="order">סדר ניקוי</button><button class="wide sec" data-open="mapview">עריכת המפה (איחוד, חלוקה, אזורים אסורים, שטיחים)</button><button class="wide sec" data-open="remap">מיפוי מחדש</button></div>`}
   else if(k==='rename'){const r=(D.rooms||[]).find(r=>r.id===RENAME)||{};t='שם לחדר';
@@ -458,6 +473,20 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
       ${o.can_ign?`<div class="grp" style="margin-top:12px"><div class="it"><span class="g"><span class="t" id="oiL">להתעלם ממנו</span><span class="s">השואב יעבור שם בניקוי הבא במקום לעקוף</span></span><button class="sw" role="switch" id="obIgn" aria-checked="${!!o.ign}" aria-labelledby="oiL"></button></div></div>`:''}
       <button class="wide sec" id="obMap" style="margin-top:12px">${I.map}להראות במפה</button>`;
     if(o.pic)setTimeout(()=>api('/mova/obstacle',{i:o.i}).then(j=>{const b=$('obImg');if(b)b.innerHTML=`<img alt="תמונה של ${esc(o.t)} שהשואב צילם" src="data:image/jpeg;base64,${j.img}">`}).catch(e=>{const b=$('obImg');if(b)b.innerHTML=`<span class="note">${esc(e.message)}</span>`}),0)}
+  else if(k==='hrun'){const r=(D.history||[])[HR]||{},d=new Date((r.t||0)*1000);t=d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    if(SH.sig&&SH.sig.startsWith(t+'|'))return;t+='|';
+    h=`<div class="obimg" id="hrImg"><span class="note">טוען מפה...</span></div><div class="tot" style="margin-top:12px"><div><b>${r.m2!=null?r.m2:'-'}</b>מ״ר</div><div><b>${r.min!=null?r.min:'-'}</b>דקות</div><div><b>${r.done===false?'לא':'כן'}</b>הושלם</div></div>`;
+    setTimeout(()=>api('/mova/hmap',{i:HR}).then(j=>{const b=$('hrImg');if(b)b.innerHTML=`<img alt="מפת הניקוי: איפה השואב עבר" src="data:image/png;base64,${j.png}">`}).catch(e=>{const b=$('hrImg');if(b)b.innerHTML=`<span class="note">${esc(e.message)}</span>`}),0)}
+  else if(k==='presets'){t='ניקויים שמורים';const PR=HO.META.movaPresets||[],R=D.rooms||[];
+    if(PE){const e=PE,m=S.find(s=>s.k==='cleaning_mode'),su=S.find(s=>s.k==='suction_level');if(SH.sig&&SH.sig.startsWith(t+'E')&&SH.keep)return;
+      const sg=(lab,id,attr,opts,cur)=>opts?`<div class="lbl" id="${id}" style="margin:6px 0 0">${lab}</div><div class="seg" role="group" aria-labelledby="${id}"><button ${attr}="" aria-pressed="${!cur}" style="flex-basis:100%">בלי לשנות</button>${opts.map(o=>`<button ${attr}="${esc(o.v)}" aria-pressed="${cur===o.v}" style="flex-basis:45%">${esc(o.t)}</button>`).join('')}</div>`:'';
+      h=`<div class="login"><label for="peN">שם</label><input id="peN" type="text" maxlength="20" value="${esc(e.name)}" placeholder="למשל: אחרי ארוחה">
+        <div class="lbl" id="peWL" style="margin:6px 0 0">מה לנקות</div><div class="seg" role="group" aria-labelledby="peWL"><button data-pea="1" aria-pressed="${!e.rooms.length}" style="flex-basis:100%">כל הבית</button>${R.map(r=>`<button data-per="${r.id}" aria-pressed="${e.rooms.includes(r.id)}" style="flex-basis:45%">${esc(r.name)}</button>`).join('')}</div>
+        ${e.rooms.length?`<div class="lbl" id="peXL" style="margin:6px 0 0">כמה פעמים</div><div class="seg" role="group" aria-labelledby="peXL">${[1,2,3].map(v=>`<button data-pex="${v}" aria-pressed="${e.times===v}">${v===1?'פעם אחת':v===2?'פעמיים':'3 פעמים'}</button>`).join('')}</div>`:''}
+        ${sg('מצב','peML','data-pem',m&&m.o,e.mode)}${sg('עוצמת שאיבה','peSL','data-pes',su&&su.o,e.suction)}
+        <button class="wide" id="peSave">${e.id?'שמירה':'הוספה'}</button>${e.id?`<button class="wide sec" id="peDel">מחיקה</button>`:''}</div>`;t+='E'}
+    else h=`<p class="note" style="margin-top:0">ניקוי שמור מופיע כפתור במסך הראשי, ומתחיל בלחיצה אחת.</p>${PR.length?`<div class="grp">${PR.map(p=>`<button class="it" data-pe="${esc(p.id)}"><span class="g"><span class="t">${esc(p.name)}</span><span class="s">${esc(preLine(p))}</span></span></button>`).join('')}</div>`:''}
+      <button class="wide" id="peNew" style="margin-top:12px">${I.plus}ניקוי שמור חדש</button>`}
   else if(k==='remote'){t='שלט רחוק';
     h=`<p class="note" style="margin-top:0">מחזיקים חץ כדי להזיז את השואב. עוזבים והוא עוצר.</p>
       <div class="pad" role="group" aria-label="חיצים"><span></span><button data-mv="f" aria-label="קדימה">↑</button><span></span><button data-mv="r" aria-label="להסתובב ימינה">→</button><button data-mv="s" aria-label="עצירה">■</button><button data-mv="l" aria-label="להסתובב שמאלה">←</button><span></span><button data-mv="b" aria-label="אחורה">↓</button><span></span></div>`}
@@ -583,7 +612,9 @@ function mvClick(b){const m=MVW;if(m.dragged&&b.closest('.mv-stage')){m.dragged=
   if(b.id==='goRooms'){const ids=[...sel];closeMapView();act('rooms','מנקה '+(ids.length===1?'חדר אחד':ids.length+' חדרים'),{rooms:ids,times});return true}
   if(b.dataset.times){times=+b.dataset.times;mvDraw();return true}
   return false}
-let RENAME=null,ORDER=null,ROOM=null,OBS=null;
+let RENAME=null,ORDER=null,ROOM=null,OBS=null,HR=0,PE=null;
+function preLine(p){const S=(D&&D.selects)||[],R=(D&&D.rooms)||[],nm=(k,v)=>{const s=S.find(s=>s.k===k);return s&&v?((s.o.find(o=>o.v===v)||{}).t||''):''};
+  return [p.rooms.length?p.rooms.map(id=>(R.find(r=>r.id===id)||{}).name||'חדר').join(', '):'כל הבית',p.rooms.length&&p.times>1?p.times+' פעמים':'',nm('cleaning_mode',p.mode),nm('suction_level',p.suction)].filter(Boolean).join(' · ')}
 function roomLine(r){const O=D.room_opts||{},n=(l,v)=>((l||[]).find(o=>o.v===v)||{}).t;if(!D.custom)return 'לפי ההגדרה הכללית';
   return [n(O.suction,r.suction),n(O.water,r.water),r.times>1?r.times+' מעברים':''].filter(Boolean).join(' · ')||'הגדרות החדר'}
 async function roomSet(id,k,v){buzz();try{const j=await api('/mova/edit',{op:'room_set',id,k,v});if(j.map){mapD=j.map;MV.map=j.map}if(j.state){D=Object.assign({},D,j);delete D.sent;delete D.map;MV.d=D}toast('נשמר');draw();refreshSheet()}catch(e){toast(e.message);load()}}
@@ -596,7 +627,7 @@ document.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-mv]'
 addEventListener('resize',()=>{if(MVW)mvFitView()});
 
 /* ---------- taps ---------- */
-const MSG={start:'מתחיל לנקות',pause:'מושהה',dock:'חוזר לעמדה',stop:'נעצר',locate:'השואב משמיע צליל',clear:'ההתראה נוקתה',wash:'פקודה נשלחה',dry:'פקודה נשלחה',empty:'מרוקן אבק'};
+const MSG={start:'מתחיל לנקות',pause:'מושהה',dock:'חוזר לעמדה',stop:'נעצר',locate:'השואב משמיע צליל',clear:'ההתראה נוקתה',wash:'פקודה נשלחה',dry:'פקודה נשלחה',empty:'מרוקן אבק',drain:'מנקז מים',station_clean:'מנקה את העמדה',reclean:'משלים את מה שפוספס'};
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
   if(MVW&&b.closest('.mv')&&mvClick(b))return;
   if(b.id==='back'){try{P.postMessage('unplug-close','*')}catch(_){}return}
@@ -621,6 +652,18 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.id==='mvNotify'){const on=b.getAttribute('aria-checked')!=='true';b.setAttribute('aria-checked',on);D.notify=on;return api('/mova/notify',{on}).then(()=>toast(on?'תקבל התראה כשהשואב יסיים או ייתקע':'ההתראות כבויות')).catch(e=>{toast(e.message);load()})}
   if(b.dataset.ren){RENAME=+b.dataset.ren;return sheet('rename')}
   if(b.dataset.room1){ROOM=+b.dataset.room1;return sheet('room')}
+  if(b.dataset.hr!=null&&b.closest('.sheet')){HR=+b.dataset.hr;return sheet('hrun')}
+  if(b.dataset.pre){const p=(HO.META.movaPresets||[]).find(p=>p.id===b.dataset.pre);if(!p)return;return act('preset','מתחיל: '+p.name,{rooms:p.rooms,times:p.times,cleaning_mode:p.mode||null,suction_level:p.suction||null})}
+  if(b.id==='peNew'){PE={name:'',rooms:[],times:1,mode:null,suction:null};SH.sig='';return refreshSheet()}
+  if(b.dataset.pe){const p=(HO.META.movaPresets||[]).find(p=>p.id===b.dataset.pe);if(!p)return;PE=JSON.parse(JSON.stringify(p));SH.sig='';return refreshSheet()}
+  if(PE&&(b.dataset.pea!=null||b.dataset.per||b.dataset.pex||b.dataset.pem!=null||b.dataset.pes!=null)){PE.name=$('peN').value;
+    if(b.dataset.pea!=null)PE.rooms=[];if(b.dataset.per){const id=+b.dataset.per;PE.rooms.includes(id)?PE.rooms=PE.rooms.filter(x=>x!==id):PE.rooms.push(id)}
+    if(b.dataset.pex)PE.times=+b.dataset.pex;if(b.dataset.pem!=null)PE.mode=b.dataset.pem||null;if(b.dataset.pes!=null)PE.suction=b.dataset.pes||null;
+    SH.sig='';refreshSheet();const q=SH.el.querySelector(['pea','per','pex','pem','pes'].map(k=>b.dataset[k]!=null?`[data-${k}="${b.dataset[k]}"]`:'').filter(Boolean)[0]);q&&q.focus();return}
+  if(b.id==='peSave'&&PE){PE.name=$('peN').value.trim();if(!PE.name)return toast('צריך שם');const L=(HO.META.movaPresets||[]).slice();
+    if(PE.id){const i=L.findIndex(p=>p.id===PE.id);if(i>=0)L[i]=PE}else{PE.id='p'+Date.now().toString(36);L.push(PE)}HO.META.movaPresets=L;HO.saveMeta();PE=null;SH.sig='';refreshSheet();draw();return toast('נשמר. מופיע במסך הראשי')}
+  if(b.id==='peDel'&&PE){if(!confirm('למחוק את "'+PE.name+'"?'))return;HO.META.movaPresets=(HO.META.movaPresets||[]).filter(p=>p.id!==PE.id);HO.saveMeta();PE=null;SH.sig='';refreshSheet();draw();return toast('נמחק')}
+  if(b.id==='opOn'){const on=b.getAttribute('aria-checked')!=='true';b.setAttribute('aria-checked',on);return setv('offpeak',{on,start:$('opS').value,end:$('opE').value},on?'טעינה בשעות זולות פעילה':'כבוי')}
   if(b.dataset.rs){const r=(D.rooms||[]).find(r=>r.id===ROOM);if(r)r[b.dataset.rs]=+b.dataset.v;refreshSheet();return roomSet(ROOM,b.dataset.rs,+b.dataset.v)}
   if(b.dataset.rgo){const id=+b.dataset.rgo,r=(D.rooms||[]).find(r=>r.id===id);closeSheet();if(MVW)closeMapView();return act('rooms','מנקה את '+(r?r.name:'החדר'),{rooms:[id],times:D.custom?1:times})}
   if(b.dataset.remap){const fast=b.dataset.remap==='fast';closeSheet();if(MVW)closeMapView();return act('map_new',fast?'מתחיל מיפוי מהיר':'מתחיל ניקוי עם מיפוי',{fast})}
@@ -652,6 +695,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='hsT'&&HSE){HSE.time=t.value;return}
   if(t.dataset.sel){const s=(D.selects||[]).find(s=>s.k===t.dataset.sel);if(s)s.cur=t.value;return setv(t.dataset.sel,t.value,'נשמר')}
+  if(t.id==='opS'||t.id==='opE')return setv('offpeak',{on:$('opOn').getAttribute('aria-checked')==='true',start:$('opS').value,end:$('opE').value},'נשמר');
   if(t.id==='dS'||t.id==='dE')return setv('dnd',{on:$('dndOn').getAttribute('aria-checked')==='true',start:$('dS').value,end:$('dE').value},'נשמר')});
 
 /* ---------- fit on one screen, like the AC page ---------- */
