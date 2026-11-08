@@ -164,14 +164,22 @@ function startDrag(e,c,grid,o){
   if(e.button>0||!c.dataset.id||e.target.closest('.edCorner,.reBtns,.preview-icon-edit'))return;
   e.preventDefault();
   const pid=e.pointerId,startX=e.clientX,startY=e.clientY;
-  let x=startX,y=startY,active=true,raf=0,moved=false,scroll=0;
-  const app=document.querySelector('.app');
+  let x=startX,y=startY,active=true,raf=0,moved=false,scroll=0,target=null;
+  const app=document.querySelector('.app'),s0=app?app.scrollTop:0;
+  /* where the card would land: the nearest card, before or after it */
+  const aim=()=>{const rtl=getComputedStyle(grid).direction==='rtl';let best=null,score=Infinity,after=false;
+    for(const el of cards()){const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dist=Math.hypot((x-cx)*.9,(y-cy)*1.25);
+      if(dist<score){score=dist;best=el;after=y>cy+Math.min(r.height*.15,24)||(Math.abs(y-cy)<r.height*.35&&(rtl?x<cx:x>cx))}}
+    return {best,after}};
   const cards=()=>[...grid.querySelectorAll('.card[data-id]')].filter(el=>el!==c&&!el.classList.contains('hiddenCard'));
   c.classList.add('draggingCard');
   // Do not reorder the grid during a gesture: it causes iOS hit-target loss
   // and makes mixed-width cards jump. Only commit one insertion on release.
   const paint=()=>{raf=0;if(!active)return;
-    c.style.transform=`translate3d(${x-startX}px,${y-startY}px,0)`;
+    /* the list may scroll under the finger: keep the card under it */
+    const ds=app?app.scrollTop-s0:0;
+    c.style.transform=`translate3d(${x-startX}px,${y-startY+ds}px,0)`;
+    if(moved){const {best}=aim();if(best!==target){target&&target.classList.remove('dropTarget');target=best;target&&target.classList.add('dropTarget')}}
   };
   const move=ev=>{
     if(ev.pointerId!==pid)return;
@@ -182,7 +190,7 @@ function startDrag(e,c,grid,o){
     scroll=rect?(y<rect.top+75?-8:y>rect.bottom-90?8:0):0;
     if(ev.cancelable)ev.preventDefault();
   };
-  const tick=()=>{if(!active)return;if(scroll&&app)app.scrollBy(0,scroll);requestAnimationFrame(tick)};
+  const tick=()=>{if(!active)return;if(scroll&&app){app.scrollBy(0,scroll);if(!raf)raf=requestAnimationFrame(paint)}requestAnimationFrame(tick)};
   const finish=ev=>{
     if(ev.pointerId!==pid)return;
     active=false;
@@ -190,18 +198,9 @@ function startDrag(e,c,grid,o){
     removeEventListener('pointerup',finish,true);
     removeEventListener('pointercancel',cancel,true);
     if(raf)cancelAnimationFrame(raf);
-    c.style.transform='';c.classList.remove('draggingCard');
+    c.style.transform='';c.classList.remove('draggingCard');target&&target.classList.remove('dropTarget');
     if(moved){
-      const rtl=getComputedStyle(grid).direction==='rtl';
-      let best=null,score=Infinity,after=false;
-      for(const el of cards()){
-        const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
-        const distance=Math.hypot((x-cx)*.9,(y-cy)*1.25);
-        if(distance<score){
-          score=distance;best=el;
-          after=y>cy+Math.min(r.height*.15,24)||(Math.abs(y-cy)<r.height*.35&&(rtl?x<cx:x>cx));
-        }
-      }
+      const {best,after}=aim();
       if(best){
         const ref=after?best.nextElementSibling:best;
         if(ref!==c&&ref!==c.nextElementSibling)grid.insertBefore(c,ref);
@@ -213,7 +212,7 @@ function startDrag(e,c,grid,o){
   const cancel=ev=>{if(ev.pointerId!==pid)return;active=false;
     removeEventListener('pointermove',move,true);removeEventListener('pointerup',finish,true);removeEventListener('pointercancel',cancel,true);
     if(raf)cancelAnimationFrame(raf);
-    c.style.transform='';c.classList.remove('draggingCard');
+    c.style.transform='';c.classList.remove('draggingCard');target&&target.classList.remove('dropTarget');
   };
   addEventListener('pointermove',move,true);
   addEventListener('pointerup',finish,true);
