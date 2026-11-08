@@ -131,6 +131,25 @@ body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,
 .fc1 .quick button{min-height:76px}.fc1 .quick button svg{width:24px;height:24px}.fc1 .qlbl{display:none}
 .fc2 header{min-height:48px}.fc2 .circ{width:44px;height:44px}.fc2 .ctl .rc{width:52px;height:52px}.fc2 .pw{min-height:52px;margin-top:6px}.fc2 #app{gap:8px}
 .fc3 .quick span{display:none}.fc3 .st2{display:none}.fc3 .quick button{min-height:60px;flex-direction:row}
+
+/* ---------- one grid for every device page: same header, dial size, rows and bar ---------- */
+#app{padding-top:calc(env(safe-area-inset-top,0px) + 12px)!important;gap:12px!important}
+.dial{margin:0 auto -6%!important}
+.pw{margin-top:0!important;min-height:64px!important}
+.quick button{min-height:96px}
+.ebar{padding:6px!important}.ebar button{min-height:60px!important}
+.qlbl{margin:0 4px!important;font-size:1rem;line-height:20px}
+.morebtn{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:58px;padding:0 16px;border-radius:22px;background:#1c1c1ecc;font-weight:700}
+.ctl{margin-bottom:12px}
+.quick button{min-height:0!important;height:96px}
+.ebar{bottom:env(safe-area-inset-bottom,0px)!important}
+#app{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 90px)!important}
+#pMore{position:absolute;width:0;height:0}
+.qlbl{margin-bottom:8px!important}
+.morebtn{min-height:60px!important}
+.qlbl{height:20px!important;line-height:20px!important;overflow:hidden}
+#pDur{line-height:0}#pDur>*{line-height:normal}
+#main{gap:12px!important}
 </style>
 </head>
 <body>
@@ -214,10 +233,10 @@ function draw(){
   part('pHero',`<div class="hero" role="group" aria-label="${esc(on?(left?`דולק, נשארו ${left} דקות, יכבה ב-${endAt}`:'דולק ללא טיימר'):choose?'כבוי. נבחר '+mins(pick):state)}"><div class="dial${on?' on':''}"><svg viewBox="0 0 300 300" aria-hidden="true">${ticks}<path class="trk" d="${arc(A0,A0+SPAN)}"/>${on?`<path class="val" d="${arc(A0,a)}"/><circle class="knob" r="13" cx="${kx}" cy="${ky}"/>`:choose?`<path class="pre" d="${arc(A0,pa)}"/><circle class="knob" r="13" cx="${px}" cy="${py}" style="opacity:.8"/>`:''}</svg>
     <div class="ctr" aria-hidden="true"><div class="big${(on&&left)||(choose&&pick)?'':' word'}">${bigTxt}</div>${st?`<div class="st">${esc(st)}</div>`:''}${sub2?`<div class="st2">${esc(sub2)}</div>`:''}</div></div></div>`);
   if(!app){part('pMsg',`<div class="warn">שליטה ישירה בדוד עובדת רק באפליקציית HomeOn המותקנת באייפון, כשהאייפון ברשת של הבית.</div>`);
-    part('pMain',`<button class="pw" data-web="on?m=${pick}">${I.power}<span>פתיחה ב-Ember</span></button>`);part('pDur','');part('pMore','');return fit()}
+    part('pMain',`<button class="pw" data-web="on?m=${pick}">${I.power}<span>פתיחה ב-Ember</span></button>`);part('pDur','');part('pMoreRow','');part('pMore','');return fit()}
   if(!linked&&!checking){part('pMsg',`<div class="warn${L.error?' bad':''}" role="alert">${esc(L.error?'הדוד לא ענה. האייפון וה-Switcher צריכים להיות באותה רשת Wi-Fi.':'הדוד עוד לא מחובר ל-HomeOn.')}</div>`);
     part('pMain',`<div class="mainrow"><button class="sq" id="refresh" aria-label="בדיקת חיבור">${I.refresh}<span aria-hidden="true">בדיקה</span></button><button class="pw" id="setup">${I.wifi}<span>חיבור Switcher V4</span></button></div>`);
-    part('pDur','');part('pMore','');return fit()}
+    part('pDur','');part('pMoreRow','');part('pMore','');return fit()}
   part('pMsg','');
   const i=DUR.findIndex(d=>d[0]===pick);
   const ctl=on?`<div class="ctl" style="justify-content:center"><button class="pill" id="add15" aria-label="עוד 15 דקות">${I.plus}<span aria-hidden="true">15 דק׳</span></button></div>`
@@ -226,6 +245,7 @@ function draw(){
       <button class="rc" id="tMinus" aria-label="פחות זמן. עכשיו ${esc(mins(pick))}"${i===0?' disabled':''}>−</button></div>`;
   part('pMain',`${ctl}<button class="pw${on?' on':''}" id="power" aria-pressed="${!!on}"${busy?' disabled':''}>${I.power}<span>${busy?'שולח...':on?'כיבוי':pick?'הדלקה ל-'+mins(pick):'הדלקה ללא טיימר'}</span></button>`);
   part('pDur',`<div class="qlbl" id="qL">זמן מהיר</div><div class="quick" role="group" aria-labelledby="qL">${QUICK.map(([m,t,ic])=>`<button data-q="${m}" aria-pressed="${!on&&pick===m}" aria-label="${t}, ${m} דקות${on?'. מדליק מחדש לזמן הזה':''}">${QI[ic]}<b aria-hidden="true">${t}</b><span aria-hidden="true">${m} דק׳</span></button>`).join('')}</div>`);
+  part('pMoreRow',`<button class="morebtn" id="menu2" aria-haspopup="dialog"><span>הגדרות נוספות</span>${I.chev}</button>`);
   const nx=SC&&SC.next?SC.next:null,au=L.auto?hrs(L.auto):'';
   part('pMore',`<div class="ebar"><button data-open="auto" aria-label="כיבוי אוטומטי: ${au?'אחרי '+au:'לא ידוע'}. שינוי"><span class="bi" aria-hidden="true">${QI.timer}</span><span aria-hidden="true" style="min-width:0"><small>כיבוי אוטומטי</small><b>${au?'אחרי '+au:'-'}</b></span></button>
     <button data-open="sched" aria-label="התזמון הבא: ${nx?esc(nextTxt(nx)):'אין'}. תזמונים"><span class="bi" aria-hidden="true">${QI.cal}</span><span aria-hidden="true" style="min-width:0"><small>תזמון הבא</small><b>${nx?esc(nextTxt(nx)):'אין'}</b></span></button></div>`);
@@ -289,7 +309,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.id==='back'){try{P.postMessage('unplug-close','*')}catch(_){}return}
   if(b.id==='power'){const on=H.link().on;return on?cmd('off',0,'הדוד כבה','כיבוי'):cmd('on',pick,'הדוד דולק'+(pick?' ל-'+mins(pick):''),'הדלקה ל-'+mins(pick))}
   if(b.id==='add15')return cmd('add',15,'נוספו 15 דקות','הוספת 15 דק׳');
-  if(b.id==='menu')return openMenu();
+  if(b.id==='menu'||b.id==='menu2')return openMenu();
   if(b.id==='tInf'){pick=0;LS.set('ember_pick',0);buzz();draw();return say('ללא טיימר')}
   if(b.dataset.q){const m=+b.dataset.q;pick=m;LS.set('ember_pick',m);buzz();if(H.link().on)return cmd('on',m,'הטיימר עודכן ל-'+mins(m),'הדלקה ל-'+mins(m));draw();return say('נבחר '+mins(m))}
   if(b.id==='tMinus'||b.id==='tPlus'){const i=DUR.findIndex(d=>d[0]===pick),j=pick===0?(b.id==='tPlus'?DUR.length-2:DUR.length-2):Math.max(0,Math.min(DUR.length-2,(i<0?1:i)+(b.id==='tPlus'?1:-1)));pick=DUR[j][0];LS.set('ember_pick',pick);buzz();draw();const q=$(b.id);if(q&&!q.disabled)q.focus();else{const o=$(b.id==='tPlus'?'tMinus':'tPlus');o&&o.focus()}return say(mins(pick))}
@@ -325,7 +345,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 const app=$('app');
 function fit(){const dl=document.querySelector('.dial'),hero=document.querySelector('.hero'),more=$('moreDet');app.style.overflowY='hidden';
   const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));
-  if(dl&&hero&&!(more&&more.open)){let w=Math.min(270,hero.clientWidth-60);dl.style.width=w+'px';while(w>170&&over()){w-=10;dl.style.width=w+'px'}
+  if(dl&&hero&&!(more&&more.open)){let w=Math.min(250,hero.clientWidth-60);dl.style.width=w+'px';while(w>150&&over()){w-=10;dl.style.width=w+'px'}
     for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}while(w>110&&over()){w-=10;dl.style.width=w+'px'}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
 addEventListener('resize',fit);document.addEventListener('toggle',()=>setTimeout(fit,30),true);
