@@ -163,6 +163,7 @@ header .hd-l{margin-inline-start:auto}
 
 .ebar small{white-space:normal!important;line-height:1.1}.fc3 .ebar b{white-space:normal!important}
 .dial{margin-top:20px!important}
+.days{display:flex;justify-content:space-between;gap:4px;margin-bottom:8px}.days button{width:48px;height:48px;min-height:48px;flex:0 0 48px;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:700}.days button{background:var(--card2);color:#fff}.days button[aria-pressed="true"]{background:#3d8bff;color:#fff}
 </style>
 </head>
 <body>
@@ -294,7 +295,8 @@ async function schedCall(o,ok){try{const v=await H.native(o);if(!v.list)throw ne
 function keepTimes(){const a=$('scS'),z=$('scE');if(a&&a.value)SE.start=toMin(a.value);if(z&&z.value)SE.end=toMin(z.value)}
 function openSched(){
   if(SE){const e=SE;return sheet(e.src.slot!=null||e.src.parked?'עריכת תזמון':'תזמון חדש',`<div class="tm"><label>מהשעה<input type="time" id="scS" value="${hhmm(e.start)}"></label><label>עד השעה<input type="time" id="scE" value="${hhmm(e.end)}"></label></div>
-    <div class="lbl" id="scDL">ימים</div><div class="seg" role="group" aria-labelledby="scDL">${DN.map((n,i)=>`<button data-sd="${i}" aria-pressed="${e.days.includes(i)}" aria-label="יום ${DNL[i]}" style="flex:1 1 11%;padding:0">${n}</button>`).join('')}</div>
+    <div class="lbl" id="scDL">ימים</div><div class="days" role="group" aria-labelledby="scDL">${DN.map((n,i)=>`<button data-sd="${i}" aria-pressed="${e.days.includes(i)}" aria-label="יום ${DNL[i]}">${n}</button>`).join('')}</div>
+    <p class="note" style="margin:0 4px 14px">${e.days.length?'':'בלי ימים מסומנים: פעם אחת, היום (או מחר אם השעה כבר עברה). '}השעה יכולה גם לעבור את חצות.</p>
     <button class="wide" id="scSave">שמירה בדוד</button>${e.src.slot!=null||e.src.parked?`<button class="wide sec" id="scDel">מחיקה</button>`:''}<button class="wide sec" id="scBack">חזרה לרשימה</button>`)}
   const L=SC?(SC.list||[]):[],P=SC?(SC.parked||[]):[];
   const row=(x,act)=>`<div class="it"><button class="g" ${act?`data-sc="${x.slot}"`:`data-pk="${esc(x.id)}"`} style="text-align:start"><span class="t">${hhmm(x.start)}-${hhmm(x.end)}</span><span class="s">${esc(daysTxt(x))}${act?'':' · מושבת'}</span></button><button class="sw" role="switch" ${act?`data-sct="${x.slot}"`:`data-pkt="${esc(x.id)}"`} aria-checked="${act}" aria-label="${hhmm(x.start)} ${esc(daysTxt(x))} פעיל"></button></div>`;
@@ -334,9 +336,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.dataset.sc!=null||b.dataset.pk!=null){const x=b.dataset.sc!=null?(SC.list||[]).find(s=>s.slot===+b.dataset.sc):(SC.parked||[]).find(p=>p.id===b.dataset.pk);if(!x)return;SE={src:b.dataset.sc!=null?{slot:x.slot}:{parked:x.id},days:x.days.slice(),start:x.start,end:x.end,active:b.dataset.sc!=null};return openSched()}
   if(b.dataset.sct!=null||b.dataset.pkt!=null){const act=b.dataset.sct!=null,x=act?(SC.list||[]).find(s=>s.slot===+b.dataset.sct):(SC.parked||[]).find(p=>p.id===b.dataset.pkt);if(!x)return;b.disabled=true;
     return schedCall(Object.assign({cmd:'schedSave',days:x.days,start:x.start,end:x.end,active:!act},act?{slot:x.slot}:{parked:x.id}),act?'התזמון הושבת':'התזמון הופעל')}
-  if(b.id==='scNew'){SE={src:{},days:[0,1,2,3,4],start:390,end:435,active:true};return openSched()}
+  if(b.id==='scNew'){SE={src:{},days:[],start:390,end:435,active:true};return openSched()}
   if(b.dataset.sd!=null&&SE){keepTimes();const i=+b.dataset.sd;SE.days.includes(i)?SE.days=SE.days.filter(x=>x!==i):SE.days.push(i);SE.days.sort();openSched();const q=SH&&SH.querySelector(`[data-sd="${i}"]`);q&&q.focus();return}
-  if(b.id==='scSave'&&SE){keepTimes();if(!SE.days.length)return toast('צריך לפחות יום אחד');if(SE.end===SE.start)return toast('שעת הסיום צריכה להיות אחרי ההתחלה');
+  if(b.id==='scSave'&&SE){keepTimes();if(SE.end===SE.start)return toast('שעת הסיום צריכה להיות אחרי ההתחלה');
     b.disabled=true;return schedCall(Object.assign({cmd:'schedSave',days:SE.days,start:SE.start,end:SE.end,active:SE.active},SE.src),'התזמון נשמר בדוד').then(()=>{SE=null;openSched()})}
   if(b.id==='scDel'&&SE){if(!confirm('למחוק את התזמון?'))return;return schedCall(Object.assign({cmd:'schedDelete'},SE.src),'התזמון נמחק').then(()=>{SE=null;openSched()})}
   if(b.id==='scBack'){SE=null;return openSched()}

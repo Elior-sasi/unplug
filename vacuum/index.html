@@ -194,6 +194,7 @@ header .circ{width:52px!important;height:52px!important;background:#1c1c1ecc!imp
 header{position:absolute!important;top:8px;inset-inline-start:24px;min-height:0!important;z-index:4}
 header .tt{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
 .vhero .vst{padding-inline-start:52px!important}
+.days{display:flex;flex-wrap:nowrap;justify-content:space-between;gap:4px}.days button{width:48px;height:48px;min-height:48px;flex:0 0 48px;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:700}
 </style>
 </head>
 <body>
@@ -441,12 +442,12 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
   else if(k==='hsch'){t='ניקוי מתוזמן';
     if(HSE){const e=HSE,R=D.rooms||[];if(SH.sig&&SH.sig.startsWith(t+'E')&&SH.keep)return;
       h=`<div class="login"><label for="hsT">שעה</label><input id="hsT" type="time" value="${esc(e.time)}">
-        <div class="lbl" id="hsDL" style="margin:6px 0 0">ימים</div><div class="seg" role="group" aria-labelledby="hsDL">${DNS.map((n,i)=>`<button data-hsd="${i}" aria-pressed="${e.days.includes(i)}" aria-label="יום ${['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][i]}" style="flex:1 1 12%;min-height:48px;padding:0">${n}</button>`).join('')}</div>
+        <div class="lbl" id="hsDL" style="margin:6px 0 0">ימים <small style="font-weight:400;opacity:.75">(בלי ימים: פעם אחת)</small></div><div class="seg days" role="group" aria-labelledby="hsDL">${DNS.map((n,i)=>`<button data-hsd="${i}" aria-pressed="${e.days.includes(i)}" aria-label="יום ${['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][i]}" style="flex:1 1 12%;min-height:48px;padding:0">${n}</button>`).join('')}</div>
         <div class="lbl" id="hsWL" style="margin:6px 0 0">מה לנקות</div><div class="seg" role="group" aria-labelledby="hsWL"><button data-hsall="1" aria-pressed="${!e.rooms.length}" style="flex-basis:100%">כל הבית</button>${R.map(r=>`<button data-hsr="${r.id}" aria-pressed="${e.rooms.includes(r.id)}" style="flex-basis:45%">${esc(r.name)}</button>`).join('')}</div>
         ${e.rooms.length?`<div class="lbl" id="hsXL" style="margin:6px 0 0">כמה פעמים</div><div class="seg" role="group" aria-labelledby="hsXL">${[1,2,3].map(v=>`<button data-hsx="${v}" aria-pressed="${e.times===v}">${v===1?'פעם אחת':v===2?'פעמיים':'3 פעמים'}</button>`).join('')}</div>`:''}
         <button class="wide" id="hsSave">${e.id?'שמירה':'הוספה'}</button>${e.id?`<button class="wide sec" id="hsDel">מחיקה</button>`:''}</div>`;t+='E'}
-    else h=`<p class="note">HomeOn מתחיל את הניקוי בזמן שקבעת, גם כשהאפליקציה סגורה.</p>${HS.length?`<div class="grp">${HS.map(x=>`<div class="it"><button class="g" data-hse="${x.id}" style="text-align:start"><span class="t">${esc(x.time)} · ${esc(hsDays(x.days))}</span><span class="s">${esc(hsWhat(x))}</span></button>
-        <button class="sw" role="switch" data-hson="${x.id}" aria-checked="${!!x.enabled}" aria-label="${esc(x.time)} ${esc(hsDays(x.days))} פעיל"></button></div>`).join('')}</div>`:''}
+    else h=`<p class="note">HomeOn מתחיל את הניקוי בזמן שקבעת, גם כשהאפליקציה סגורה.</p>${HS.length?`<div class="grp">${HS.map(x=>`<div class="it"><button class="g" data-hse="${x.id}" style="text-align:start"><span class="t">${esc(x.time)} · ${esc((x.once?"פעם אחת":hsDays(x.days)))}</span><span class="s">${esc(hsWhat(x))}</span></button>
+        <button class="sw" role="switch" data-hson="${x.id}" aria-checked="${!!x.enabled}" aria-label="${esc(x.time)} ${esc((x.once?"פעם אחת":hsDays(x.days)))} פעיל"></button></div>`).join('')}</div>`:''}
       <button class="wide" id="hsNew" style="margin-top:12px">${I.plus}ניקוי מתוזמן חדש</button>`}
   else if(k==='sch'){t='תזמונים בשואב';const DN=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
     const days=s=>{if(s.once)return 'פעם אחת';const r=String(s.days||'').padStart(7,'0'),on=[...r].map((c,i)=>c==='1'?i:-1).filter(i=>i>=0);return on.length===7?'כל יום':on.map(i=>DN[i]).join(' ')};
@@ -654,15 +655,15 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
     if(a==='rooms'){const ids=[...sel];return act('rooms','מנקה '+(ids.length===1?'חדר אחד':ids.length+' חדרים'),{rooms:ids,times})}
     if(a==='start'&&D&&D.state&&(D.state.paused||D.state.state===3))return act('start','ממשיך לנקות');
     return act(a,MSG[a])}
-  if(b.id==='hsNew'){HSE={time:'10:00',days:[0,1,2,3,4],rooms:[],times:1};SH.sig='';return refreshSheet()}
+  if(b.id==='hsNew'){HSE={time:'10:00',days:[],rooms:[],times:1};SH.sig='';return refreshSheet()}
   if(b.dataset.hse){const x=HS.find(x=>x.id===b.dataset.hse);if(!x)return;const v=((x.cmds||[])[0]||{}).value||{};HSE={id:x.id,time:x.time,days:(x.days||[]).slice(),rooms:v.a==='rooms'?(v.rooms||[]).slice():[],times:v.times||1,enabled:x.enabled};SH.sig='';return refreshSheet()}
   if(b.dataset.hsd!=null&&HSE){const i=+b.dataset.hsd;HSE.days.includes(i)?HSE.days=HSE.days.filter(x=>x!==i):HSE.days.push(i);HSE.time=$('hsT').value||HSE.time;SH.sig='';return refreshSheet()}
   if(b.dataset.hsall&&HSE){HSE.rooms=[];HSE.time=$('hsT').value||HSE.time;SH.sig='';return refreshSheet()}
   if(b.dataset.hsr&&HSE){const id=+b.dataset.hsr;HSE.rooms.includes(id)?HSE.rooms=HSE.rooms.filter(x=>x!==id):HSE.rooms.push(id);HSE.time=$('hsT').value||HSE.time;SH.sig='';return refreshSheet()}
   if(b.dataset.hsx&&HSE){HSE.times=+b.dataset.hsx;HSE.time=$('hsT').value||HSE.time;SH.sig='';return refreshSheet()}
-  if(b.id==='hsSave'&&HSE){const e=HSE;e.time=$('hsT').value;if(!e.time||!e.days.length)return toast('צריך שעה ולפחות יום אחד');
+  if(b.id==='hsSave'&&HSE){const e=HSE;e.time=$('hsT').value;if(!e.time)return toast('צריך שעה');let days=e.days.slice().sort(),once=!days.length;if(once){const [h,m]=e.time.split(':').map(Number),at=new Date();at.setHours(h,m,0,0);if(at<=new Date())at.setDate(at.getDate()+1);days=[at.getDay()]}
     const value=e.rooms.length?{a:'rooms',rooms:e.rooms,times:e.times}:{a:'start'};b.disabled=true;
-    return api('/schedules/save',{id:e.id,device:HO.MOVA.id,time:e.time,days:e.days.slice().sort(),cmds:[{code:'mova',value}],label:'שואב',enabled:e.enabled!==false,once:false})
+    return api('/schedules/save',{id:e.id,device:HO.MOVA.id,time:e.time,days,cmds:[{code:'mova',value}],label:'שואב',enabled:e.enabled!==false,once})
       .then(()=>{HSE=null;SH.sig='';toast('נשמר');return loadHS()}).catch(er=>{b.disabled=false;toast(er.message)})}
   if(b.id==='hsDel'&&HSE){if(!confirm('למחוק את הניקוי המתוזמן?'))return;return api('/schedules/delete',{id:HSE.id}).then(()=>{HSE=null;SH.sig='';toast('נמחק');return loadHS()}).catch(er=>toast(er.message))}
   if(b.dataset.hson){const x=HS.find(x=>x.id===b.dataset.hson);if(!x)return;const on=b.getAttribute('aria-checked')!=='true';b.setAttribute('aria-checked',on);x.enabled=on;
