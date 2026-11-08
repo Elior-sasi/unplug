@@ -46,3 +46,10 @@ html.dv,html.dv body{background:radial-gradient(120% 65% at 50% 30%,var(--dv-g1)
 /* corner buttons (back, menu, settings): a lighter circle with a thin light edge, so they stand out on the black background */
 :root{--dv-btn:#2c2c2e;--dv-btn-edge:inset 0 0 0 1.5px rgba(255,255,255,.32)}
 .dv-circle,header.top .menu-btn,.hoBack,#unplugBack,.dv-corners button,#back.circ,#menu.circ,#mvX.circ{background:var(--dv-btn)!important;box-shadow:var(--dv-btn-edge)!important;border:0!important}
+
+/* one bottom bar on every page, in the heater's look: warm dark glass, orange icon tiles, white values */
+html .bottom-bar,html nav#bar.bar,html .ebar{background:rgba(36,30,26,.92)!important;border:1px solid #ff9a3d33!important;box-shadow:0 10px 30px #0009!important}
+html .bottom-bar .bb .bb-ic,html nav#bar .bb .bi,html .ebar .bi{width:44px!important;height:44px!important;border-radius:14px!important;background:#ff9a3d2e!important;color:#ff9a3d!important}
+html .bottom-bar .bb .bb-ic svg{width:22px;height:22px}
+html .bottom-bar .bb .bb-t small,html nav#bar .bb small,html .ebar small{color:#aeaeb2!important;font-size:.85rem}
+html .bottom-bar .bb .bb-t b,html nav#bar .bb b,html .ebar b{color:#fff!important}
