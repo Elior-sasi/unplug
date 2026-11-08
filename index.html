@@ -1437,15 +1437,15 @@ const hm=t=>String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padS
 /* ---------- schedules ---------- */
 const DAYS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'],DAYSL=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 function daysText(s){const ds=(s.days||[]).slice().sort();if(s.once)return 'פעם אחת';if(ds.length===7)return 'כל יום';if(ds.join()==='0,1,2,3,4')return 'א׳-ה׳';if(ds.join()==='5,6')return 'סופ״ש';return ds.map(i=>DAYS[i]).join(' ')}
-function cmdsText(s){const d=DEVS.find(x=>x.id===s.device);return (s.cmds||[]).map(c=>{const f=d&&(d.functions||[]).find(x=>x.code===c.code);
+function cmdsText(s){if(s.device==='mova-e30-ultra'){const v=((s.cmds||[])[0]||{}).value||{};return v.a==='rooms'?'ניקוי '+((v.rooms||[]).length===1?'חדר אחד':(v.rooms||[]).length+' חדרים'):'ניקוי כל הבית'}const d=DEVS.find(x=>x.id===s.device);return (s.cmds||[]).map(c=>{const f=d&&(d.functions||[]).find(x=>x.code===c.code);
   if(d&&c.code===powerCode(d))return c.value?'הדלקה':'כיבוי';const n=f?nameOf(f):c.code;
   return n+': '+(typeof c.value==='boolean'?(c.value?'דלוק':'כבוי'):f&&f.type==='Integer'?fmtNum(c.value,f):vname(c.value))}).join(', ')}
-function schedRow(s,withDev){const d=DEVS.find(x=>x.id===s.device);
+function schedRow(s,withDev){const d=DEVS.find(x=>x.id===s.device)||(s.device==='mova-e30-ultra'&&typeof MOVA!=='undefined'?MOVA:null);
   const action=cmdsText(s),name=d?dname(d):'מכשיר שהוסר';
   return `<div class="schedule-swipe" data-swipe-id="${esc(s.id)}"><button type="button" class="schedule-reveal-delete" data-swipe-delete="${esc(s.id)}" aria-label="מחיקת התזמון של ${esc(name)}">מחק</button><div class="row schedule-swipe-content"><button class="row-btn grow" data-se="${esc(s.id)}" style="display:block;min-width:0;text-align:start"><span class="t" style="font-family:var(--f-num);font-size:1.3rem">${esc(s.time)}</span> <span class="t">${esc(name)}</span><br><span class="s">${esc(action)} · ${esc(daysText(s))}${s.label&&s.label!=='טיימר'?' · '+esc(s.label):''}</span></button>
    <button class="sw" role="switch" data-sen="${esc(s.id)}" aria-checked="${!!s.enabled}" aria-label="תזמון ${esc(s.time)} פעיל"></button></div></div>`}
 function bindSchedRows(root){
-  root.querySelectorAll('[data-se]').forEach(b=>b.onclick=()=>{const s=SCHED.find(x=>String(x.id)===b.dataset.se);if(s)openSchedEdit(s,DEVS.find(x=>x.id===s.device))});
+  root.querySelectorAll('[data-se]').forEach(b=>b.onclick=()=>{const s=SCHED.find(x=>String(x.id)===b.dataset.se);if(s&&s.device==='mova-e30-ultra')return openMova();if(s)openSchedEdit(s,DEVS.find(x=>x.id===s.device))});
   root.querySelectorAll('[data-sen]').forEach(b=>b.onclick=async()=>{const s=SCHED.find(x=>String(x.id)===b.dataset.sen);if(!s)return;s.enabled=!s.enabled;b.setAttribute('aria-checked',s.enabled);
     try{await api('/schedules/save',s)}catch(e){s.enabled=!s.enabled;b.setAttribute('aria-checked',s.enabled);toast(e.message)}});
   root.querySelectorAll('[data-swipe-delete]').forEach(b=>b.onclick=async()=>{const s=SCHED.find(x=>String(x.id)===b.dataset.swipeDelete);if(!s||!confirm('למחוק את התזמון של '+(DEVS.find(d=>d.id===s.device)?.name||'המכשיר')+' בשעה '+s.time+'?'))return;

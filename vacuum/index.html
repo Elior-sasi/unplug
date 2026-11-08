@@ -208,6 +208,11 @@ const QUICK=['cleaning_mode','suction_level','water_volume','mop_pad_humidity','
 const sel=new Set();let times=1;
 
 /* ---------- data ---------- */
+let HS=[],HSE=null; /* HomeOn cleaning schedules (run by our server) and the one being edited */
+const DNS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+async function loadHS(){try{const j=await api('/schedules');HS=(j.schedules||[]).filter(x=>x.device===HO.MOVA.id);draw();refreshSheet()}catch(e){}}
+const hsDays=d=>{const s=(d||[]).slice().sort();return s.length===7?'כל יום':s.join()==='0,1,2,3,4'?'א׳-ה׳':s.map(i=>DNS[i]).join(' ')};
+const hsWhat=x=>{const v=((x.cmds||[])[0]||{}).value||{};const R=(D&&D.rooms)||[];return v.a==='rooms'?(v.rooms||[]).map(id=>(R.find(r=>r.id===id)||{}).name||('חדר '+id)).join(', ')+(v.times>1?' · '+v.times+' פעמים':''):'כל הבית'};
 let D=MV.d||null,linked=MV.linked,err='',mapD=MV.map||null,mapAt=MV.mapAt||0;
 async function load(){try{const j=await api('/mova/state');D=j;linked=true;err='';MV.d=j;MV.linked=true}
   catch(e){const m=String(e.message||e);if(/לא מחובר|פג|עדכון/.test(m)){linked=false;D=null;MV.linked=false;MV.d=null}err=m}
@@ -273,10 +278,11 @@ function draw(){
       ['mode',I.sliders,'מצב ניקוי מתקדם','מים, לחות מגבים, CleanGenius'],
       (D.rooms||[]).length&&['roomsl',I.map,'חדרים','שמות, סדר ניקוי ועריכת המפה'],
       (cn.station||cn.empty)&&['station',I.station,'העמדה',stationLine(x)],
-      cons.length&&['cons',I.wrench,'תחזוקה',due?due+' חלקים להחלפה':'הכול תקין',due],
+      cons.length&&['cons',I.wrench,'תחזוקה',due?(due===1?'חלק אחד להחלפה':due+' חלקים להחלפה'):'הכול תקין',due],
       ['settings',I.gear,'הגדרות','שטיחים, נעילת ילדים, ייבוש ועוד'],
       dnd&&['dnd',I.moon,'שעות שקטות',dnd.on?`פעיל ${dnd.start||''}-${dnd.end||''}`:'כבוי'],
-      sch.length&&['sch',I.clock,'תזמונים',sch.length+' בשואב'],
+      ['hsch',I.clock,'ניקוי מתוזמן',HS.length?((n=>n===0?'כבוי':n===1?'אחד פעיל':n+' פעילים')(HS.filter(x=>x.enabled).length)):'לפי ימים, שעה וחדרים'],
+      sch.length&&['sch',I.clock,'תזמונים ישנים בשואב',sch.length+' שמורים בשואב עצמו'],
       ['hist',I.list,'היסטוריה',x.totals&&x.totals.count!=null?x.totals.count+' ניקויים':''],
       ['device',I.info,'השואב','חדר, ראוטר, ניתוק']].filter(Boolean);
     const open=$('moreDet')?$('moreDet').open:false;
@@ -309,7 +315,7 @@ function drawLogin(){if($('login'))return;sig={};
 
 /* ---------- windows (sheets) ---------- */
 let SH=null,lastFocus=null;
-function sheet(kind){closeSheet(true);if(kind==='order')ORDER=null;lastFocus=document.activeElement;
+function sheet(kind){closeSheet(true);if(kind==='order')ORDER=null;if(kind==='hsch')HSE=null;lastFocus=document.activeElement;
   const s=document.createElement('div');s.className='scrim';s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh-h"><h3 id="shT" tabindex="-1"></h3><button class="circ" data-x aria-label="סגירה">${I.x}</button></div><div id="shB"></div></div>`;
   s.addEventListener('click',e=>{if(e.target===s)closeSheet()});s.querySelector('[data-x]').onclick=()=>closeSheet();
   s.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
@@ -346,6 +352,16 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
       <div class="it"><label class="g t" for="dS">מהשעה</label><input type="time" id="dS" value="${esc(d.start||'22:00')}"></div>
       <div class="it"><label class="g t" for="dE">עד השעה</label><input type="time" id="dE" value="${esc(d.end||'08:00')}"></div></div>
       <p class="note">בשעות האלה השואב לא יתחיל ניקוי מתוזמן ולא ישמיע הודעות.</p>`}
+  else if(k==='hsch'){t='ניקוי מתוזמן';
+    if(HSE){const e=HSE,R=D.rooms||[];if(SH.sig&&SH.sig.startsWith(t+'E')&&SH.keep)return;
+      h=`<div class="login"><label for="hsT">שעה</label><input id="hsT" type="time" value="${esc(e.time)}">
+        <div class="lbl" id="hsDL" style="margin:6px 0 0">ימים</div><div class="seg" role="group" aria-labelledby="hsDL">${DNS.map((n,i)=>`<button data-hsd="${i}" aria-pressed="${e.days.includes(i)}" aria-label="יום ${['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][i]}" style="flex:1 1 12%;min-height:48px;padding:0">${n}</button>`).join('')}</div>
+        <div class="lbl" id="hsWL" style="margin:6px 0 0">מה לנקות</div><div class="seg" role="group" aria-labelledby="hsWL"><button data-hsall="1" aria-pressed="${!e.rooms.length}" style="flex-basis:100%">כל הבית</button>${R.map(r=>`<button data-hsr="${r.id}" aria-pressed="${e.rooms.includes(r.id)}" style="flex-basis:45%">${esc(r.name)}</button>`).join('')}</div>
+        ${e.rooms.length?`<div class="lbl" id="hsXL" style="margin:6px 0 0">כמה פעמים</div><div class="seg" role="group" aria-labelledby="hsXL">${[1,2,3].map(v=>`<button data-hsx="${v}" aria-pressed="${e.times===v}">${v===1?'פעם אחת':v===2?'פעמיים':'3 פעמים'}</button>`).join('')}</div>`:''}
+        <button class="wide" id="hsSave">${e.id?'שמירה':'הוספה'}</button>${e.id?`<button class="wide sec" id="hsDel">מחיקה</button>`:''}</div>`;t+='E'}
+    else h=`<p class="note">HomeOn מתחיל את הניקוי בזמן שקבעת, גם כשהאפליקציה סגורה.</p>${HS.length?`<div class="grp">${HS.map(x=>`<div class="it"><button class="g" data-hse="${x.id}" style="text-align:start"><span class="t">${esc(x.time)} · ${esc(hsDays(x.days))}</span><span class="s">${esc(hsWhat(x))}</span></button>
+        <button class="sw" role="switch" data-hson="${x.id}" aria-checked="${!!x.enabled}" aria-label="${esc(x.time)} ${esc(hsDays(x.days))} פעיל"></button></div>`).join('')}</div>`:''}
+      <button class="wide" id="hsNew" style="margin-top:12px">${I.plus}ניקוי מתוזמן חדש</button>`}
   else if(k==='sch'){t='תזמונים בשואב';const DN=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
     const days=s=>{if(s.once)return 'פעם אחת';const r=String(s.days||'').padStart(7,'0'),on=[...r].map((c,i)=>c==='1'?i:-1).filter(i=>i>=0);return on.length===7?'כל יום':on.map(i=>DN[i]).join(' ')};
     h=`<div class="grp">${(D.schedules||[]).map(s=>`<div class="it"><span class="g"><span class="t" id="sc_${s.id}">${esc(s.time)}</span><span class="s">${esc(days(s))}</span></span>
@@ -375,7 +391,7 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
   if(SH.sig===t+h)return;const box=SH.el.querySelector('#shB'),a=document.activeElement,inside=box.contains(a);
   if(inside&&/^(SELECT|INPUT)$/.test(a.tagName))return;
   const key=inside?(a.id?'#'+a.id:a.dataset.q?`[data-q="${a.dataset.q}"][data-v="${a.dataset.v}"]`:a.dataset.room?`[data-room="${a.dataset.room}"]`:a.dataset.k?`[data-k="${a.dataset.k}"]`:a.dataset.times?`[data-times="${a.dataset.times}"]`:a.dataset.reset?`[data-reset="${a.dataset.reset}"]`:a.dataset.num?`[data-num="${a.dataset.num}"][data-d="${a.dataset.d}"]`:null):null;
-  SH.el.querySelector('#shT').textContent=t;box.innerHTML=h;SH.sig=t+h;if(key){const n=box.querySelector(key);n&&n.focus({preventScroll:true})}}
+  SH.el.querySelector('#shT').textContent=t.replace(/E$/,'');box.innerHTML=h;SH.sig=t+h;if(key){const n=box.querySelector(key);n&&n.focus({preventScroll:true})}}
 
 /* ---------- the big map: zoom, pick rooms, and edit (names, merge, split, no-go zones, walls, order) ---------- */
 let MVW=null;
@@ -479,6 +495,19 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
     if(a==='rooms'){const ids=[...sel];return act('rooms','מנקה '+(ids.length===1?'חדר אחד':ids.length+' חדרים'),{rooms:ids,times})}
     if(a==='start'&&D&&D.state&&(D.state.paused||D.state.state===3))return act('start','ממשיך לנקות');
     return act(a,MSG[a])}
+  if(b.id==='hsNew'){HSE={time:'10:00',days:[0,1,2,3,4],rooms:[],times:1};SH.sig='';return refreshSheet()}
+  if(b.dataset.hse){const x=HS.find(x=>x.id===b.dataset.hse);if(!x)return;const v=((x.cmds||[])[0]||{}).value||{};HSE={id:x.id,time:x.time,days:(x.days||[]).slice(),rooms:v.a==='rooms'?(v.rooms||[]).slice():[],times:v.times||1,enabled:x.enabled};SH.sig='';return refreshSheet()}
+  if(b.dataset.hsd!=null&&HSE){const i=+b.dataset.hsd;HSE.days.includes(i)?HSE.days=HSE.days.filter(x=>x!==i):HSE.days.push(i);HSE.time=$('hsT').value||HSE.time;SH.sig='';return refreshSheet()}
+  if(b.dataset.hsall&&HSE){HSE.rooms=[];HSE.time=$('hsT').value||HSE.time;SH.sig='';return refreshSheet()}
+  if(b.dataset.hsr&&HSE){const id=+b.dataset.hsr;HSE.rooms.includes(id)?HSE.rooms=HSE.rooms.filter(x=>x!==id):HSE.rooms.push(id);HSE.time=$('hsT').value||HSE.time;SH.sig='';return refreshSheet()}
+  if(b.dataset.hsx&&HSE){HSE.times=+b.dataset.hsx;HSE.time=$('hsT').value||HSE.time;SH.sig='';return refreshSheet()}
+  if(b.id==='hsSave'&&HSE){const e=HSE;e.time=$('hsT').value;if(!e.time||!e.days.length)return toast('צריך שעה ולפחות יום אחד');
+    const value=e.rooms.length?{a:'rooms',rooms:e.rooms,times:e.times}:{a:'start'};b.disabled=true;
+    return api('/schedules/save',{id:e.id,device:HO.MOVA.id,time:e.time,days:e.days.slice().sort(),cmds:[{code:'mova',value}],label:'שואב',enabled:e.enabled!==false,once:false})
+      .then(()=>{HSE=null;SH.sig='';toast('נשמר');return loadHS()}).catch(er=>{b.disabled=false;toast(er.message)})}
+  if(b.id==='hsDel'&&HSE){if(!confirm('למחוק את הניקוי המתוזמן?'))return;return api('/schedules/delete',{id:HSE.id}).then(()=>{HSE=null;SH.sig='';toast('נמחק');return loadHS()}).catch(er=>toast(er.message))}
+  if(b.dataset.hson){const x=HS.find(x=>x.id===b.dataset.hson);if(!x)return;const on=b.getAttribute('aria-checked')!=='true';b.setAttribute('aria-checked',on);x.enabled=on;
+    return api('/schedules/save',{id:x.id,device:x.device,time:x.time,days:x.days,cmds:x.cmds,label:x.label||'שואב',enabled:on,once:false}).catch(er=>{toast(er.message);loadHS()})}
   if(b.dataset.ren){RENAME=+b.dataset.ren;return sheet('rename')}
   if(b.dataset.rtype){SH.el.querySelectorAll('[data-rtype]').forEach(o=>o.setAttribute('aria-pressed',o===b));return}
   if(b.id==='rnSave'){const name=$('rnN').value.trim(),tb=SH.el.querySelector('[data-rtype][aria-pressed="true"]'),type=tb?+tb.dataset.rtype:0;
@@ -501,6 +530,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.id==='dvOut'){if(!confirm('לנתק את חשבון MOVAhome מ-HomeOn?'))return;closeSheet();return api('/mova/logout').then(()=>{linked=false;D=null;mapD=null;MV.linked=false;MV.d=null;MV.map=null;HO.render();draw()}).catch(e=>toast(e.message))}
 });
 document.addEventListener('change',e=>{const t=e.target;
+  if(t.id==='hsT'&&HSE){HSE.time=t.value;return}
   if(t.dataset.sel){const s=(D.selects||[]).find(s=>s.k===t.dataset.sel);if(s)s.cur=t.value;return setv(t.dataset.sel,t.value,'נשמר')}
   if(t.id==='dS'||t.id==='dE')return setv('dnd',{on:$('dndOn').getAttribute('aria-checked')==='true',start:$('dS').value,end:$('dE').value},'נשמר')});
 
@@ -517,7 +547,7 @@ document.addEventListener('touchmove',e=>{if(e.target.closest('.scrim'))return;c
 let x0=null,y0=0;addEventListener('touchstart',e=>{const t=e.touches[0];x0=t.clientX>innerWidth-28||t.clientX<28?t.clientX:null;y0=t.clientY},{passive:true});
 addEventListener('touchend',e=>{if(x0==null||SH)return;const t=e.changedTouches[0];if(Math.abs(t.clientX-x0)>90&&Math.abs(t.clientY-y0)<60)$('back').click();x0=null},{passive:true});
 
-draw();load().then(()=>loadMap(!mapD));
+draw();load().then(()=>{loadMap(!mapD);loadHS()});
 setInterval(()=>{if(document.visibilityState==='visible'&&linked)load()},8000);
 setInterval(()=>{if(document.visibilityState==='visible'&&SH&&SH.kind==='map')loadMap(false)},20000);
 })();
