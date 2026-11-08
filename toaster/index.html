@@ -479,6 +479,24 @@ html.in-unplug,html.in-unplug body{overscroll-behavior:none}
 .in-unplug .prof[aria-pressed="true"]{background:#3d8bff26!important}
 .in-unplug .sec h2{font-size:1.25rem!important;font-weight:700!important;color:#fff!important}
 .in-unplug .hoSub{font-size:.95rem;color:rgba(235,235,245,.6);margin-top:2px}
+
+/* ---------- Ember look inside HomeOn: warm glow, thin big countdown, steps under the dial, profile tiles ---------- */
+html.in-unplug,html.in-unplug body{background:radial-gradient(120% 65% at 50% 30%,#2b1609 0%,#120a05 48%,#000 100%) fixed #000!important}
+html.in-unplug .app>header.top{position:static!important;pointer-events:auto;min-height:60px;display:flex;align-items:center}
+html.in-unplug header.top h1{position:static!important;width:auto!important;height:auto!important;overflow:visible!important;clip:auto!important;font-size:2rem!important;font-weight:800!important}
+html.in-unplug #unplugBack,html.in-unplug header.top #menuBtn{width:52px!important;height:52px!important;background:#1c1c1ecc!important}
+html.in-unplug .hero{background:none!important;padding:0!important}
+html.in-unplug .hoTime{font-weight:200!important;font-size:min(4.2rem,9vh)!important}
+html.in-unplug .hoSteps{margin-top:0!important;margin-bottom:0!important;padding:0!important}
+html.in-unplug .hoStep{width:64px!important;height:64px!important;background:#1c1c1ecc!important;font-weight:500!important;font-size:2rem!important}
+html.in-unplug .power{background:#1c1c1ecc!important;color:#fff!important}
+html.in-unplug .app.is-on .power{background:#ff9a3d!important;color:#1a0c04!important}
+html.in-unplug .profiles{display:grid!important;grid-template-columns:repeat(4,1fr)!important;overflow:visible!important}
+html.in-unplug .prof{flex-direction:column!important;justify-content:center!important;min-height:96px!important;border-radius:24px!important;padding:8px 4px!important;background:#1c1c1ecc!important;text-align:center}
+html.in-unplug .prof b{white-space:normal!important;line-height:1.15}
+html.in-unplug .prof .chip svg{width:28px!important;height:28px!important}
+html.in-unplug .prof[aria-pressed="true"]{background:#3d8bff2e!important;outline:1.5px solid #3d8bff66}
+html.in-unplug .sec>h2{color:#aeaeb2!important;font-weight:600!important;font-size:1rem!important}
 </style>
 </head>
 <body>

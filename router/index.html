@@ -263,6 +263,12 @@ nav.tabs svg{width:22px;height:22px}
 .opt[aria-pressed="true"] .chk{opacity:1}
 .toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:13px;z-index:40;white-space:nowrap;direction:rtl}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- Ember look: glow, title row on top ---------- */
+html,body{background:radial-gradient(120% 65% at 50% 30%,#0e1d33 0%,#070c14 50%,#000 100%) fixed #000!important}
+header.top{position:static!important;pointer-events:auto!important;display:flex!important;align-items:center;min-height:60px;margin-bottom:4px}
+header.top .brand{position:static!important;width:auto!important;height:auto!important;overflow:visible!important;clip:auto!important;font-size:2rem!important;font-weight:800!important;flex:1}
+header.top .menu-btn,#unplugBack{width:52px!important;height:52px!important;background:#1c1c1ecc!important}
 </style>
 
 <div class="app" id="app">
