@@ -404,7 +404,7 @@ function draw(){
   if(cn.washing)q.push(rb('wash',I.drop,x&&x.washing?'עצור':'שטיפה',0,x&&x.washing?'עצירת שטיפת המגבים':'שטיפת מגבים',x&&x.washing?'busy':''));
   part('pQuick',D?`<div class="rbs" role="group" aria-label="פעולות">${q.join('')}</div>`:'');
   /* more settings - each opens its own window */
-  if(D){const cons=D.consumables||[],due=cons.filter(c=>c.pct<=15).length,sch=D.schedules||[],dnd=x.dnd;
+  if(D){const cons=D.consumables||[],due=cons.filter(c=>c.pct<=15).length,sch=D.schedules||[],dnd=x&&x.dnd;
     const items=[
       ['mode',I.sliders,'מצב ניקוי מתקדם','מים, לחות מגבים, CleanGenius'],
       (D.rooms||[]).length&&['roomsl',I.map,'חדרים','הגדרות לכל חדר, שמות, סדר ומיפוי'],
@@ -424,7 +424,7 @@ function draw(){
     const el=part('pMore',html);const det=el.querySelector('details');if(det&&!det._w){det._w=1;det.addEventListener('toggle',()=>setTimeout(fit,30))}}
   /* the floating bar: mode and suction */
   const S=(D&&D.selects)||[],m=S.find(s=>s.k==='cleaning_mode'),su=S.find(s=>s.k==='suction_level');
-  const lab=s=>s?((s.o.find(o=>o.v===s.cur)||{}).t||''):'';
+  const lab=s=>s?(((s.o||[]).find(o=>o.v===s.cur)||{}).t||''):'';
   if(m||su){$('bar').hidden=false;const bh=`${m?`<button class="bb" data-open="qmode" aria-label="מצב ניקוי: ${esc(lab(m))}. שינוי"><span class="bi" aria-hidden="true">${I.drop}</span><span aria-hidden="true"><small>מצב</small><b>${esc(lab(m))}</b></span></button>`:''}
       ${su?`<button class="bb" data-open="qsuction" aria-label="עוצמת שאיבה: ${esc(lab(su))}. שינוי"><span class="bi" aria-hidden="true">${I.wind}</span><span aria-hidden="true"><small>שאיבה</small><b>${esc(lab(su))}</b></span></button>`:''}`;
     if(sig.bar!==bh){$('bar').innerHTML=bh;sig.bar=bh}}else $('bar').hidden=true;

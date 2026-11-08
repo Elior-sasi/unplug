@@ -671,6 +671,12 @@ body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,
 .app{padding-bottom:calc(var(--nav-h) + 28px + env(safe-area-inset-bottom))!important}
 #view{padding-bottom:0!important}
 .reordering #view{padding-bottom:calc(var(--nav-h,80px) + env(safe-area-inset-bottom) + 40px)!important}
+/* accessibility floor: every control at least 44x44, no text under ~12.5px */
+.chip{min-width:44px;justify-content:center;text-align:center}
+.chip.add{width:44px;height:44px;min-height:44px}
+.seg button{min-height:44px}
+.sw{border:5px solid transparent!important;background-clip:padding-box!important;box-sizing:content-box;width:56px;height:34px}
+nav.bar button{font-size:max(.8rem,12.5px)}
 </style>
 </head>
 <body>
