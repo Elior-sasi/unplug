@@ -8,7 +8,7 @@
 :root{color-scheme:dark;--bg:#000;--card:#1c1c1e;--card2:#2c2c2e;--card3:#3a3a3c;--fg:#fff;--mut:#aeaeb2;--line:#ffffff14;--acc:#ff9a3d;--ink:#1f0e00;--on:#3d8bff;--on-txt:#6fa8ff;--bad:#ff6961;--ok:#30d158;
  --f:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Hebrew",system-ui,sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:17px;overscroll-behavior:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:1.0625rem;overscroll-behavior:none}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 button:disabled{opacity:.4;cursor:default}
 :focus-visible{outline:3px solid #ffc48a;outline-offset:3px;border-radius:14px}
@@ -200,7 +200,7 @@ header .tt{position:absolute!important;width:1px!important;height:1px!important;
 #pMain .pw{width:100%;min-height:64px;font-size:1.1rem;padding:0 16px}
 #pMain .pw span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* map labels: small, so many rooms fit; the selection count is already on the button */
-#mcard .pin{min-height:24px;padding:1px 8px;font-size:12px;border-width:1px}
+#mcard .pin{min-height:24px;padding:1px 8px;font-size:0.75rem;border-width:1px}
 .mpill{display:none!important}
 
 /* ---------- device.css language: corners on top, power pill dark when idle and orange while cleaning ---------- */
@@ -217,6 +217,7 @@ button.sending{opacity:.6;position:relative}button.sending::after{content:'';pos
 @keyframes spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){button.sending::after{animation:none}}
 </style>
 <link rel="stylesheet" href="../device.css?v=1">
+<script>/* HomeOn text size (settings) applies here too */(function(){const a=()=>{let s='100';try{const v=localStorage.getItem('unplug_ts');if(['100','115','130','150'].includes(v))s=v}catch(e){}document.documentElement.style.fontSize=s+'%';document.documentElement.classList.toggle('ts-big',s!=='100')};a();addEventListener('storage',e=>{if(e.key==='unplug_ts')a()})})();</script>
 </head>
 <body>
 <div id="app">
