@@ -412,7 +412,9 @@ const hero=document.getElementById('hero'),T=window.TST;if(hero&&T){const R=T.R,
   /* scroll only when there is really more than one screen (e.g. "more settings" open) */
   const app=document.getElementById('app');const fit=()=>{if(!app)return;const bar=document.querySelector('.bottom-bar');if(bar)app.style.setProperty('padding-bottom',Math.ceil(innerHeight-bar.getBoundingClientRect().top+16)+'px','important');app.style.overflowY='hidden';
     const dl=document.querySelector('.hoDial'),more=document.getElementById('moreDet');
-    if(dl&&!(more&&more.open)){let w=Math.min(300,hero.clientWidth-96);dl.style.width=w+'px';while(w>190&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
+    const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));
+    if(dl&&!(more&&more.open)){let w=Math.min(300,hero.clientWidth-96);dl.style.width=w+'px';while(w>170&&over()){w-=10;dl.style.width=w+'px'}
+      for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}while(w>110&&over()){w-=10;dl.style.width=w+'px'}}
     app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'};
   addEventListener('resize',fit);document.getElementById('moreDet')?.addEventListener('toggle',()=>setTimeout(fit,50));setTimeout(fit,300);setInterval(fit,1500);
   /* when the page fits, an up/down drag must not move it (iOS bounces frames even with nothing to scroll); sideways rows still scroll */
@@ -497,6 +499,11 @@ html.in-unplug .prof b{white-space:normal!important;line-height:1.15}
 html.in-unplug .prof .chip svg{width:28px!important;height:28px!important}
 html.in-unplug .prof[aria-pressed="true"]{background:#3d8bff2e!important;outline:1.5px solid #3d8bff66}
 html.in-unplug .sec>h2{color:#aeaeb2!important;font-weight:600!important;font-size:1rem!important}
+
+/* when the text is big: compact steps instead of scrolling */
+html.in-unplug.fc1 .prof{min-height:72px!important}html.in-unplug.fc1 .prof .chip svg{width:22px!important;height:22px!important}html.in-unplug.fc1 .sec>h2{display:none}
+html.in-unplug.fc2 .app>header.top{min-height:48px}html.in-unplug.fc2 .hoStep{width:52px!important;height:52px!important}html.in-unplug.fc2 .power{min-height:52px!important}
+html.in-unplug.fc3 .profiles{display:flex!important;overflow-x:auto!important;scrollbar-width:none}html.in-unplug.fc3 .prof{flex:0 0 26%!important;min-height:64px!important}
 </style>
 </head>
 <body>

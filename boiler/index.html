@@ -126,6 +126,11 @@ header h1{font-size:2rem;font-weight:800}
 
 /* no text selection on long-press, anywhere */
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,textarea,select{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+
+/* when the text is big: compact steps instead of scrolling */
+.fc1 .quick button{min-height:76px}.fc1 .quick button svg{width:24px;height:24px}.fc1 .qlbl{display:none}
+.fc2 header{min-height:48px}.fc2 .circ{width:44px;height:44px}.fc2 .ctl .rc{width:52px;height:52px}.fc2 .pw{min-height:52px;margin-top:6px}.fc2 #app{gap:8px}
+.fc3 .quick span{display:none}.fc3 .st2{display:none}.fc3 .quick button{min-height:60px;flex-direction:row}
 </style>
 </head>
 <body>
@@ -319,7 +324,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 /* one screen, no scrolling, like the AC page */
 const app=$('app');
 function fit(){const dl=document.querySelector('.dial'),hero=document.querySelector('.hero'),more=$('moreDet');app.style.overflowY='hidden';
-  if(dl&&hero&&!(more&&more.open)){let w=Math.min(270,hero.clientWidth-60);dl.style.width=w+'px';while(w>170&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
+  const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));
+  if(dl&&hero&&!(more&&more.open)){let w=Math.min(270,hero.clientWidth-60);dl.style.width=w+'px';while(w>170&&over()){w-=10;dl.style.width=w+'px'}
+    for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}while(w>110&&over()){w-=10;dl.style.width=w+'px'}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
 addEventListener('resize',fit);document.addEventListener('toggle',()=>setTimeout(fit,30),true);
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
