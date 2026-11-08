@@ -159,7 +159,7 @@ header{position:absolute;top:10px;inset-inline-start:26px;min-height:0;z-index:4
 header .tt{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
 .rb{min-width:0;flex:1}.rb>span{width:min(60px,15vw);height:min(60px,15vw)}
 .vhero{position:relative}.vhero .vst{padding-inline-start:52px;min-height:44px;display:flex;align-items:center}
-header{top:10px;inset-inline-start:12px}
+header{top:8px;inset-inline-start:24px}
 </style>
 </head>
 <body>
@@ -591,7 +591,7 @@ function unclash(){const w=document.querySelector('#mcard .mwrap');if(!w)return;
 window.__fit=()=>{fit();unclash()};
 function fit(){if(linked===false||MVW)return;const bar=$('bar');const pb=bar.hidden?24:Math.ceil(innerHeight-bar.getBoundingClientRect().top+16);app.style.paddingBottom=pb+'px';
   const mc=$('mcard'),more=$('moreDet');app.style.overflowY='hidden';
-  if(mc&&!(more&&more.open)){let h=Math.round(innerHeight*.56);mc.style.setProperty('--mh',h+'px');const floor=Math.max(240,Math.round(innerHeight*.34));while(h>floor&&app.scrollHeight>app.clientHeight+1){h-=12;mc.style.setProperty('--mh',h+'px')}}
+  if(mc&&!(more&&more.open)){let h=Math.round(innerHeight*.56);mc.style.setProperty('--mh',h+'px');const floor=Math.max(150,Math.round(innerHeight*.2));while(h>floor&&app.scrollHeight>app.clientHeight+1){h-=12;mc.style.setProperty('--mh',h+'px')}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden';unclash()}
 addEventListener('resize',fit);
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
