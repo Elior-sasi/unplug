@@ -164,6 +164,13 @@ header .hd-l{margin-inline-start:auto}
 .ebar small{white-space:normal!important;line-height:1.1}.fc3 .ebar b{white-space:normal!important}
 .dial{margin-top:20px!important}
 .days{display:flex;justify-content:space-between;gap:4px;margin-bottom:8px}.days button{width:48px;height:48px;min-height:48px;flex:0 0 48px;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:700}.days button{background:var(--card2);color:#fff}.days button[aria-pressed="true"]{background:#3d8bff;color:#fff}
+
+/* background glow: neutral when off; orange when heating, blue when cooling */
+:root{--g1:#1c1c1e;--g2:#0b0b0c}
+html.glow-warm{--g1:#2b1609;--g2:#120a05}
+html.glow-cool{--g1:#0e1d33;--g2:#070c14}
+html,html body,html.in-unplug,html.in-unplug body{background:radial-gradient(120% 65% at 50% 30%,var(--g1) 0%,var(--g2) 50%,#000 100%) fixed #000!important;transition:background .6s}
+@media (prefers-reduced-motion:reduce){html,html body{transition:none!important}}
 </style>
 </head>
 <body>
@@ -235,6 +242,7 @@ function draw(){
   const app=H.inApp(),linked=app&&L.connected,checking=app&&!L.checked,on=linked&&L.on,left=linked?Math.ceil((L.left||0)/60):0;
   {const d=$('hDot');if(d){d.className='dot'+(linked?' ok':app&&L.checked?' bad':'')}}
   if(on&&left>total)total=left;
+  document.documentElement.classList.toggle('glow-warm',!!on);
   const frac=on?(left?Math.min(1,left/Math.max(total,1)):1):0,a=A0+SPAN*Math.max(.001,frac),[kx,ky]=pt(a);
   const state=!app?'בדפדפן':checking?'בודק...':!linked?'לא מחובר':on?'דולק':'כבוי';
   const choose=linked&&!on;
