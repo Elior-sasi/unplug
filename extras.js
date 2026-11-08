@@ -271,3 +271,10 @@ function openShabbat(){
     el.querySelector('#shS').onclick=()=>doSave(true);
   });
 }
+
+/* room tabs: keep their scroll position across re-renders, and keep the chosen tab in view */
+(function(){if(typeof window.render!=='function'||window.render._keepChips)return;const _r=window.render;
+  const w=function(){const c=document.querySelector('.chips'),sl=c?c.scrollLeft:null;const out=_r.apply(this,arguments);
+    const n=document.querySelector('.chips');if(n){if(sl!=null)n.scrollLeft=sl;const s=n.querySelector('[aria-pressed="true"]');
+      if(s){const a=s.getBoundingClientRect(),b=n.getBoundingClientRect();if(a.left<b.left+4||a.right>b.right-4)s.scrollIntoView({inline:'center',block:'nearest',behavior:'instant'})}}
+    return out};w._keepChips=true;window.render=w})();
