@@ -594,8 +594,6 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 .card .favToggle[aria-pressed="true"] svg{fill:currentColor;filter:drop-shadow(0 0 5px #ff9a3d55)}
 .card .favToggle:focus-visible{outline:2px solid #ff9a3d;outline-offset:1px}
 .card.wide .favToggle{left:auto;right:10px;top:8px;bottom:auto}
-.card:has(.favToggle[aria-pressed="true"]) .st{padding-inline-end:38px}
-.card.wide:has(.favToggle[aria-pressed="true"]) .st{padding-inline-end:0}
 .reordering .card .favToggle{display:none!important}
 .reordering .card .edFav{background:#303237!important;color:#a3a3aa!important}
 .reordering .card .edFav[aria-pressed="true"]{background:#413021!important;color:#ff9a3d!important}
@@ -1180,7 +1178,7 @@ function openEmberSheet(){
     draw();if(IN_APP)refresh();
   });
 }
-const favButton=d=>META.fav[d.id]?`<button class="favToggle" type="button" data-fav-toggle aria-label="הסר ממועדפים: ${esc(dname(d))}" aria-pressed="true">${svg('star',2)}</button>`:'';
+const favButton=d=>""; /* no star on the cards: favorites live in the "מועדפים" tab; add or remove from the card menu */
 function card(d){
   if(d.id==='oralb-io2'){const nm=esc(dname(d));const status=typeof brushCardStatus==='function'?brushCardStatus():'טעינה ותזכורת להחלפת ראש';
     return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
