@@ -54,7 +54,7 @@ openWidget=function(){
       <li>לחיצה ארוכה על מקום ריק במסך הבית ← <b>עריכה</b> ← <b>הוספת וידג׳ט</b></li>
       <li>לחפש <b>HomeOn</b> ← <b>מכשירים</b> ← לבחור גודל</li></ol>
     <div class="sec-h"><h2>בדיקת חיבור לווידג׳ט</h2></div><p class="s" id="wgD" style="direction:ltr;text-align:right;word-break:break-all">בודק...</p>`,(el)=>{draw(el);
-    nativeCall({action:'diag'}).then(r=>{const v=typeof r==='string'?JSON.parse(r):r;el.querySelector('#wgD').textContent=`${v.shared?'✓ shared':'✗ not shared'} · group: ${v.group} · profile: ${v.profile} · key: ${v.key?'yes':'no'} · devices: ${v.devices} · ${v.bundle}`})
+    nativeCall({action:'diag'}).then(r=>{const v=typeof r==='string'?JSON.parse(r):r;el.querySelector('#wgD').textContent=`${v.shared?"✓ shared":"✗ not shared"} · store: ${v.store||"?"} · group: ${v.group} · profile: ${v.profile} · key: ${v.key?'yes':'no'} · devices: ${v.devices} · ${v.bundle}`})
       .catch(e=>{el.querySelector('#wgD').textContent='צריך את הגרסה החדשה של האפליקציה ('+(e&&e.message||e)+')'})});
 };
 
