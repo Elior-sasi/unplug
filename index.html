@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="HomeOn">
@@ -677,6 +677,8 @@ body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,
 .seg button{min-height:44px}
 .sw{border:5px solid transparent!important;background-clip:padding-box!important;box-sizing:content-box;width:56px;height:34px}
 nav.bar button{font-size:max(.8rem,12.5px)}
+/* iOS zooms into any field under 16px when zoom is allowed */
+input,select,textarea{font-size:max(16px,1em)!important}
 </style>
 </head>
 <body>
@@ -1010,7 +1012,7 @@ function viewDevices(v){
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
   v.querySelectorAll('[data-preview-edit]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.previewEdit;const d={id,name:(META.names||{})[id]||(id==='preview-ac'?'שלט מזגן':'שלט המקרן'),category:id==='preview-ac'?'ac':'tv'};sheet('עריכת שלט',`<div class="list"><button class="row row-btn" id="previewRename">שינוי שם</button><button class="row row-btn" id="previewChangeIcon">שינוי סמליל</button></div>`,(el,close)=>{el.querySelector('#previewRename').onclick=()=>{const name=prompt('שם השלט',d.name);if(name===null)return;const val=name.trim();if(!val)return;META.names=META.names||{};META.names[id]=val;saveMeta();close();render()};el.querySelector('#previewChangeIcon').onclick=()=>{close();pickIcon(d,()=>render())}})});
 
-  const beurerEntry=$('beurerScaleEntry');if(beurerEntry)beurerEntry.onclick=()=>openBeurerScalePreview();
+  const beurerEntry=$('beurerScaleEntry');if(beurerEntry)beurerEntry.onclick=()=>openFrame({id:'preview-beurer-bf500',name:(META.names||{})['preview-beurer-bf500']||'משקל חכם'},'/unplug/scale-mock/?in=unplug','משקל');
   const projectorEntry=$('projectorPreviewEntry');if(projectorEntry)projectorEntry.onclick=()=>openProjectorPreview({id:'gtv',name:'מקרן Magcubic HY350 GTV'});
   $('roomAdd').onclick=()=>{const n=(prompt('שם החדר החדש','סלון')||'').trim();if(!n)return;if(!META.roomList.includes(n))META.roomList.push(n);META.roomHome[n]=META.home;saveMeta();manageRooms(n)};
   $('roomEdit').onclick=()=>manageRooms();
@@ -1297,9 +1299,11 @@ function openBreeze(d){
 }
 /* the toaster app, inside HomeOn, on the same plug */
 function openToaster(d){LSset('toaster_key',CFG.key);LSset('toaster_dev',d.id);openFrame(d,'/unplug/toaster/?in=unplug','טוסטר')}
+/* device pages: one stable address per version, so the phone keeps them in its cache and they open at once */
+const PAGES_V='20261109a';
 function openFrame(d,src,what){
   const w=document.createElement('div');w.className='breeze';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label',dname(d));
-  w.innerHTML=`<iframe src="${src}${src.includes('?')?'&':'?'}v=${Math.floor(Date.now()/60000)}" title="${esc(what)} - שליטה ב${esc(dname(d))}" allow="clipboard-write"></iframe>`;
+  w.innerHTML=`<iframe src="${src}${src.includes('?')?'&':'?'}v=${PAGES_V}" title="${esc(what)} - שליטה ב${esc(dname(d))}" allow="clipboard-write"></iframe>`;
   const close=()=>{w.remove();document.querySelector('.app').removeAttribute('aria-hidden');refreshOne(d.id);loadSched().catch(()=>{})};
   const onMsg=e=>{if(e.data==='unplug-close'){removeEventListener('message',onMsg);close()}};addEventListener('message',onMsg);
   w.addEventListener('keydown',e=>{if(e.key==='Escape')close()});

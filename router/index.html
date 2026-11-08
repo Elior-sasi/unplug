@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="he" dir="rtl" class="dv"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ראוטר · HomeOn</title>
 <style>
 @font-face{font-family:Rubik;font-weight:400;font-display:swap;src:url(fonts/rubik-latin-400-normal.woff2) format('woff2')}
@@ -30,7 +30,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,
 body{background:#000!important}
 .top .brand .logo{display:none!important}
 .top .brand{font-size:30px;font-weight:800;letter-spacing:-.5px}
-.hoBack{flex:none;width:44px;height:44px;border-radius:50%;background:#2c2c2e;color:#fff;display:grid;place-items:center;border:0}
+.hoBack{flex:none;width:var(--dv-corner,52px);height:var(--dv-corner,52px);border-radius:50%;background:#2c2c2e;color:#fff;display:grid;place-items:center;border:0}
 .hoBack svg{width:22px;height:22px}
 nav.tabs{left:50%!important;right:auto!important;bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;transform:translateX(-50%);width:calc(100% - 32px);max-width:560px;height:64px;padding:4px!important;border-radius:999px;
  background:linear-gradient(160deg,rgba(58,52,46,.62),rgba(23,20,18,.8))!important;border:1px solid #ffd2a83d!important;box-shadow:inset 0 1px 1.5px #ffffff40,0 14px 34px #000a;-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%)}
@@ -42,7 +42,7 @@ header.top{position:absolute;top:22px;inset-inline:26px;z-index:4;pointer-events
 header.top button{pointer-events:auto}
 header.top .brand,#modePill{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
 .hero-top{padding-top:40px}
-header.top .menu-btn{width:44px;height:44px;background:#2c2c2e;border:0;color:#fff}
+header.top .menu-btn{width:var(--dv-corner,52px);height:var(--dv-corner,52px);background:#2c2c2e;border:0;color:#fff}
 </style>
 <script>
 /* Inside HomeOn: title "ראוטר" with a back button, like every HomeOn screen */
@@ -283,6 +283,8 @@ header.top .menu-btn,#unplugBack{width:52px!important;height:52px!important;back
 .chip[aria-pressed="true"],.seg button[aria-pressed="true"],.dpick button[aria-pressed="true"]{background:var(--dv-sel)!important;border-color:var(--dv-sel)!important;color:#fff!important}
 .prof[aria-pressed="true"],.side[aria-pressed="true"]{background:var(--dv-sel-soft)!important;border-color:#3d8bff66!important;color:var(--dv-sel-txt)!important}
 .prof[aria-pressed="true"] svg{color:var(--dv-sel-txt)!important}
+/* iOS zooms into any field under 16px when zoom is allowed */
+input,select,textarea{font-size:max(16px,1em)!important}
 </style>
 
 <div class="app" id="app">

@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl" class="dv">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>טוסטר</title>
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -529,6 +529,8 @@ html,html body,html.in-unplug,html.in-unplug body{background:radial-gradient(120
 html.ts-big.in-unplug .prof{height:auto!important;min-height:96px!important;overflow:visible!important;padding:10px 4px!important}
 html.ts-big.in-unplug .prof b,html.ts-big.in-unplug .prof span{white-space:normal!important;overflow:visible;text-overflow:clip}
 html.ts-big.in-unplug .profiles{align-items:stretch}
+/* iOS zooms into any field under 16px when zoom is allowed */
+input,select,textarea{font-size:max(16px,1em)!important}
 </style>
 <link rel="stylesheet" href="../device.css?v=1">
 <script>/* HomeOn text size (settings) applies here too */(function(){const a=()=>{let s='100';try{const v=localStorage.getItem('unplug_ts');if(['100','115','130','150'].includes(v))s=v}catch(e){}document.documentElement.style.fontSize=s+'%';document.documentElement.classList.toggle('ts-big',s!=='100')};a();addEventListener('storage',e=>{if(e.key==='unplug_ts')a()})})();</script>

@@ -171,6 +171,10 @@ html.glow-warm{--g1:#2b1609;--g2:#120a05}
 html.glow-cool{--g1:#0e1d33;--g2:#070c14}
 html,html body,html.in-unplug,html.in-unplug body{background:radial-gradient(120% 65% at 50% 30%,var(--g1) 0%,var(--g2) 50%,#000 100%) fixed #000!important;transition:background .6s}
 @media (prefers-reduced-motion:reduce){html,html body{transition:none!important}}
+/* iOS zooms into any field under 16px when zoom is allowed */
+input,select,textarea{font-size:max(16px,1em)!important}
+/* the last-action line stays inside the dial: it wraps instead of running over the ticks */
+.ctr .st2{white-space:normal!important;line-height:1.2;max-width:100%;overflow-wrap:anywhere}
 </style>
 <link rel="stylesheet" href="../device.css?v=1">
 <script>/* HomeOn text size (settings) applies here too */(function(){const a=()=>{let s='100';try{const v=localStorage.getItem('unplug_ts');if(['100','115','130','150'].includes(v))s=v}catch(e){}document.documentElement.style.fontSize=s+'%';document.documentElement.classList.toggle('ts-big',s!=='100')};a();addEventListener('storage',e=>{if(e.key==='unplug_ts')a()})})();</script>

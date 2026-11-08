@@ -215,6 +215,10 @@ header .circ{width:52px!important;height:52px!important;background:var(--dv-card
 .sw[aria-checked="true"]{background:var(--dv-sel)!important}
 button.sending{opacity:.6;position:relative}button.sending::after{content:'';position:absolute;inset-inline-start:10px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){button.sending::after{animation:none}}
+/* iOS zooms into any field under 16px when zoom is allowed */
+input,select,textarea{font-size:max(16px,1em)!important}
+html.vtight .vhero .vstat{display:none}
+html.vtight .mcard{padding:4px}
 </style>
 <link rel="stylesheet" href="../device.css?v=1">
 <script>/* HomeOn text size (settings) applies here too */(function(){const a=()=>{let s='100';try{const v=localStorage.getItem('unplug_ts');if(['100','115','130','150'].includes(v))s=v}catch(e){}document.documentElement.style.fontSize=s+'%';document.documentElement.classList.toggle('ts-big',s!=='100')};a();addEventListener('storage',e=>{if(e.key==='unplug_ts')a()})})();</script>
@@ -788,7 +792,10 @@ function unclash(){const w=document.querySelector('#mcard .mwrap');if(!w)return;
 window.__fit=()=>{fit();unclash()};
 function fit(){if(linked===false||MVW)return;const bar=$('bar');const pb=bar.hidden?24:Math.ceil(innerHeight-bar.getBoundingClientRect().top+16);app.style.paddingBottom=pb+'px';
   const mc=$('mcard'),more=$('moreDet');app.style.overflowY='hidden';
-  if(mc&&!(more&&more.open)){let h=Math.round(innerHeight*.56);mc.style.setProperty('--mh',h+'px');const floor=Math.max(150,Math.round(innerHeight*.2));while(h>floor&&app.scrollHeight>app.clientHeight+1){h-=12;mc.style.setProperty('--mh',h+'px')}}
+  if(mc&&!(more&&more.open)){const R=document.documentElement;R.classList.remove('vtight');
+    const shrink=()=>{let h=Math.round(innerHeight*.56);mc.style.setProperty('--mh',h+'px');const floor=Math.max(150,Math.round(innerHeight*.2));while(h>floor&&app.scrollHeight>app.clientHeight+1){h-=12;mc.style.setProperty('--mh',h+'px')}return h};
+    /* the map comes first: when it would get small, the "last cleaning / maintenance" lines step aside (VoiceOver still reads them) */
+    if(shrink()<innerHeight*.34){R.classList.add('vtight');shrink()}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden';unclash()}
 addEventListener('resize',fit);
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
