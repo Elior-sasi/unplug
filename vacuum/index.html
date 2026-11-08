@@ -183,7 +183,7 @@ header{top:8px;inset-inline-start:24px}
 <div id="app">
   <header>
     <button class="circ" id="back" aria-label="חזרה ל-HomeOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
-    <div class="tt"><h1>שואב</h1><div class="sub" id="sub">MOVA</div></div>
+    <div class="tt"><h1>שואב</h1></div>
   </header>
   <main id="main" style="display:flex;flex-direction:column;gap:14px"></main>
 </div>
@@ -292,7 +292,7 @@ function part(id,html,parent){let el=$(id);if(!el){el=document.createElement('di
   el.innerHTML=html;sig[id]=html;el.hidden=!html;if(key){const n=el.querySelector(key);n&&n.focus({preventScroll:true})}return el}
 function stateName(x){return x?(ST_HE[x.state]||'מוכן'):''}
 function draw(){
-  $('sub').textContent=HO.dname(HO.MOVA)+(HO.roomOf(HO.MOVA)?' · '+HO.roomOf(HO.MOVA):'');
+  {const h=document.querySelector('.tt h1'),nm=HO.dname(HO.MOVA)||'שואב';if(h&&h.textContent!==nm)h.textContent=nm}
   if(linked===false){$('bar').hidden=true;return drawLogin()}
   if($('login')){$('main').innerHTML='';sig={}}
   const x=D&&D.state;

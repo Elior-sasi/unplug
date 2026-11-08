@@ -75,7 +75,7 @@ header .tt{position:absolute!important;width:1px!important;height:1px!important;
 <div id="app">
   <header>
     <button class="circ" id="back" aria-label="חזרה ל-HomeOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
-    <div class="tt"><h1>דוד</h1><div class="sub" id="sub">Switcher V4</div></div>
+    <div class="tt"><h1>דוד</h1></div>
   </header>
   <main id="main" style="display:flex;flex-direction:column;gap:14px"></main>
 </div>
@@ -116,7 +116,7 @@ function part(id,html){let el=$(id);if(!el){el=document.createElement('div');el.
   el.innerHTML=html;sig[id]=html;el.hidden=!html;if(k){const n=el.querySelector(k);n&&n.focus({preventScroll:true})}return el}
 
 function draw(){
-  L=H.link();const nm=H.dname(E);$('sub').textContent=(nm&&nm!=='דוד'?nm:'Switcher V4')+(H.roomOf(E)?' · '+H.roomOf(E):'');
+  L=H.link();const nm=H.dname(E);{const h=document.querySelector('.tt h1');if(h&&nm&&h.textContent!==nm)h.textContent=nm}
   const app=H.inApp(),linked=app&&L.connected,checking=app&&!L.checked,on=linked&&L.on,left=linked?Math.ceil((L.left||0)/60):0;
   if(on&&left>total)total=left;
   const frac=on?(left?Math.min(1,left/Math.max(total,1)):1):0,a=A0+SPAN*Math.max(.001,frac),[kx,ky]=pt(a);
