@@ -52,7 +52,10 @@ openWidget=function(){
     <div class="sec-h"><h2>הוספה למסך הבית</h2></div>
     <ol style="line-height:1.7;padding-inline-start:22px;margin:0">
       <li>לחיצה ארוכה על מקום ריק במסך הבית ← <b>עריכה</b> ← <b>הוספת וידג׳ט</b></li>
-      <li>לחפש <b>HomeOn</b> ← <b>מכשירים</b> ← לבחור גודל</li></ol>`,(el)=>draw(el));
+      <li>לחפש <b>HomeOn</b> ← <b>מכשירים</b> ← לבחור גודל</li></ol>
+    <div class="sec-h"><h2>בדיקת חיבור לווידג׳ט</h2></div><p class="s" id="wgD" style="direction:ltr;text-align:right;word-break:break-all">בודק...</p>`,(el)=>{draw(el);
+    nativeCall({action:'diag'}).then(r=>{const v=typeof r==='string'?JSON.parse(r):r;el.querySelector('#wgD').textContent=`${v.shared?'✓ shared':'✗ not shared'} · group: ${v.group} · profile: ${v.profile} · key: ${v.key?'yes':'no'} · devices: ${v.devices} · ${v.bundle}`})
+      .catch(e=>{el.querySelector('#wgD').textContent='צריך את הגרסה החדשה של האפליקציה ('+(e&&e.message||e)+')'})});
 };
 
 /* ---------- leaving / coming home, by the iPhone itself ---------- */
