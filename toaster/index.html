@@ -637,7 +637,7 @@ const LSset=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(
 const CIRC=2*Math.PI*118;
 
 const TIMES=[2,3,4,5];
-const SHADE_NAME={2:'בהיר',3:'זהוב',4:'שחום',5:'כהה'};
+const SHADE_NAME={2:'בהיר',3:'זהוב',4:'זהוב כהה',5:'כהה'};
 const TOAST=[[246,226,184],[236,196,128],[214,150,70],[160,92,36],[92,48,20]];
 const mix=(c1,c2,t)=>c1.map((v,i)=>Math.round(v+(c2[i]-v)*t));
 function shadeAt(d){d=Math.max(0,Math.min(1,d))*(TOAST.length-1);const i=Math.min(TOAST.length-2,Math.floor(d));return mix(TOAST[i],TOAST[i+1],d-i)}
@@ -1048,7 +1048,7 @@ function render(){
   if(CAP)LSset('toaster_end',R.on&&R.endAt?String(R.endAt):null);
   $('app').classList.toggle('is-on',R.on);document.documentElement.classList.toggle('glow-warm',!!R.on);
   drawClock();
-  $('state').textContent=R.on?(R.rounds>1?(R.midDone?'סיבוב שני':'סיבוב ראשון'):'קולה...'):R.justDone?'הטוסט מוכן':'מוכן לקלייה';
+  $('state').textContent=R.on?(R.rounds>1?(R.midDone?'סיבוב שני':'סיבוב ראשון'):'בקלייה...'):R.justDone?'הטוסט מוכן':'מוכן לקלייה';
   $('hint').textContent=R.on?(R.endAt?'לחץ את הידית למטה. החשמל ינותק בסוף':'אין טיימר פעיל'):R.justDone?'אפשר להוציא':'בחר שחום והדלק';
   $('power').setAttribute('aria-pressed',R.on);$('powerTxt').textContent=R.on?'כבה עכשיו':'הדלק';
   $('ext').disabled=!R.on||!R.endAt;
