@@ -521,8 +521,8 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
 /* ---------- the big map: zoom, pick rooms, and edit (names, merge, split, no-go zones, walls, order) ---------- */
 let MVW=null;
 const RTYPES=[[1,'סלון'],[2,'חדר שינה'],[3,'חדר עבודה'],[4,'מטבח'],[5,'פינת אוכל'],[6,'שירותים'],[7,'מרפסת'],[8,'מסדרון'],[9,'חדר שירות'],[10,'ארון'],[13,'חדר כושר'],[14,'חדר משחקים'],[0,'אחר']];
-const TOOLS=[['roomset','הגדרות חדר'],['rename','שינוי שם'],['merge','איחוד חדרים'],['split','חלוקת חדר'],['nogo','אזור אסור'],['nomop','בלי שטיפה'],['wall','קיר וירטואלי'],['carpet','שטיח'],['zones','האזורים שלי'],['order','סדר ניקוי'],['remap','מיפוי מחדש']];
-const HINT={rename:'לוחצים על חדר כדי לשנות לו שם',merge:'בוחרים שני חדרים צמודים',split:'בוחרים חדר, ואז שתי נקודות לקו החלוקה',roomset:'לוחצים על חדר כדי לקבוע לו עוצמה, מים ומעברים',nogo:'מעבירים אצבע על המפה כדי לסמן אזור',nomop:'מעבירים אצבע על המפה כדי לסמן אזור',carpet:'מעבירים אצבע על השטיח כדי לסמן אותו',zone:'מעבירים אצבע על המפה כדי לסמן אזור לניקוי. אפשר כמה',spot:'לוחצים על המקום שצריך לנקות (בערך מטר על מטר)',wall:'לוחצים על שתי נקודות לקיר',zones:'',order:''};
+const TOOLS=[['roomset','הגדרות חדר'],['rename','שינוי שם'],['merge','איחוד חדרים'],['del','מחיקת חדר'],['split','חלוקת חדר'],['nogo','אזור אסור'],['nomop','בלי שטיפה'],['wall','קיר וירטואלי'],['carpet','שטיח'],['zones','האזורים שלי'],['order','סדר ניקוי'],['remap','מיפוי מחדש']];
+const HINT={rename:'לוחצים על חדר כדי לשנות לו שם',merge:'בוחרים שני חדרים צמודים',split:'בוחרים חדר, ואז שתי נקודות לקו החלוקה',del:'לוחצים על החדר שרוצים למחוק, ואז על החדר הצמוד שהוא יצטרף אליו',roomset:'לוחצים על חדר כדי לקבוע לו עוצמה, מים ומעברים',nogo:'מעבירים אצבע על המפה כדי לסמן אזור',nomop:'מעבירים אצבע על המפה כדי לסמן אזור',carpet:'מעבירים אצבע על השטיח כדי לסמן אותו',zone:'מעבירים אצבע על המפה כדי לסמן אזור לניקוי. אפשר כמה',spot:'לוחצים על המקום שצריך לנקות (בערך מטר על מטר)',wall:'לוחצים על שתי נקודות לקיר',zones:'',order:''};
 function openMapView(){if(!mapD){loadMap(true);return toast('טוען מפה...')}
   closeSheet(true);const el=document.createElement('div');el.className='mv';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','מפה');
   document.body.append(el);$('app').setAttribute('aria-hidden','true');$('bar').hidden=true;
@@ -545,8 +545,8 @@ function zoneSvg(){const Z=MVW.zones,r=(q,c,f)=>{const x=Math.min(q[0],q[2]),y=M
   return h}
 function mvDraw(){if(!MVW)return;const m=MVW,el=m.el,pins=mapD&&mapD.rooms||[],t=m.tool,maps=mapD&&mapD.maps||[];
   const picked=id=>m.mode==='clean'?sel.has(id):m.picks.includes(id);
-  const need=t==='merge'?m.picks.length===2:t==='split'?m.picks.length===1&&m.pts.length===2:(t==='nogo'||t==='nomop'||t==='wall'||t==='carpet')?m.pts.length===2:false;
-  const actLabel={merge:'איחוד שני החדרים',split:'חלוקת החדר',nogo:'הוספת האזור האסור',nomop:'הוספת אזור בלי שטיפה',wall:'הוספת הקיר',carpet:'הוספת השטיח'}[t];
+  const need=(t==='merge'||t==='del')?m.picks.length===2:t==='split'?m.picks.length===1&&m.pts.length===2:(t==='nogo'||t==='nomop'||t==='wall'||t==='carpet')?m.pts.length===2:false;
+  const actLabel={merge:'איחוד שני החדרים',split:'חלוקת החדר',nogo:'הוספת האזור האסור',nomop:'הוספת אזור בלי שטיפה',wall:'הוספת הקיר',carpet:'הוספת השטיח'}[t]||(t==='del'?(m.picks.length===2?'מחיקת '+((pins.find(r=>r.id===m.picks[0])||{}).name||'החדר')+' (מצטרף ל'+((pins.find(r=>r.id===m.picks[1])||{}).name||'חדר')+')':m.picks.length?'עכשיו החדר הצמוד':'בוחרים חדר למחיקה'):'');
   const zl=[...(m.zones.nogo||[]).map((q,i)=>['nogo',i,'אזור אסור '+(i+1)]),...(m.zones.nomop||[]).map((q,i)=>['nomop',i,'בלי שטיפה '+(i+1)]),...(m.zones.walls||[]).map((q,i)=>['walls',i,'קיר '+(i+1)]),...(m.zones.carpets||[]).map((q,i)=>['carpets',i,'שטיח '+(i+1)])];
   const n=sel.size;
   const cmBar=`<div class="cm" role="group" aria-label="מה לנקות">${[['rooms','חדרים'],['zone','אזור'],['spot','נקודה']].map(([k,n])=>`<button data-cm="${k}" aria-pressed="${m.cm===k}">${n}</button>`).join('')}</div>`;
@@ -622,12 +622,14 @@ function mvClick(b){const m=MVW;if(m.dragged&&b.closest('.mv-stage')){m.dragged=
     if(m.tool==='rename'){RENAME=id;sheet('rename');return true}
     if(m.tool==='roomset'){ROOM=id;sheet('room');return true}
     if(m.tool==='merge'){m.picks.includes(id)?m.picks=m.picks.filter(x=>x!==id):m.picks=[...m.picks,id].slice(-2);mvDraw();return true}
+    if(m.tool==='del'){if(m.picks.includes(id))m.picks=m.picks.filter(x=>x!==id);else if(m.picks.length<2)m.picks=[...m.picks,id];else m.picks=[m.picks[0],id];mvDraw();say(m.picks.length===1?'נבחר למחיקה. עכשיו החדר הצמוד':'החדר הצמוד נבחר');return true}
     if(m.tool==='split'){m.picks=[id];m.pts=[];mvDraw();say('עכשיו שתי נקודות לקו');return true}
     toast('בוחרים כלי עריכה למטה');return true}
   if(b.dataset.zdel){const [k,i]=b.dataset.zdel.split(':');m.zones[k].splice(+i,1);
     if(k==='carpets')mvEdit({op:'carpets',carpets:m.zones.carpets},'השטיח נמחק');else mvEdit({op:'zones',zones:{walls:m.zones.walls,nogo:m.zones.nogo,nomop:m.zones.nomop}},'נמחק');return true}
   if(b.id==='mvDo'){const t=m.tool;
     if(t==='merge')mvEdit({op:'merge',ids:m.picks},'החדרים אוחדו. המפה תתעדכן בעוד רגע');
+    if(t==='del'){const a=(((mapD&&mapD.rooms)||[]).find(r=>r.id===m.picks[0])||{}).name||'החדר';if(!confirm('למחוק את '+a+'? השטח שלו יצטרף לחדר הצמוד.'))return true;mvEdit({op:'merge',ids:[m.picks[1],m.picks[0]]},a+' נמחק. המפה תתעדכן בעוד רגע')}
     if(t==='split')mvEdit({op:'split',id:m.picks[0],line:[...m.pts[0],...m.pts[1]]},'החדר חולק. המפה תתעדכן בעוד רגע');
     if(t==='nogo'||t==='nomop'||t==='wall'){const k=t==='wall'?'walls':t;(m.zones[k]=m.zones[k]||[]).push([...m.pts[0],...m.pts[1]]);mvEdit({op:'zones',zones:{walls:m.zones.walls,nogo:m.zones.nogo,nomop:m.zones.nomop}},'נשמר')}
     if(t==='carpet'){const c=(m.zones.carpets||[]).concat([{q:[...m.pts[0],...m.pts[1]]}]);mvEdit({op:'carpets',carpets:c},'השטיח נשמר')}
