@@ -632,13 +632,13 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 /* Stable compact edit controls; no changes to card image or layout. */
 .reordering .card .editActions{display:contents}
 .reordering .card .edCorner{position:absolute!important;width:34px!important;height:34px!important;bottom:auto!important;right:auto!important;transform:none!important;z-index:5}
-.reordering .card .edCorner,.reordering .card .edCorner.edDel{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}
+.reordering .card .edCorner,.reordering .card .edCorner.edDel{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important}
 /* the touch area is a bit larger than the circle */
-.reordering .card .edCorner::before{content:"";position:absolute;inset:-3px;border-radius:50%}
+.reordering .card .edCorner::before{content:"";position:absolute;inset:-2px;border-radius:50%}
 .reordering .card .edDel{top:8px!important;left:6px!important}
-.reordering .card .edFav{top:8px!important;left:44px!important}
-.reordering .card .edSize{top:8px!important;left:82px!important}
-.reordering .card .edIcon{top:8px!important;left:120px!important}
+.reordering .card .edFav{top:8px!important;left:42px!important}
+.reordering .card .edSize{top:8px!important;left:78px!important}
+.reordering .card .edIcon{top:8px!important;left:114px!important}
 .reordering .card:not(.wide) .ic{opacity:.25}
 .reordering .card.draggingCard{z-index:30;box-shadow:0 20px 44px #000c;opacity:.95}
 /* the selected room tab: blue, like the selected tab in the bottom bar */
@@ -952,7 +952,7 @@ function viewDevices(v){
       (typeof cmdBarHtml==='function'?cmdBarHtml():'')+(typeof liveStripHtml==='function'?liveStripHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
    `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים"><span style="display:inline-grid;transform:rotate(-90deg)">${svg('chev',2.4)}</span></button></div>`+
-   (list.length||ROOM==='all'&&!q?`<div class="grid" role="list">${ROOM==='all'&&!q?`${list.some(d=>d.id==='gtv')?'':`<div class="card" role="listitem" data-id="preview-projector" data-preview="projector"><button class="open" id="projectorPreviewEntry" aria-label="פתיחת שלט המקרן"></button><div class="ic" aria-hidden="true">${artFor((META.icons||{})["preview-projector"]||"custom_magcubic_hy350_gtv_projector",STYLE())}</div><div class="nm">${esc((META.names||{})["preview-projector"]||"שלט המקרן")}</div><div class="st">HY350 GTV · הדמיה</div></div>`}`:''}${list.map(card).join('')}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?ROOM==='fav'?'אין עדיין מועדפים':'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&ROOM!=='fav'&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':ROOM==='fav'?'כדי להוסיף מועדפים, פתח מכשיר וסמן אותו בכוכב, או לחץ על הכוכב במצב עריכת המסך.':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
+   (list.length||ROOM==='all'&&!q?`<div class="grid" role="list">${(()=>{const pv=ROOM==='all'&&!q&&!list.some(d=>d.id==='gtv')?`<div class="card" role="listitem" data-id="preview-projector" data-preview="projector"><button class="open" id="projectorPreviewEntry" aria-label="פתיחת שלט המקרן"></button><div class="ic" aria-hidden="true">${artFor((META.icons||{})["preview-projector"]||"custom_magcubic_hy350_gtv_projector",STYLE())}</div><div class="nm">${esc((META.names||{})["preview-projector"]||"שלט המקרן")}</div><div class="st">HY350 GTV · הדמיה</div></div>`:'';const items=list.map(d=>[META.order?.[d.id]??999,card(d)]);if(pv)items.push([META.order?.['preview-projector']??-1,pv]);return items.map((x,i)=>[x[0],i,x[1]]).sort((x,y)=>x[0]-y[0]||x[1]-y[1]).map(x=>x[2]).join('')})()}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?ROOM==='fav'?'אין עדיין מועדפים':'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&ROOM!=='fav'&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':ROOM==='fav'?'כדי להוסיף מועדפים, פתח מכשיר וסמן אותו בכוכב, או לחץ על הכוכב במצב עריכת המסך.':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
   /* same screen as before: keep the existing cards, so pictures don't blink on every refresh */
   const HK=H+'|'+(typeof REORDER!=='undefined'&&REORDER?1:0)+'|'+ROOM;if(v._h===HK&&v.firstElementChild)return;v._h=HK;v.innerHTML=H;
   const qi=$('q');if(qi){qi.oninput=()=>{Q=qi.value;const pos=qi.selectionStart;render();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
