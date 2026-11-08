@@ -273,7 +273,8 @@ async function load(){try{const j=await api('/mova/state');D=j;linked=true;err='
   draw()}
 async function loadMap(force){if(!linked)return;const x=D&&D.state,busy=x&&(x.running||BUSY.has(x.state));
   if(!force&&!busy&&mapD&&Date.now()-mapAt<5*60000)return;
-  try{const j=await api('/mova/map');mapAt=Date.now();window.MAPERR=j.map?'':'השואב לא שלח מפה';if(j.map){mapD=j.map;MV.map=j.map;MV.mapAt=mapAt;refreshSheet();mvDraw()}draw()}catch(e){window.MAPERR=String(e&&e.message||e).slice(0,200);draw()}}
+  window.MAPLOAD=true;draw();
+  try{const j=await Promise.race([api('/mova/map'),new Promise((_,r)=>setTimeout(()=>r(new Error('השרת לא ענה תוך 60 שניות')),60000))]);window.MAPLOAD=false;mapAt=Date.now();window.MAPERR=j.map?'':'השואב לא שלח מפה';if(j.map){mapD=j.map;MV.map=j.map;MV.mapAt=mapAt;refreshSheet();mvDraw()}draw()}catch(e){window.MAPLOAD=false;window.MAPERR=String(e&&e.message||e).slice(0,200);draw()}}
 async function send(path,body,ok){buzz();try{const j=await api(path,body);if(j&&j.state){D=Object.assign({},D,j);delete D.sent;MV.d=D}ok&&toast(ok);draw();refreshSheet()}catch(e){toast(e.message);load()}}
 const act=(a,ok,extra)=>send('/mova/act',Object.assign({a},extra||{}),ok);
 const setv=(k,v,ok)=>send('/mova/set',{k,v},ok);
@@ -335,7 +336,7 @@ function draw(){
       ${pins?pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join(''):''}</div>
       <button class="mbig" data-open="mapview" aria-label="הגדלת המפה ועריכה">${I.expand}</button>
       ${sel.size?`<span class="mpill" aria-hidden="true">${sel.size===1?'חדר אחד נבחר':sel.size+' חדרים נבחרו'}</span>`:''}</div>`
-    :(window.MAPERR?`<div class="warn" role="status" style="background:#2c2c2e;border-radius:18px;padding:12px 14px;display:flex;gap:10px;align-items:center"><span style="flex:1">המפה לא נטענה: ${esc(window.MAPERR)}</span><button class="btn" id="mapRetry" style="min-height:44px;padding:0 14px;border-radius:999px;background:#3a3a3c">שוב</button></div>`:'')+(rooms.length?`<h2 id="hRooms">חדרים</h2><div class="row" role="group" aria-labelledby="hRooms">${rooms.map(r=>`<button class="chip" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${sel.has(r.id)?'✓ ':''}${esc(r.name)}</button>`).join('')}</div>`:''));
+    :(window.MAPLOAD&&!window.MAPERR?`<div class="warn" role="status" style="background:#2c2c2e;border-radius:18px;padding:12px 14px">טוען מפה...</div>`:'')+(window.MAPERR?`<div class="warn" role="status" style="background:#2c2c2e;border-radius:18px;padding:12px 14px;display:flex;gap:10px;align-items:center"><span style="flex:1">המפה לא נטענה: ${esc(window.MAPERR)}</span><button class="btn" id="mapRetry" style="min-height:44px;padding:0 14px;border-radius:999px;background:#3a3a3c">שוב</button></div>`:'')+(rooms.length?`<h2 id="hRooms">חדרים</h2><div class="row" role="group" aria-labelledby="hRooms">${rooms.map(r=>`<button class="chip" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${sel.has(r.id)?'✓ ':''}${esc(r.name)}</button>`).join('')}</div>`:''));
   const PR=HO.META.movaPresets||[];
   part('pPre',D&&PR.length?`<div class="pre" role="group" aria-label="ניקויים שמורים">${PR.map(p=>`<button data-pre="${esc(p.id)}" aria-label="ניקוי שמור: ${esc(p.name)}. ${esc(preLine(p))}"><span aria-hidden="true">▶ </span>${esc(p.name)}</button>`).join('')}</div>`:'');
   const cnr=(D&&D.can)||{};
