@@ -289,7 +289,7 @@ async function loadHS(){try{const j=await api('/schedules');HS=(j.schedules||[])
 const hsDays=d=>{const s=(d||[]).slice().sort();return s.length===7?'כל יום':s.join()==='0,1,2,3,4'?'א׳-ה׳':s.map(i=>DNS[i]).join(' ')};
 const hsWhat=x=>{const v=((x.cmds||[])[0]||{}).value||{};const R=(D&&D.rooms)||[];return v.a==='rooms'?(v.rooms||[]).map(id=>(R.find(r=>r.id===id)||{}).name||('חדר '+id)).join(', ')+(v.times>1?' · '+v.times+' פעמים':''):'כל הבית'};
 let D=MV.d||null,linked=MV.linked,err='',mapD=MV.map||null,mapAt=MV.mapAt||0;
-async function load(){try{const j=await api('/mova/state');D=j;linked=true;err='';MV.d=j;MV.linked=true}
+async function load(){try{const j=await api('/mova/state');if(OPTP&&j.state&&Date.now()<OPTUNTIL){const s2=j.state,same=Object.keys(OPTP).every(k=>s2[k]===OPTP[k]);if(same)OPTP=null;else j.state=Object.assign({},s2,OPTP)}D=j;linked=true;err='';MV.d=j;MV.linked=true}
   catch(e){const m=String(e.message||e);if(/לא מחובר|פג|עדכון/.test(m)){linked=false;D=null;MV.linked=false;MV.d=null}err=m}
   draw()}
 async function loadMap(force){if(!linked)return;const x=D&&D.state,busy=x&&(x.running||BUSY.has(x.state));
@@ -298,9 +298,15 @@ async function loadMap(force){if(!linked)return;const x=D&&D.state,busy=x&&(x.ru
   try{const j=await Promise.race([api('/mova/map'),new Promise((_,r)=>setTimeout(()=>r(new Error('השרת לא ענה תוך 60 שניות')),60000))]);window.MAPLOAD=false;loadMap._again=0;mapAt=Date.now();window.MAPERR=j.map?'':'השואב לא שלח מפה';if(j.map){mapD=j.map;MV.map=j.map;MV.mapAt=mapAt;refreshSheet();mvDraw()}draw()}catch(e){/* the first call after a quiet while often times out while the server wakes up: try once more before showing an error */if(!loadMap._again){loadMap._again=1;setTimeout(()=>loadMap(true),2500);return}loadMap._again=0;window.MAPLOAD=false;window.MAPERR=String(e&&e.message||e).slice(0,200);draw()}}
 let LASTBTN=null;document.addEventListener('pointerdown',e=>{LASTBTN=e.target.closest&&e.target.closest('button')},true);document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')LASTBTN=document.activeElement},true);
 /* answer the tap at once: the button dims with a spinner and "שולח..." until the vacuum's cloud replies */
-async function send(path,body,ok){buzz();const b=LASTBTN&&LASTBTN.isConnected?LASTBTN:null;if(b){b.classList.add('sending');b.setAttribute('aria-busy','true')}toast('שולח לשואב...');
+/* show the expected state the moment you tap; the real state replaces it a moment later */
+const OPT={start:{state:1,running:true,paused:false,docked:false,returning:false},rooms:1,zone:1,spot:1,preset:1,reclean:1,
+  pause:{state:3,running:false,paused:true},dock:{state:5,running:false,paused:false,returning:true},stop:{state:2,running:false,paused:false,returning:false}};
+function optimistic(path,body){if(path!=='/mova/act'||!D||!D.state)return;let p=OPT[body.a];if(p===1)p=OPT.start;if(!p)return;
+  D=Object.assign({},D,{state:Object.assign({},D.state,p)});MV.d=D;OPTP=p;OPTUNTIL=Date.now()+6000;draw()}
+let OPTP=null,OPTUNTIL=0;
+async function send(path,body,ok){buzz();optimistic(path,body);const b=LASTBTN&&LASTBTN.isConnected?LASTBTN:null;if(b){b.classList.add('sending');b.setAttribute('aria-busy','true')}toast('שולח לשואב...');
   try{await send2(path,body,ok)}finally{if(b){b.classList.remove('sending');b.removeAttribute('aria-busy')}}}
-async function send2(path,body,ok){try{const j=await api(path,body);if(j&&j.state){D=Object.assign({},D,j);delete D.sent;MV.d=D}else{setTimeout(load,1500);setTimeout(load,4500)}ok&&toast(ok);draw();refreshSheet()}catch(e){toast(e.message);load()}}
+async function send2(path,body,ok){try{const j=await api(path,body);if(j&&j.state){D=Object.assign({},D,j);delete D.sent;MV.d=D}else{[800,2000,4500].forEach(t=>setTimeout(load,t))}ok&&toast(ok);draw();refreshSheet()}catch(e){OPTP=null;toast(e.message);load()}}
 const act=(a,ok,extra)=>send('/mova/act',Object.assign({a},extra||{}),ok);
 const setv=(k,v,ok)=>send('/mova/set',{k,v},ok);
 
