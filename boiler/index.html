@@ -74,6 +74,9 @@ details.more[open] summary svg{transform:rotate(180deg)}
 header{position:absolute;top:calc(env(safe-area-inset-top,0px) + 18px);inset-inline-start:24px;min-height:0;z-index:4}
 header .tt{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
 
+
+/* no text selection on long-press, anywhere */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,textarea,select{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 </style>
 </head>
 <body>
@@ -184,7 +187,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.dataset.open==='room')return H.after(()=>H.pickRoom());
   if(b.dataset.open==='hide')return H.after(()=>H.hide());
   if(b.dataset.open==='hist'){const h=H.history(),f=t=>new Date(t).toLocaleString('he-IL',{weekday:'short',hour:'2-digit',minute:'2-digit'});
-    return sheet('היסטוריה',h.length?`<div class="grp">${h.map(l=>`<div class="it"><span class="g"><span class="t">${esc(l.text)}</span><span class="s">${esc(f(l.t))}</span></span></div>`).join('')}</div>`:'<p class="note">עוד לא בוצעו פעולות בדוד מ-HomeOn.</p>')}
+    return sheet('היסטוריה',h.length?`<div class="grp">${h.map(l=>`<div class="it"><span class="g"><span class="t">${esc(l.text)}</span><span class="s">${esc(f(l.t))}</span></span></div>`).join('')}</div><button class="it" id="histClear" style="margin-top:12px;border-radius:18px;background:var(--card);justify-content:center;color:#ff6961;font-weight:700">מחיקת ההיסטוריה</button>`:'<p class="note">עוד לא בוצעו פעולות בדוד מ-HomeOn.</p>')}
+  if(b.id==='histClear'){if(!confirm('למחוק את כל ההיסטוריה של הדוד?'))return;if(H.clearHistory)H.clearHistory();closeSheet();draw();return toast('ההיסטוריה נמחקה')}
 });
 
 /* one screen, no scrolling, like the AC page */

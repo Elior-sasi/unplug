@@ -20,6 +20,9 @@ input{-webkit-user-select:text;user-select:text}
 .raw{font-family:var(--mono);font-size:11px;direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-all;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;max-height:40vh;overflow:auto;-webkit-user-select:text;user-select:text}
 .net.off{color:var(--muted)}
 .net.warn{color:var(--warn)}
+
+/* no text selection on long-press, anywhere */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,textarea,select{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 </style>
 <style id="homeon-theme">
 /* HomeOn look: same header, orange accent, glass pill tab bar with blue active tab */

@@ -177,6 +177,9 @@ header .tt{position:absolute!important;width:1px!important;height:1px!important;
 .rb{min-width:0;flex:1}.rb>span{width:min(60px,15vw);height:min(60px,15vw)}
 .vhero{position:relative}.vhero .vst{padding-inline-start:52px;min-height:44px;display:flex;align-items:center}
 header{top:8px;inset-inline-start:24px}
+
+/* no text selection on long-press, anywhere */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,textarea,select{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 </style>
 </head>
 <body>
