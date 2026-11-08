@@ -279,7 +279,6 @@ function moreHtml(app){const last=LS.get('unplug_ember_last',null);
     on2&&['auto',I.clock,'כיבוי אוטומטי',lk.auto?'אחרי '+hrs(lk.auto)+' אם שוכחים':'אם שוכחים את הדוד דולק'],
     on2&&['stats',I.list,'צריכה','שעות חימום, קוט״ש ועלות'],
     H.inApp()&&['setup',I.wifi,'חיבור מחדש של Switcher V4','אם הדוד הוחלף או עבר רשת'],
-    app&&H.inApp()&&['full',I.clock,'המסך של Ember','המסך הישן של הדוד'],
     ['hist',I.list,'היסטוריה',last?`אחרון: ${last.t} ב-${last.at}`:'פעולות מ-HomeOn'],
     ['room',I.home,'חדר',H.roomOf(E)||'בלי חדר'],
     ['hide',I.eye,'הסתרת הדוד מ-HomeOn','אפשר להחזיר מהוספת מכשיר']].filter(Boolean);
