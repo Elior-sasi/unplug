@@ -20,7 +20,12 @@ header{display:flex;align-items:center;gap:10px;min-height:52px}
 header .tt{flex:1;min-width:0}
 header h1{margin:0;font-size:1.6rem;font-weight:700;line-height:1.1}
 header .sub{font-size:.9rem;color:var(--mut)}
-.hero{background:var(--card);border-radius:28px;padding:14px 12px 4px}
+.hero{background:var(--card);border-radius:28px;padding:14px 12px 4px;position:relative}
+.adj{position:absolute;bottom:12px;width:58px;height:58px;border-radius:50%;background:#2c2c2e;display:grid;place-items:center;font-size:1.9rem;font-weight:700;color:#fff;z-index:2}
+.adj:disabled{opacity:.35}
+.adj.mi{left:14px}.adj.pl{right:14px}
+.dial .pre{fill:none;stroke:#ff9a3d88;stroke-width:14;stroke-linecap:round}
+.last{font-size:.95rem;color:var(--mut);text-align:center;margin:0}
 .dial{position:relative;width:260px;aspect-ratio:1;margin:0 auto -8%;container-type:inline-size}
 .dial svg{width:100%;height:100%;display:block}
 .trk{stroke:#3a3a3c;stroke-width:14;fill:none;stroke-linecap:round}
@@ -104,6 +109,8 @@ const I={power:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
  refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>'};
 const DUR=[[15,'15 דק׳'],[30,'30 דק׳'],[45,'45 דק׳'],[60,'שעה'],[90,'שעה וחצי'],[120,'שעתיים'],[0,'ללא טיימר']];
 const mins=m=>m===0?'ללא טיימר':(DUR.find(d=>d[0]===m)||[0,m+' דק׳'])[1];
+const when=t=>{const d=new Date(t),n=new Date(),k=Math.round((new Date(n.getFullYear(),n.getMonth(),n.getDate())-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/864e5),hm=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  return k<=0?'היום '+hm:k===1?'אתמול '+hm:d.toLocaleDateString('he-IL',{weekday:'long'})+' '+hm};
 let pick=LS.get('ember_pick',30),total=LS.get('ember_total',30),busy=false,tick=null,L=H.link();
 
 const C=150,R=133,A0=135,SPAN=270;
@@ -121,20 +128,24 @@ function draw(){
   if(on&&left>total)total=left;
   const frac=on?(left?Math.min(1,left/Math.max(total,1)):1):0,a=A0+SPAN*Math.max(.001,frac),[kx,ky]=pt(a);
   const state=!app?'בדפדפן':checking?'בודק...':!linked?'לא מחובר':on?'דולק':'כבוי';
-  const bigTxt=on&&left?`${left}<small>דק׳</small>`:state;
-  const st=on?(left?'נשארו':'דולק ללא טיימר'):linked?'המים לא מתחממים':'';
+  const choose=linked&&!on;
+  const bigTxt=on&&left?`${left}<small>דק׳</small>`:choose?(pick?`${pick}<small>דק׳</small>`:'ללא טיימר'):state;
+  const st=on?(left?'נשארו':'דולק ללא טיימר'):choose?'כבוי · בוחרים זמן':linked?'המים לא מתחממים':'';
+  const pa=A0+SPAN*Math.max(.001,pick?Math.min(1,pick/120):1);
   const endAt=on&&left?new Date(Date.now()+left*60000).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'';
-  part('pHero',`<div class="hero" role="group" aria-label="${esc(on?(left?`דולק, נשארו ${left} דקות, יכבה ב-${endAt}`:'דולק ללא טיימר'):state)}"><div class="dial${on?' on':''}"><svg viewBox="0 0 300 300" aria-hidden="true">${ticks}<path class="trk" d="${arc(A0,A0+SPAN)}"/>${on?`<path class="val" d="${arc(A0,a)}"/><circle class="knob" r="13" cx="${kx}" cy="${ky}"/>`:''}</svg>
-    <div class="ctr" aria-hidden="true"><div class="big${on&&left?'':' word'}">${bigTxt}</div>${st?`<div class="st">${esc(st)}</div>`:''}${endAt?`<div class="st2">יכבה ב-${endAt}</div>`:''}</div></div></div>`);
+  part('pHero',`<div class="hero" role="group" aria-label="${esc(on?(left?`דולק, נשארו ${left} דקות, יכבה ב-${endAt}`:'דולק ללא טיימר'):state)}"><div class="dial${on?' on':''}"><svg viewBox="0 0 300 300" aria-hidden="true">${ticks}<path class="trk" d="${arc(A0,A0+SPAN)}"/>${on?`<path class="val" d="${arc(A0,a)}"/><circle class="knob" r="13" cx="${kx}" cy="${ky}"/>`:choose?`<path class="pre" d="${arc(A0,pa)}"/>`:''}</svg>
+    <div class="ctr" aria-hidden="true"><div class="big${(on&&left)||(choose&&pick)?'':' word'}">${bigTxt}</div>${st?`<div class="st">${esc(st)}</div>`:''}${endAt?`<div class="st2">יכבה ב-${endAt}</div>`:''}</div></div>
+    ${choose?`<button class="adj mi" id="tMinus" aria-label="פחות זמן. עכשיו ${esc(mins(pick))}"${DUR.findIndex(d=>d[0]===pick)<=0?' disabled':''}>−</button><button class="adj pl" id="tPlus" aria-label="יותר זמן. עכשיו ${esc(mins(pick))}"${DUR.findIndex(d=>d[0]===pick)>=DUR.length-1?' disabled':''}>+</button>`:''}</div>`);
   if(!app){part('pMsg',`<div class="warn">שליטה ישירה בדוד עובדת רק באפליקציית HomeOn המותקנת באייפון, כשהאייפון ברשת של הבית.</div>`);
     part('pMain',`<button class="pw" data-web="on?m=${pick}">${I.power}<span>פתיחה ב-Ember</span></button>`);part('pDur','');part('pMore',moreHtml(false));return fit()}
   if(!linked&&!checking){part('pMsg',`<div class="warn${L.error?' bad':''}" role="alert">${esc(L.error?'הדוד לא ענה. האייפון וה-Switcher צריכים להיות באותה רשת Wi-Fi.':'הדוד עוד לא מחובר ל-HomeOn.')}</div>`);
     part('pMain',`<div class="mainrow"><button class="sq" id="refresh" aria-label="בדיקת חיבור">${I.refresh}<span aria-hidden="true">בדיקה</span></button><button class="pw" id="setup">${I.wifi}<span>חיבור Switcher V4</span></button></div>`);
     part('pDur','');part('pMore',moreHtml(true));return fit()}
   part('pMsg','');
-  part('pMain',`<div class="mainrow"><button class="sq" id="add15"${on?'':' disabled'} aria-label="עוד 15 דקות">${I.plus}<span aria-hidden="true">15 דק׳</span></button>
-    <button class="pw${on?' on':''}" id="power" aria-pressed="${!!on}"${busy?' disabled':''}>${I.power}<span>${busy?'שולח...':on?'כיבוי':'הדלקה ל-'+mins(pick)}</span></button></div>`);
-  part('pDur',`<h2 id="hD">${on?'להדליק מחדש ל-':'להדליק ל-'}</h2><div class="row" role="group" aria-labelledby="hD">${DUR.map(([m,t])=>`<button class="chip" data-m="${m}" aria-pressed="${pick===m}">${t}</button>`).join('')}</div>`);
+  part('pMain',`<div class="mainrow">${on?`<button class="sq" id="add15" aria-label="עוד 15 דקות">${I.plus}<span aria-hidden="true">15 דק׳</span></button>`:''}
+    <button class="pw${on?' on':''}" id="power" aria-pressed="${!!on}"${busy?' disabled':''}${on?'':` aria-label="הדלקה ל-${esc(mins(pick))}"`}>${I.power}<span>${busy?'שולח...':on?'כיבוי':'הדלקה'}</span></button></div>`);
+  const hl=(H.history()||[]).find(l=>/^הדלקה/.test(l.text||''));
+  part('pDur',hl?`<p class="last">הדלקה אחרונה: ${esc(when(hl.t))}${/ל-/.test(hl.text)?', '+esc(hl.text.replace(/^הדלקה ל-/,'')):''}</p>`:'');
   part('pMore',moreHtml(true));fit()}
 function moreHtml(app){const last=LS.get('unplug_ember_last',null);
   const items=[app&&H.inApp()&&['full',I.clock,'תזמונים וסטטיסטיקה','המסך המלא של הדוד'],
@@ -163,6 +174,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.id==='back'){try{P.postMessage('unplug-close','*')}catch(_){}return}
   if(b.id==='power'){const on=H.link().on;return on?cmd('off',0,'הדוד כבה','כיבוי'):cmd('on',pick,'הדוד דולק'+(pick?' ל-'+mins(pick):''),'הדלקה ל-'+mins(pick))}
   if(b.id==='add15')return cmd('add',15,'נוספו 15 דקות','הוספת 15 דק׳');
+  if(b.id==='tMinus'||b.id==='tPlus'){const i=DUR.findIndex(d=>d[0]===pick),j=Math.max(0,Math.min(DUR.length-1,(i<0?1:i)+(b.id==='tPlus'?1:-1)));pick=DUR[j][0];LS.set('ember_pick',pick);buzz();draw();const q=$(b.id);if(q&&!q.disabled)q.focus();else{const o=$(b.id==='tPlus'?'tMinus':'tPlus');o&&o.focus()}return say(mins(pick))}
   if(b.dataset.m!=null&&b.classList.contains('chip')){pick=+b.dataset.m;LS.set('ember_pick',pick);
     if(H.link().on)return cmd('on',pick,'הטיימר עודכן ל-'+mins(pick),'הדלקה ל-'+mins(pick));draw();return say('נבחר '+mins(pick))}
   if(b.id==='refresh'){toast('בודק חיבור...');return refresh()}
@@ -178,7 +190,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 /* one screen, no scrolling, like the AC page */
 const app=$('app');
 function fit(){const dl=document.querySelector('.dial'),hero=document.querySelector('.hero'),more=$('moreDet');app.style.overflowY='hidden';
-  if(dl&&hero&&!(more&&more.open)){let w=Math.min(300,hero.clientWidth-60);dl.style.width=w+'px';while(w>170&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
+  if(dl&&hero&&!(more&&more.open)){let w=Math.min(360,hero.clientWidth-24);dl.style.width=w+'px';while(w>170&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
 addEventListener('resize',fit);document.addEventListener('toggle',()=>setTimeout(fit,30),true);
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
