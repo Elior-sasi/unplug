@@ -15,7 +15,7 @@ button:disabled{opacity:.4;cursor:default}
 input:focus,input:focus-visible,select:focus,select:focus-visible{outline:3px solid #6fa8ff;outline-offset:2px}
 svg{width:22px;height:22px;flex:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-#app{height:100%;overflow:hidden;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 120px;max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+#app{height:calc(100% - env(safe-area-inset-top,0px) - 10px);margin-top:calc(env(safe-area-inset-top,0px) + 10px);overflow:hidden;padding:0 16px 120px;max-width:640px;margin-inline:auto;display:flex;flex-direction:column;gap:14px}
 header{display:flex;align-items:center;gap:10px;min-height:52px}
 .circ{width:44px;height:44px;border-radius:50%;background:var(--card2);display:grid;place-items:center;flex:none}
 .circ svg{width:22px;height:22px}
@@ -80,7 +80,7 @@ details.more[open] summary svg{transform:rotate(180deg)}
 .vtx{flex:1;min-width:0}.vst{font-size:1.45rem;font-weight:700;line-height:1.15}.vhero.on .vst{color:var(--acc)}
 .vsub{color:var(--mut);font-size:.95rem;margin-top:2px}
 .vbat{height:8px;border-radius:999px;background:#3a3a3c;margin-top:8px;overflow:hidden}.vbat i{display:block;height:100%;background:var(--ok);border-radius:999px}.vbat.low i{background:#ffd60a}
-.vstat{font-size:.85rem;color:var(--mut);margin-top:6px}
+.vstat{font-size:.85rem;color:var(--mut);margin-top:4px;line-height:1.35}.vstat:first-of-type{margin-top:6px}
 .mcard{position:relative;background:#141416;border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .mcard .mwrap{position:relative;max-width:100%}
 .mcard img{display:block;max-width:100%;max-height:var(--mh,48vh);width:auto;height:auto;margin:auto}
@@ -174,6 +174,14 @@ const say=t=>{$('live').textContent='';setTimeout(()=>$('live').textContent=t,30
 let tt;const toast=t=>{document.querySelector('.toast')?.remove();const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.append(e);say(t);clearTimeout(tt);tt=setTimeout(()=>e.remove(),2600)};
 const buzz=()=>{try{P.webkit&&P.webkit.messageHandlers&&P.webkit.messageHandlers.homeon&&P.webkit.messageHandlers.homeon.postMessage({action:'haptic'})}catch(e){}};
 const api=(p,b)=>HO.api(p,b);
+/* device art from HomeOn uses paths relative to the main page (real/...); inside this frame they must be resolved against it */
+const BASE=new URL('.',P.location.href).href;
+const art=w=>String(HO.devArt(HO.MOVA,w)).replace(/(src=(?:"|&quot;|')|this\.src=')(?!https?:|data:|\/)/g,'$1'+BASE);
+/* "today", "yesterday", "3 days ago" for a unix time in seconds */
+function ago(t){if(!t)return '';const d=new Date(t*1000),n=new Date();const day=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate());
+  const k=Math.round((day(n)-day(d))/864e5);const hm=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  return k<=0?'היום ב-'+hm:k===1?'אתמול ב-'+hm:k===2?'שלשום':k<7?'לפני '+k+' ימים':k<14?'לפני שבוע':k<31?'לפני '+Math.floor(k/7)+' שבועות':'ב-'+d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})}
+const nb=s=>String(s).replace(/ /g,'\u00a0'); /* keep a number with its unit on one line */
 const I={
  power:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>',
  pause:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>',
@@ -247,15 +255,18 @@ function draw(){
   const bat=x&&x.battery!=null?x.battery:null;
   /* last cleaning and maintenance, one short line */
   const h0=(D&&D.history||[])[0],cons=(D&&D.consumables)||[],due=cons.filter(c=>c.pct<=15).length;
-  const stats=D&&!busy&&!paused?[h0?'ניקוי אחרון: '+(h0.m2!=null?h0.m2+' מ״ר':'')+(h0.min!=null?' · '+h0.min+' דק׳':''):'',cons.length?(due?(due===1?'חלק אחד להחלפה':due+' חלקים להחלפה'):'תחזוקה: הכול תקין'):''].filter(Boolean).join(' · '):'';
+  const last=D&&!busy&&!paused&&h0?'ניקוי אחרון: '+(ago(h0.t)||'לא ידוע מתי'):'';
+  const lastInfo=last?[h0.m2!=null?nb(h0.m2+' מ״ר'):'',h0.min!=null?nb(h0.min+' דק׳'):'',h0.done===false?'לא הושלם':''].filter(Boolean).join(' · '):'';
+  const maint=D&&!busy&&!paused&&cons.length?(due?(due===1?'חלק אחד להחלפה':due+' חלקים להחלפה'):'תחזוקה: הכול תקין'):'';
+  const stats=[last,lastInfo,maint].filter(Boolean).join('. ');
   part('pHero',`<div class="vhero${busy?' on':''}" role="group" aria-label="${esc(x?stateName(x)+'. '+(bat!=null?'סוללה '+bat+' אחוז. ':'')+sub2+(stats?'. '+stats:''):'מתחבר')}">
-    <div class="vimg" aria-hidden="true">${HO.devArt(HO.MOVA,1)}</div>
+    <div class="vimg" aria-hidden="true">${art(1)}</div>
     <div class="vtx" aria-hidden="true"><div class="vst">${esc(x?stateName(x):'מתחבר...')}</div><div class="vsub">${esc([sub2,bat!=null?'סוללה '+pct(bat):''].filter(Boolean).join(' · '))}</div>
-      ${bat!=null?`<div class="vbat${bat<=20?' low':''}"><i style="width:${bat}%"></i></div>`:''}${stats?`<div class="vstat">${esc(stats)}</div>`:''}</div></div>`);
+      ${bat!=null?`<div class="vbat${bat<=20?' low':''}"><i style="width:${bat}%"></i></div>`:''}${last?`<div class="vstat">${esc(last)}${lastInfo?`<br>${esc(lastInfo)}`:''}</div>`:''}${maint?`<div class="vstat">${esc(maint)}</div>`:''}</div></div>`);
   part('pErr',x&&(x.error||x.has_error)?`<div class="err" role="alert"><span>${esc(ERR_HE[x.error]||('השואב מדווח על תקלה'+(x.error?' (קוד '+x.error+')':'')))}</span><button data-a="clear">הבנתי</button></div>`:'');
   /* the map: tap rooms to pick them; the corner button opens it big, with editing */
   const rooms=(D&&D.rooms)||[],pins=mapD&&mapD.rooms&&mapD.rooms.length?mapD.rooms:null;
-  part('pMap',mapD?`<div class="mcard" id="mcard"><div class="mwrap"><img src="data:image/png;base64,${mapD.png}" alt="מפת הבית${rooms.length?', '+rooms.length+' חדרים':''}">
+  part('pMap',mapD?`<div class="mcard" id="mcard"><div class="mwrap"><img onload="window.__fit&&window.__fit()" src="data:image/png;base64,${mapD.png}" alt=""מפת הבית${rooms.length?', '+rooms.length+' חדרים':''}">
       ${pins?pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join(''):''}</div>
       <button class="mbig" data-open="mapview" aria-label="הגדלת המפה ועריכה">${I.expand}</button>
       ${sel.size?`<span class="mpill" aria-hidden="true">${sel.size===1?'חדר אחד נבחר':sel.size+' חדרים נבחרו'}</span>`:''}</div>`
@@ -299,7 +310,7 @@ function stationLine(x){const t=[['clean_tank','מים נקיים'],['dirty_tank
   return t.length?t.map(([k,n])=>n+': '+(TANK_HE[x[k]]||x[k])).join(' · '):'הכול תקין'}
 
 function drawLogin(){if($('login'))return;sig={};
-  $('main').innerHTML=`<div class="hero" style="padding:20px"><div style="width:140px;margin:0 auto" aria-hidden="true">${HO.devArt(HO.MOVA,1.5)}</div></div>
+  $('main').innerHTML=`<div class="hero" style="padding:20px"><div style="width:140px;margin:0 auto" aria-hidden="true">${art(1.5)}</div></div>
   <div class="login" id="login"><h2 style="margin:0">חיבור לשואב</h2><p class="note" style="margin:0">פעם אחת, עם חשבון MOVAhome שלך.</p>
     <label for="mvE">אימייל של MOVAhome</label><input id="mvE" type="email" autocomplete="username" dir="ltr">
     <label for="mvP">סיסמה</label><input id="mvP" type="password" autocomplete="current-password" dir="ltr">
@@ -330,7 +341,7 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
   else if(k==='mode'){t='מצב ניקוי מתקדם';const q=S.filter(s=>QUICK.includes(s.k)&&s.k!=='cleaning_mode'&&s.k!=='suction_level');
     h=q.map(segHtml).join('')||'<p class="note">אין הגדרות נוספות לשואב הזה.</p>'}
   else if(k==='map'){t='בחירת חדרים';const rooms=D.rooms||[],pins=mapD&&mapD.rooms&&mapD.rooms.length?mapD.rooms:null,n=sel.size;
-    h=`${mapD?`<div class="map"><img src="data:image/png;base64,${mapD.png}" alt="מפת הבית">${pins?pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join(''):''}</div>`:'<p class="note">טוען מפה...</p>'}
+    h=`${mapD?`<div class="map"><img onload="window.__fit&&window.__fit()" src="data:image/png;base64,${mapD.png}" alt=""מפת הבית">${pins?pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join(''):''}</div>`:'<p class="note">טוען מפה...</p>'}
       ${!pins&&rooms.length?`<div class="seg" role="group" aria-label="חדרים">${rooms.map(r=>`<button data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join('')}</div>`:''}
       <div class="lbl" id="lTimes">כמה פעמים</div><div class="seg" role="group" aria-labelledby="lTimes">${[1,2,3].map(v=>`<button data-times="${v}" aria-pressed="${times===v}">${v===1?'פעם אחת':v===2?'פעמיים':'3 פעמים'}</button>`).join('')}</div>
       <button class="wide" id="goRooms"${n?'':' disabled'}>${n?'ניקוי '+(n===1?esc(((rooms.find(r=>sel.has(r.id))||{}).name)||''):n+' חדרים'):'בחר חדרים במפה'}</button>`}
@@ -537,10 +548,22 @@ document.addEventListener('change',e=>{const t=e.target;
 
 /* ---------- fit on one screen, like the AC page ---------- */
 const app=$('app');
+/* room pins sit on the room centres; when two rooms are close the labels overlap, so push them apart vertically */
+function unclash(){const w=document.querySelector('#mcard .mwrap');if(!w)return;const ps=[...w.querySelectorAll('.pin')];if(ps.length<2)return;
+  ps.forEach(p=>p.style.marginTop='');const H=w.clientHeight;
+  for(let it=0;it<6;it++){let moved=false;
+    for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const a=ps[i].getBoundingClientRect(),b=ps[j].getBoundingClientRect();
+      const ox=Math.min(a.right,b.right)-Math.max(a.left,b.left),oy=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+      if(ox>2&&oy>2){const up=a.top<=b.top,d=Math.ceil(oy/2)+3;
+        const shift=(p,v)=>{const cur=parseFloat(p.style.marginTop)||0,r=p.getBoundingClientRect(),top=w.getBoundingClientRect().top;
+          const nv=Math.max(-(r.top-top)+cur+4,Math.min(H-(r.bottom-top)+cur-4,cur+v));p.style.marginTop=nv+'px'};
+        shift(ps[i],up?-d:d);shift(ps[j],up?d:-d);moved=true}}
+    if(!moved)break}}
+window.__fit=()=>{fit();unclash()};
 function fit(){if(linked===false||MVW)return;const bar=$('bar');const pb=bar.hidden?24:Math.ceil(innerHeight-bar.getBoundingClientRect().top+16);app.style.paddingBottom=pb+'px';
   const mc=$('mcard'),more=$('moreDet');app.style.overflowY='hidden';
   if(mc&&!(more&&more.open)){let h=Math.round(innerHeight*.5);mc.style.setProperty('--mh',h+'px');while(h>150&&app.scrollHeight>app.clientHeight+1){h-=12;mc.style.setProperty('--mh',h+'px')}}
-  app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
+  app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden';unclash()}
 addEventListener('resize',fit);
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
 document.addEventListener('touchmove',e=>{if(e.target.closest('.scrim'))return;const t=e.touches[0];if(Math.abs(t.clientX-tx)>Math.abs(t.clientY-ty))return;if(app.style.overflowY==='hidden')e.preventDefault()},{passive:false});
