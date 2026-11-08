@@ -581,7 +581,7 @@ input,select,textarea{font-size:max(16px,1em)!important}
       <rect x="66" y="222" width="34" height="10" rx="4" class="foot"/><rect x="220" y="222" width="34" height="10" rx="4" class="foot"/>
     </svg>
     <div class="status">
-      <div class="state" id="state">מוכן לקלייה</div>
+      <div class="state" id="state">מוכן</div>
       <div class="hint" id="hint">בחר שחום והדלק</div>
     </div>
   </section>
@@ -1048,7 +1048,7 @@ function render(){
   if(CAP)LSset('toaster_end',R.on&&R.endAt?String(R.endAt):null);
   $('app').classList.toggle('is-on',R.on);document.documentElement.classList.toggle('glow-warm',!!R.on);
   drawClock();
-  $('state').textContent=R.on?(R.rounds>1?(R.midDone?'סיבוב שני':'סיבוב ראשון'):'בקלייה...'):R.justDone?'הטוסט מוכן':'מוכן לקלייה';
+  $('state').textContent=R.on?(R.rounds>1?(R.midDone?'סיבוב שני':'סיבוב ראשון'):'מכין טוסט...'):R.justDone?'הטוסט מוכן':'מוכן';
   $('hint').textContent=R.on?(R.endAt?'לחץ את הידית למטה. החשמל ינותק בסוף':'אין טיימר פעיל'):R.justDone?'אפשר להוציא':'בחר שחום והדלק';
   $('power').setAttribute('aria-pressed',R.on);$('powerTxt').textContent=R.on?'כבה עכשיו':'הדלק';
   $('ext').disabled=!R.on||!R.endAt;
