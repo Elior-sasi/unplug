@@ -274,7 +274,7 @@ async function load(){try{const j=await api('/mova/state');D=j;linked=true;err='
 async function loadMap(force){if(!linked)return;const x=D&&D.state,busy=x&&(x.running||BUSY.has(x.state));
   if(!force&&!busy&&mapD&&Date.now()-mapAt<5*60000)return;
   window.MAPLOAD=true;draw();
-  try{const j=await Promise.race([api('/mova/map'),new Promise((_,r)=>setTimeout(()=>r(new Error('השרת לא ענה תוך 60 שניות')),60000))]);window.MAPLOAD=false;mapAt=Date.now();window.MAPERR=j.map?'':'השואב לא שלח מפה';if(j.map){mapD=j.map;MV.map=j.map;MV.mapAt=mapAt;refreshSheet();mvDraw()}draw()}catch(e){window.MAPLOAD=false;window.MAPERR=String(e&&e.message||e).slice(0,200);draw()}}
+  try{const j=await Promise.race([api('/mova/map'),new Promise((_,r)=>setTimeout(()=>r(new Error('השרת לא ענה תוך 60 שניות')),60000))]);window.MAPLOAD=false;loadMap._again=0;mapAt=Date.now();window.MAPERR=j.map?'':'השואב לא שלח מפה';if(j.map){mapD=j.map;MV.map=j.map;MV.mapAt=mapAt;refreshSheet();mvDraw()}draw()}catch(e){/* the first call after a quiet while often times out while the server wakes up: try once more before showing an error */if(!loadMap._again){loadMap._again=1;setTimeout(()=>loadMap(true),2500);return}loadMap._again=0;window.MAPLOAD=false;window.MAPERR=String(e&&e.message||e).slice(0,200);draw()}}
 async function send(path,body,ok){buzz();try{const j=await api(path,body);if(j&&j.state){D=Object.assign({},D,j);delete D.sent;MV.d=D}ok&&toast(ok);draw();refreshSheet()}catch(e){toast(e.message);load()}}
 const act=(a,ok,extra)=>send('/mova/act',Object.assign({a},extra||{}),ok);
 const setv=(k,v,ok)=>send('/mova/set',{k,v},ok);
