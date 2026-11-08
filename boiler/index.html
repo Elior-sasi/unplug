@@ -319,7 +319,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 /* one screen, no scrolling, like the AC page */
 const app=$('app');
 function fit(){const dl=document.querySelector('.dial'),hero=document.querySelector('.hero'),more=$('moreDet');app.style.overflowY='hidden';
-  if(dl&&hero&&!(more&&more.open)){let w=Math.min(360,hero.clientWidth-24);dl.style.width=w+'px';while(w>170&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
+  if(dl&&hero&&!(more&&more.open)){let w=Math.min(270,hero.clientWidth-60);dl.style.width=w+'px';while(w>170&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
 addEventListener('resize',fit);document.addEventListener('toggle',()=>setTimeout(fit,30),true);
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
