@@ -131,7 +131,7 @@ function bindReorder(v){
     grid.querySelectorAll('.card').forEach(c=>{
       const id=c.dataset.id;if(!id)return;const nm=esc(c.querySelector('.nm').textContent),wide=META.size[id]==='w';
       if(META.hidden[id])c.classList.add('hiddenCard');
-      c.insertAdjacentHTML('beforeend',`<div class="editActions" role="group" aria-label="פעולות עריכה עבור ${nm}"><button class="edCorner edFav" data-fav aria-pressed="${!!META.fav[id]}" aria-label="מועדף - ${nm}">${svg('star',2.4)}</button><button class="edCorner edDel" data-hide aria-label="${META.hidden[id]?'הצגת':'הסתרת'} ${nm}">${svg(META.hidden[id]?'plus':'close',2.6)}</button><button class="edCorner edSize" data-size aria-label="${wide?'כרטיס מרובע':'כרטיס מלבני'} - ${nm}">${svg(wide?'close':'plus',2.6)}</button><button class="edCorner edIcon" data-icon aria-label="עריכת שם וסמליל - ${nm}" title="עריכת שם וסמליל">${svg('edit',2.4)}</button></div>`);
+      c.insertAdjacentHTML('beforeend',`<div class="editActions" role="group" aria-label="פעולות עריכה עבור ${nm}"><button class="edCorner edFav" data-fav aria-pressed="${!!META.fav[id]}" aria-label="מועדף - ${nm}">${svg('star',2.4)}</button><button class="edCorner edDel" data-hide aria-label="${META.hidden[id]?'הצגת':'הסתרת'} ${nm}">${META.hidden[id]?svg('plus',2.8):'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>'}</button><button class="edCorner edSize" data-size aria-label="${wide?'כרטיס מרובע':'כרטיס מלבני'} - ${nm}">${svg(wide?'close':'plus',2.6)}</button><button class="edCorner edIcon" data-icon aria-label="עריכת שם וסמליל - ${nm}" title="עריכת שם וסמליל">${svg('edit',2.4)}</button></div>`);
       // Editing controls must win hit testing over the full-card drag surface.
       // Prevent the iOS drag handler from capturing their pointer.
       c.querySelectorAll('.editActions button,.reBtns button').forEach(btn=>{
@@ -152,6 +152,15 @@ function bindReorder(v){
 }
 
 /* smooth drag: the card follows the finger, a placeholder keeps its spot, neighbours slide (FLIP) */
+/* edit mode, like Smart Life: tap a card for its options */
+function cardMenu(c){const id=c.dataset.id,nm=c.querySelector('.nm')?.textContent||'',wide=(META.size||{})[id]==='w',fav=!!META.fav[id],hid=!!(META.hidden||{})[id];
+  sheet(esc(nm),`<div class="list">
+    <button class="row row-btn" data-cm="fav"><span class="grow t">${fav?'הסרה מהמועדפים':'הוספה למועדפים'}</span>${svg('star',2.2)}</button>
+    <button class="row row-btn" data-cm="icon"><span class="grow t">שם ותמונה</span>${svg('edit',2.2)}</button>
+    <button class="row row-btn" data-cm="size"><span class="grow t">${wide?'כרטיס קטן':'כרטיס רחב'}</span>${svg('grid',2.2)}</button>
+    <button class="row row-btn" data-cm="hide"><span class="grow t">${hid?'הצגה במסך':'הסתרה מהמסך'}</span>${svg(hid?'plus':'close',2.2)}</button></div>
+    <p class="s" style="margin:10px 4px 0">לשינוי הסדר: לוחצים על כרטיס וגוררים אותו.</p>`,(el,close)=>el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{const k=b.dataset.cm;close();
+      const t={fav:'[data-fav]',icon:'[data-icon]',size:'[data-size]',hide:'[data-hide]'}[k];const live=document.querySelector(`.card[data-id="${CSS.escape(id)}"] ${t}`);live&&live.click()}))}
 function flip(grid,mutate){
   const items=[...grid.children],before=new Map(items.map(el=>[el,el.getBoundingClientRect()]));
   mutate();
@@ -187,7 +196,8 @@ function startDrag(e,c,grid,o){
     /* glide into the new place */
     c.style.transition='transform .2s cubic-bezier(.2,.8,.2,1)';c.style.transform='';
     setTimeout(()=>{c.style.transition='';c.classList.remove('draggingCard')},210);
-    if(save&&moved)saveOrderFrom(grid);try{o.releasePointerCapture(pid)}catch(_){}};
+    if(save&&moved)saveOrderFrom(grid);try{o.releasePointerCapture(pid)}catch(_){}
+    if(save&&!moved)setTimeout(()=>cardMenu(c),0)};
   const finish=ev=>{if(ev.pointerId===pid)end(true)};
   const cancel=ev=>{if(ev.pointerId===pid)end(true)};
   addEventListener('pointermove',move,true);addEventListener('pointerup',finish,true);addEventListener('pointercancel',cancel,true);
