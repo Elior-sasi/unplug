@@ -550,6 +550,7 @@ input,select,textarea{font-size:max(16px,1rem)!important}
 .cmdBar{display:flex;align-items:center;gap:8px;background:#1c1c1e;border-radius:16px;padding:4px 6px 4px 14px;margin:0 0 14px}
 .cmdBar input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;min-height:44px}
 .cmdBar input::placeholder{color:#8e8e93}
+.search .cmdMic{margin-inline-end:-8px}.qDo{margin:-4px 0 12px}
 .cmdMic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--gold);flex:none}
 .cmdMic svg{width:22px;height:22px}.cmdMic.rec{background:var(--gold);color:#1f0e00;animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 8px #ff9a3d33}}
@@ -952,14 +953,17 @@ function viewDevices(v){
   const rooms=roomsOf(META.home);
   if(ROOM!=='all'&&ROOM!=='fav'&&ROOM!=='off'&&!rooms.includes(ROOM))ROOM='all';
   const offN=DEVS.filter(d=>!d.online).length,onDevs=DEVS.filter(d=>d.online&&isOn(d));
-  const q=Q.trim().toLowerCase();
+  /* one bar: typing a device name filters; a sentence like "תכבה את המזגן" becomes a command */
+  const cmdP=Q.trim()&&typeof parseCommand==='function'?parseCommand(Q.trim()):null,isCmd=!!(cmdP&&cmdP.actions.length);
+  const q=isCmd?'':Q.trim().toLowerCase();
   let list=DEVS.filter(d=>((typeof REORDER!=='undefined'&&REORDER)||!(META.hidden||{})[d.id])&&(ROOM==='all'||(ROOM==='fav'?META.fav[d.id]:ROOM==='off'?!d.online:roomOf(d)===ROOM)));
   if(q)list=list.filter(d=>(dname(d)+' '+catOf(d)[0]+' '+roomOf(d)).toLowerCase().includes(q));
   list=list.slice().sort((x,y)=>(META.order?.[x.id]??999)-(META.order?.[y.id]??999)||(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0));
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
   const chips=[['all','הכול'],['fav','מועדפים'],...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
-  const H=(DEVS.length>5?`<label class="search">${svg('search')}<span class="sr">חיפוש מכשיר</span><input id="q" type="search" placeholder="חיפוש מכשיר" value="${esc(Q)}" autocomplete="off"></label>`:'')+
-      (typeof attentionHtml==='function'&&ROOM==='all'&&!q?attentionHtml():'')+(typeof cmdBarHtml==='function'?cmdBarHtml():'')+(typeof liveStripHtml==='function'?liveStripHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
+  const H=`<form class="search" id="qF" role="search" autocomplete="off">${svg('search')}<label class="sr" for="q">חיפוש מכשיר או פקודה</label><input id="q" type="search" enterkeyhint="go" placeholder="חיפוש או פקודה" aria-describedby="qHint" value="${esc(Q)}" autocomplete="off"><button type="button" class="cmdMic" id="cmdMic" aria-label="הכתבה קולית">${svg('mic',2.2)}</button><span class="sr" id="qHint">אפשר לכתוב שם של מכשיר, או פקודה כמו: תכבה את המזגן בעוד שעה</span></form>`+
+      (isCmd?`<button class="btn pri wide qDo" id="qDo">${svg('play')}בצע: ${esc(cmdP.actions.map(a=>dname(a.d)).slice(0,3).join(', ')+(cmdP.actions.length>3?` ועוד ${cmdP.actions.length-3}`:''))}${cmdP.when?' ב-'+hm(cmdP.when):''}</button>`:'')+
+      (typeof attentionHtml==='function'&&ROOM==='all'&&!q&&!isCmd?attentionHtml():'')+(typeof liveStripHtml==='function'?liveStripHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
    `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים"><span style="display:inline-grid;transform:rotate(-90deg)">${svg('chev',2.4)}</span></button></div>`+
    (list.length||ROOM==='all'&&!q?`<div class="grid" role="list">${(()=>{const pv=ROOM==='all'&&!q&&!list.some(d=>d.id==='gtv')?`<div class="card" role="listitem" data-id="preview-projector" data-preview="projector"><button class="open" id="projectorPreviewEntry" aria-label="פתיחת שלט המקרן"></button><div class="ic" aria-hidden="true">${artFor((META.icons||{})["preview-projector"]||"custom_magcubic_hy350_gtv_projector",STYLE())}</div><div class="nm">${esc((META.names||{})["preview-projector"]||"שלט המקרן")}</div><div class="st">HY350 GTV · הדמיה</div></div>`:'';const items=list.map(d=>[META.order?.[d.id]??999,card(d)]);if(pv)items.push([META.order?.['preview-projector']??-1,pv]);
@@ -1954,12 +1958,12 @@ setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.que
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched().catch(()=>{})}});
 </script>
 <script src="extras.js?v=30"></script>
-<script src="smart.js?v=3"></script>
+<script src="smart.js?v=4"></script>
 <script src="motion.js?v=3"></script>
 <script src="washer.js?v=2"></script>
 <script src="acplug.js?v=2"></script>
 <script src="live.js?v=1"></script>
-<script src="gbackup.js?v=2"></script>
+<script src="gbackup.js?v=3"></script>
 <script src="home.js?v=2"></script>
 <script src="tv.js?v=2"></script>
 <script src="mova.js?v=4"></script>

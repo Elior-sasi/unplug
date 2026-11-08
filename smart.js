@@ -43,7 +43,7 @@ function parseCommand(raw){
   }
   targets=targets.filter(d=>powerCode(d)||d.virtual);
   for(const d of targets){
-    if(d.virtual){out.actions.push({d,ember:off?'off':'on?m=30',label:off?'כיבוי':'הדלקה ל-30 דק׳'});continue}
+    if(d.virtual){if(!on&&!off)continue;out.actions.push({d,ember:off?'off':'on?m=30',label:off?'כיבוי':'הדלקה ל-30 דק׳'});continue}
     const cmds=[],pc=powerCode(d),fn=c=>(d.functions||[]).find(f=>f.code===c);
     if(off)cmds.push({code:pc,value:false});
     else{
@@ -69,26 +69,23 @@ async function runCommand(p){
   addLog('פקודה',p.text);
   toast(bad?`בוצעו ${ok}, נכשלו ${bad}`:p.when?`נקבע ל-${hm(p.when)}`:'בוצע');
 }
-function cmdBarHtml(){
-  return `<form class="cmdBar" id="cmdF" role="search" autocomplete="off"><label class="sr" for="cmdI">פקודה בעברית</label>
-    <input id="cmdI" enterkeyhint="go" placeholder="מה לעשות? למשל: תכבה את המזגן בעוד שעה">
-    <button type="button" class="cmdMic" id="cmdMic" aria-label="הכתבה קולית">${svg('mic',2.2)}</button></form>`;
-}
 function bindCmdBar(v){
-  const f=v.querySelector('#cmdF');if(!f)return;const i=f.querySelector('#cmdI');
-  f.onsubmit=e=>{e.preventDefault();const txt=i.value.trim();if(!txt)return;i.blur();previewCommand(txt)};
+  const f=v.querySelector('#qF');if(!f)return;const i=f.querySelector('#q');
+  const go=txt=>{const p=parseCommand(txt);if(p.actions.length){i.blur();previewCommand(txt)}else i.blur()};
+  f.onsubmit=e=>{e.preventDefault();const txt=i.value.trim();if(txt)go(txt)};
+  const b=v.querySelector('#qDo');if(b)b.onclick=()=>previewCommand(i.value.trim());
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition,mic=f.querySelector('#cmdMic');
   if(!SR){mic.onclick=()=>{i.focus();toast('אפשר להכתיב עם המיקרופון שבמקלדת')};return}
   mic.onclick=()=>{try{const r=new SR();r.lang='he-IL';r.interimResults=false;r.maxAlternatives=1;mic.classList.add('rec');mic.setAttribute('aria-label','מקשיב...');
-    r.onresult=e=>{const txt=e.results[0][0].transcript;i.value=txt;previewCommand(txt)};
-    r.onend=()=>{mic.classList.remove('rec');mic.setAttribute('aria-label','הכתבה קולית')};r.onerror=()=>toast('לא שמעתי, נסה שוב');r.start()}catch(e){i.focus()}};
+    r.onresult=e=>{const txt=e.results[0][0].transcript;Q=txt;render();if(parseCommand(txt).actions.length)previewCommand(txt)};
+    r.onend=()=>{const m=document.getElementById('cmdMic');if(m){m.classList.remove('rec');m.setAttribute('aria-label','הכתבה קולית')}};r.onerror=()=>toast('לא שמעתי, נסה שוב');r.start()}catch(e){i.focus()}};
 }
 function previewCommand(txt){
   const p=parseCommand(txt);
   if(!p.actions.length){sheet('לא הבנתי',`<p>"${esc(txt)}"</p><p>נסה למשל:</p><ul class="cmdEx"><li>תדליק את המזגן על 23</li><li>תכבה הכול במטבח</li><li>בעוד שעה תכבה את הטוסטר</li><li>בשעה 22:30 תכבה את האורות</li><li>תדליק את הדוד</li></ul>`);return}
   sheet(p.when?`ב-${hm(p.when)}`:'לבצע?',`<p>"${esc(txt)}"</p><div class="list">${p.actions.map(a=>`<div class="row"><span class="mini">${devArt(a.d)}</span><span class="grow"><span class="t">${esc(dname(a.d))}</span><br><span class="s">${esc(a.label)}</span></span></div>`).join('')}</div>
     <div class="btns"><button class="btn" data-x2>ביטול</button><button class="btn pri" id="cmdGo">${p.when?'קבע':'בצע'}</button></div>`,(el,close)=>{
-    el.querySelector('[data-x2]').onclick=close;el.querySelector('#cmdGo').onclick=()=>{close();runCommand(p);const i=document.getElementById('cmdI');if(i)i.value=''};
+    el.querySelector('[data-x2]').onclick=close;el.querySelector('#cmdGo').onclick=()=>{close();runCommand(p);Q='';render()};
     el.querySelector('#cmdGo').focus()});
 }
 
