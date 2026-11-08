@@ -588,12 +588,14 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 /* BOSS warming plate: enlarge 25% only in device-card thumbnail. */
 .card .ic img.real:is([src^="real/hotplate.webp"],[src^="real/custom/boss_shabbat_hotplate.png"]){transform:scale(1.25);transform-origin:center center}
 /* Favorites: a direct, accessible orange star on every device tile. */
-.card .favToggle{position:absolute;left:8px;top:8px;z-index:3;width:44px;height:44px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:transparent;color:#92949b;cursor:pointer;touch-action:manipulation}
+.card .favToggle{position:absolute;left:8px;bottom:8px;z-index:3;width:44px;height:44px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:transparent;color:#92949b;cursor:pointer;touch-action:manipulation}
 .card .favToggle svg{width:26px;height:26px;fill:currentColor;stroke:currentColor;stroke-width:1.5}
 .card .favToggle[aria-pressed="true"]{color:#ff9a3d}
 .card .favToggle[aria-pressed="true"] svg{fill:currentColor;filter:drop-shadow(0 0 5px #ff9a3d55)}
 .card .favToggle:focus-visible{outline:2px solid #ff9a3d;outline-offset:1px}
 .card.wide .favToggle{left:auto;right:10px;top:8px;bottom:auto}
+.card:has(.favToggle[aria-pressed="true"]) .st{padding-inline-end:38px}
+.card.wide:has(.favToggle[aria-pressed="true"]) .st{padding-inline-end:0}
 .reordering .card .favToggle{display:none!important}
 .reordering .card .edFav{background:#303237!important;color:#a3a3aa!important}
 .reordering .card .edFav[aria-pressed="true"]{background:#413021!important;color:#ff9a3d!important}
