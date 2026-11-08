@@ -83,6 +83,7 @@ details.more[open] summary svg{transform:rotate(180deg)}
 .vstat{font-size:.85rem;color:var(--mut);margin-top:4px;line-height:1.35}.vstat:first-of-type{margin-top:6px}
 .mcard{position:relative;background:#141416;border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .mcard .mwrap{position:relative;max-width:100%}
+.mcard{padding:8px}
 .mcard img{display:block;max-width:100%;max-height:var(--mh,48vh);width:auto;height:auto;margin:auto}
 .mbig{position:absolute;top:10px;left:10px;width:46px;height:46px;border-radius:50%;background:#000b;border:1px solid #ffffff33;display:grid;place-items:center}
 .mpill{position:absolute;top:12px;right:12px;background:#000c;border-radius:999px;padding:8px 14px;font-weight:700;font-size:.9rem}
@@ -135,7 +136,8 @@ select,input[type=time],input[type=email],input[type=password]{font:inherit;font
 .meter.low>i{background:#ffd60a}.meter.out>i{background:var(--bad)}
 .map{position:relative;border-radius:22px;overflow:hidden;background:#141416;margin-bottom:14px}
 .map img{display:block;width:100%;height:auto}
-.pin{position:absolute;transform:translate(-50%,-50%);min-height:44px;min-width:44px;padding:6px 12px;border-radius:999px;border:2px solid #fff6;background:#000b;color:#fff;font-weight:700;font-size:.95rem;white-space:nowrap;max-width:46%;overflow:hidden;text-overflow:ellipsis}
+.pin{position:absolute;transform:translate(-50%,-50%);min-height:30px;padding:3px 11px;border-radius:999px;border:1.5px solid #ffffffa0;background:#0b0f19d9;color:#fff;font-weight:700;font-size:.82rem;line-height:1.2;white-space:nowrap;box-shadow:0 2px 8px #0008}
+.pin::after{content:"";position:absolute;inset:-8px -6px}
 .pin[aria-pressed="true"]{background:var(--acc);color:var(--ink);border-color:#fff}
 .pin[aria-pressed="true"]::before{content:"✓ "}
 .tot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:14px}
@@ -232,6 +234,26 @@ async function send(path,body,ok){buzz();try{const j=await api(path,body);if(j&&
 const act=(a,ok,extra)=>send('/mova/act',Object.assign({a},extra||{}),ok);
 const setv=(k,v,ok)=>send('/mova/set',{k,v},ok);
 
+/* ---------- map image: crop the empty margins and lighten the floor so the map is big and clear ---------- */
+let mapView=null,mapBusy='';
+function mapImg(){if(!mapD||!mapD.png)return null;const key=mapD.png.length+':'+mapD.png.slice(-48);
+  if(mapView&&mapView.key===key)return mapView;
+  if(mapBusy!==key){mapBusy=key;const im=new Image();im.onload=()=>{try{mapView=cropMap(im,key)}catch(e){mapView={key,src:im.src,rooms:mapD.rooms||[]}}if(mapBusy===key){sig.pMap='';draw();refreshSheet()}};im.src='data:image/png;base64,'+mapD.png}
+  return null}
+function cropMap(im,key){const W=im.naturalWidth,H=im.naturalHeight,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.drawImage(im,0,0);
+  const px=g.getImageData(0,0,W,H),a=px.data,bg=[a[0],a[1],a[2],a[3]];
+  const isBg=i=>a[i+3]<16||(Math.abs(a[i]-bg[0])+Math.abs(a[i+1]-bg[1])+Math.abs(a[i+2]-bg[2])<30&&Math.abs(a[i+3]-bg[3])<30);
+  let x0=W,y0=H,x1=-1,y1=-1;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4;
+    if(isBg(i)){a[i+3]=0;continue}
+    if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
+    for(let k=0;k<3;k++)a[i+k]=Math.round(255-(255-a[i+k])*.8)}
+  if(x1<0)return {key,src:im.src,rooms:mapD.rooms||[]};
+  const pad=Math.round(Math.max(x1-x0,y1-y0)*.04);x0=Math.max(0,x0-pad);y0=Math.max(0,y0-pad);x1=Math.min(W-1,x1+pad);y1=Math.min(H-1,y1+pad);
+  g.putImageData(px,0,0);const cw=x1-x0+1,ch=y1-y0+1,o=document.createElement('canvas');o.width=cw;o.height=ch;o.getContext('2d').drawImage(c,x0,y0,cw,ch,0,0,cw,ch);
+  const rooms=(mapD.rooms||[]).map(r=>Object.assign({},r,{px:+(((r.px/100*W)-x0)/cw*100).toFixed(2),py:+(((r.py/100*H)-y0)/ch*100).toFixed(2)}));
+  return {key,src:o.toDataURL('image/png'),rooms}}
+
 /* ---------- main screen ---------- */
 const C=150,R=133,A0=135,SPAN=270;
 const pt=(d,r)=>{const a=d*Math.PI/180;return[C+(r||R)*Math.cos(a),C+(r||R)*Math.sin(a)]};
@@ -265,8 +287,8 @@ function draw(){
       ${bat!=null?`<div class="vbat${bat<=20?' low':''}"><i style="width:${bat}%"></i></div>`:''}${last?`<div class="vstat">${esc(last)}${lastInfo?`<br>${esc(lastInfo)}`:''}</div>`:''}${maint?`<div class="vstat">${esc(maint)}</div>`:''}</div></div>`);
   part('pErr',x&&(x.error||x.has_error)?`<div class="err" role="alert"><span>${esc(ERR_HE[x.error]||('השואב מדווח על תקלה'+(x.error?' (קוד '+x.error+')':'')))}</span><button data-a="clear">הבנתי</button></div>`:'');
   /* the map: tap rooms to pick them; the corner button opens it big, with editing */
-  const rooms=(D&&D.rooms)||[],pins=mapD&&mapD.rooms&&mapD.rooms.length?mapD.rooms:null;
-  part('pMap',mapD?`<div class="mcard" id="mcard"><div class="mwrap"><img onload="window.__fit&&window.__fit()" src="data:image/png;base64,${mapD.png}" alt=""מפת הבית${rooms.length?', '+rooms.length+' חדרים':''}">
+  const mvw=mapImg(),rooms=(D&&D.rooms)||[],pins=mvw&&mvw.rooms.length?mvw.rooms:null;
+  part('pMap',mapD?`<div class="mcard" id="mcard"><div class="mwrap"><img onload="window.__fit&&window.__fit()" src="${mvw?mvw.src:'data:image/png;base64,'+mapD.png}" alt="מפת הבית${rooms.length?', '+rooms.length+' חדרים':''}">
       ${pins?pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join(''):''}</div>
       <button class="mbig" data-open="mapview" aria-label="הגדלת המפה ועריכה">${I.expand}</button>
       ${sel.size?`<span class="mpill" aria-hidden="true">${sel.size===1?'חדר אחד נבחר':sel.size+' חדרים נבחרו'}</span>`:''}</div>`
@@ -340,8 +362,8 @@ function refreshSheet(){if(!SH||!D&&SH.kind!=='device')return;const x=D&&D.state
   else if(k==='qsuction'){t='עוצמת שאיבה';const s=S.find(s=>s.k==='suction_level');h=s?segHtml(s):''}
   else if(k==='mode'){t='מצב ניקוי מתקדם';const q=S.filter(s=>QUICK.includes(s.k)&&s.k!=='cleaning_mode'&&s.k!=='suction_level');
     h=q.map(segHtml).join('')||'<p class="note">אין הגדרות נוספות לשואב הזה.</p>'}
-  else if(k==='map'){t='בחירת חדרים';const rooms=D.rooms||[],pins=mapD&&mapD.rooms&&mapD.rooms.length?mapD.rooms:null,n=sel.size;
-    h=`${mapD?`<div class="map"><img onload="window.__fit&&window.__fit()" src="data:image/png;base64,${mapD.png}" alt=""מפת הבית">${pins?pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join(''):''}</div>`:'<p class="note">טוען מפה...</p>'}
+  else if(k==='map'){t='בחירת חדרים';const rooms=D.rooms||[],mvw=mapImg(),pins=mvw&&mvw.rooms.length?mvw.rooms:null,n=sel.size;
+    h=`${mapD?`<div class="map"><img onload="window.__fit&&window.__fit()" src="${mvw?mvw.src:'data:image/png;base64,'+mapD.png}" alt="מפת הבית">${pins?pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join(''):''}</div>`:'<p class="note">טוען מפה...</p>'}
       ${!pins&&rooms.length?`<div class="seg" role="group" aria-label="חדרים">${rooms.map(r=>`<button data-room="${r.id}" aria-pressed="${sel.has(r.id)}">${esc(r.name)}</button>`).join('')}</div>`:''}
       <div class="lbl" id="lTimes">כמה פעמים</div><div class="seg" role="group" aria-labelledby="lTimes">${[1,2,3].map(v=>`<button data-times="${v}" aria-pressed="${times===v}">${v===1?'פעם אחת':v===2?'פעמיים':'3 פעמים'}</button>`).join('')}</div>
       <button class="wide" id="goRooms"${n?'':' disabled'}>${n?'ניקוי '+(n===1?esc(((rooms.find(r=>sel.has(r.id))||{}).name)||''):n+' חדרים'):'בחר חדרים במפה'}</button>`}
@@ -562,7 +584,7 @@ function unclash(){const w=document.querySelector('#mcard .mwrap');if(!w)return;
 window.__fit=()=>{fit();unclash()};
 function fit(){if(linked===false||MVW)return;const bar=$('bar');const pb=bar.hidden?24:Math.ceil(innerHeight-bar.getBoundingClientRect().top+16);app.style.paddingBottom=pb+'px';
   const mc=$('mcard'),more=$('moreDet');app.style.overflowY='hidden';
-  if(mc&&!(more&&more.open)){let h=Math.round(innerHeight*.5);mc.style.setProperty('--mh',h+'px');while(h>150&&app.scrollHeight>app.clientHeight+1){h-=12;mc.style.setProperty('--mh',h+'px')}}
+  if(mc&&!(more&&more.open)){let h=Math.round(innerHeight*.56);mc.style.setProperty('--mh',h+'px');const floor=Math.max(240,Math.round(innerHeight*.34));while(h>floor&&app.scrollHeight>app.clientHeight+1){h-=12;mc.style.setProperty('--mh',h+'px')}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden';unclash()}
 addEventListener('resize',fit);
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
