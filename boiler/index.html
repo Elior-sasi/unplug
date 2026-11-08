@@ -128,9 +128,9 @@ header h1{font-size:2rem;font-weight:800}
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,textarea,select{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 
 /* when the text is big: compact steps instead of scrolling */
-.fc1 .quick button{min-height:76px}.fc1 .quick button svg{width:24px;height:24px}.fc1 .qlbl{display:none}
+.fc1 .quick button{height:84px!important}.fc1 .qlbl{display:none}
 .fc2 header{min-height:48px}.fc2 .circ{width:44px;height:44px}.fc2 .ctl .rc{width:52px;height:52px}.fc2 .pw{min-height:52px;margin-top:6px}.fc2 #app{gap:8px}
-.fc3 .quick span{display:none}.fc3 .st2{display:none}.fc3 .quick button{min-height:60px;flex-direction:row}
+.fc3 .quick button{height:68px!important}.fc3 .quick b{font-size:.85rem}.fc3 .ebar button{min-height:48px!important}.fc3 .ebar .bi{width:38px;height:38px}.fc3 .morebtn{min-height:50px!important}.fc3 .quick span{display:none}.fc3 .ebar button{min-height:52px!important}
 
 /* ---------- one grid for every device page: same header, dial size, rows and bar ---------- */
 #app{padding-top:calc(env(safe-area-inset-top,0px) + 12px)!important;gap:12px!important}
@@ -150,6 +150,9 @@ body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,
 .qlbl{height:20px!important;line-height:20px!important;overflow:hidden}
 #pDur{line-height:0}#pDur>*{line-height:normal}
 #main{gap:12px!important}
+.st2{font-size:.85rem;white-space:nowrap}
+.fc3 #main{gap:8px!important}.fc3 #app{gap:8px!important}.fc3 .ctl{margin-bottom:8px}.fc3 .ebar b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fc3 #app{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 76px)!important}
+.fc2 .pw{min-height:52px!important;height:52px}.fc3 .ebar button{min-height:52px!important}
 </style>
 </head>
 <body>
@@ -345,8 +348,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 const app=$('app');
 function fit(){const dl=document.querySelector('.dial'),hero=document.querySelector('.hero'),more=$('moreDet');app.style.overflowY='hidden';
   const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));
-  if(dl&&hero&&!(more&&more.open)){let w=Math.min(250,hero.clientWidth-60);dl.style.width=w+'px';while(w>150&&over()){w-=10;dl.style.width=w+'px'}
-    for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}while(w>110&&over()){w-=10;dl.style.width=w+'px'}}
+  if(dl&&hero&&!(more&&more.open)){const w=Math.round(Math.min(260,innerWidth-80,innerHeight*.3));dl.style.width=w+'px';
+    for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
 addEventListener('resize',fit);document.addEventListener('toggle',()=>setTimeout(fit,30),true);
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
