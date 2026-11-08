@@ -155,7 +155,7 @@ function bindReorder(v){
 function flip(grid,mutate){
   const items=[...grid.children],before=new Map(items.map(el=>[el,el.getBoundingClientRect()]));
   mutate();
-  for(const el of items){const a=before.get(el),b=el.getBoundingClientRect();if(!a||el.classList.contains('dragging'))continue;
+  for(const el of items){const a=before.get(el),b=el.getBoundingClientRect();if(!a||el.classList.contains('dragging')||el.classList.contains('draggingCard'))continue;
     const dx=a.left-b.left,dy=a.top-b.top;if(!dx&&!dy)continue;
     el.style.transition='none';el.style.transform=`translate(${dx}px,${dy}px)`;el.offsetWidth;
     el.style.transition='transform .22s cubic-bezier(.2,.8,.2,1)';el.style.transform=''}
@@ -163,60 +163,34 @@ function flip(grid,mutate){
 function startDrag(e,c,grid,o){
   if(e.button>0||!c.dataset.id||e.target.closest('.edCorner,.reBtns,.preview-icon-edit'))return;
   e.preventDefault();
-  const pid=e.pointerId,startX=e.clientX,startY=e.clientY;
-  let x=startX,y=startY,active=true,raf=0,moved=false,scroll=0,target=null;
-  const app=document.querySelector('.app'),s0=app?app.scrollTop:0;
-  /* where the card would land: the nearest card, before or after it */
-  const aim=()=>{const rtl=getComputedStyle(grid).direction==='rtl';let best=null,score=Infinity,after=false;
-    for(const el of cards()){const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dist=Math.hypot((x-cx)*.9,(y-cy)*1.25);
-      if(dist<score){score=dist;best=el;after=y>cy+Math.min(r.height*.15,24)||(Math.abs(y-cy)<r.height*.35&&(rtl?x<cx:x>cx))}}
-    return {best,after}};
+  const pid=e.pointerId,startX=e.clientX,startY=e.clientY,r0=c.getBoundingClientRect(),gx=startX-r0.left,gy=startY-r0.top;
+  let x=startX,y=startY,tx=0,ty=0,active=true,raf=0,moved=false,scroll=0,lastSwap=0;
+  const app=document.querySelector('.app');
   const cards=()=>[...grid.querySelectorAll('.card[data-id]')].filter(el=>el!==c&&!el.classList.contains('hiddenCard'));
+  /* the card stays exactly under the finger, wherever the layout puts it */
+  const paint=()=>{raf=0;if(!active)return;const r=c.getBoundingClientRect(),bl=r.left-tx,bt=r.top-ty;tx=x-gx-bl;ty=y-gy-bt;c.style.transform=`translate3d(${tx}px,${ty}px,0)`};
+  /* live reorder: when the finger is over another card, the cards make room (they slide) */
+  const swap=()=>{if(!moved||Date.now()-lastSwap<180)return;const rtl=getComputedStyle(grid).direction==='rtl';
+    for(const el of cards()){const r=el.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)continue;
+      const cx=r.left+r.width/2,cy=r.top+r.height/2,after=y>cy+r.height*.25||(Math.abs(y-cy)<=r.height*.25&&(rtl?x<cx:x>cx));
+      const ref=after?el.nextElementSibling:el;if(ref===c||ref===c.nextElementSibling)return;
+      lastSwap=Date.now();flip(grid,()=>grid.insertBefore(c,ref));paint();try{navigator.vibrate&&navigator.vibrate(6)}catch(_){}return}};
   c.classList.add('draggingCard');
-  // Do not reorder the grid during a gesture: it causes iOS hit-target loss
-  // and makes mixed-width cards jump. Only commit one insertion on release.
-  const paint=()=>{raf=0;if(!active)return;
-    /* the list may scroll under the finger: keep the card under it */
-    const ds=app?app.scrollTop-s0:0;
-    c.style.transform=`translate3d(${x-startX}px,${y-startY+ds}px,0)`;
-    if(moved){const {best}=aim();if(best!==target){target&&target.classList.remove('dropTarget');target=best;target&&target.classList.add('dropTarget')}}
-  };
-  const move=ev=>{
-    if(ev.pointerId!==pid)return;
-    x=ev.clientX;y=ev.clientY;
-    moved=moved||Math.hypot(x-startX,y-startY)>8;
-    if(!raf)raf=requestAnimationFrame(paint);
-    const rect=app?.getBoundingClientRect();
-    scroll=rect?(y<rect.top+75?-8:y>rect.bottom-90?8:0):0;
-    if(ev.cancelable)ev.preventDefault();
-  };
+  const move=ev=>{if(ev.pointerId!==pid)return;x=ev.clientX;y=ev.clientY;
+    moved=moved||Math.hypot(x-startX,y-startY)>8;if(!raf)raf=requestAnimationFrame(paint);swap();
+    const rect=app?.getBoundingClientRect(),canScroll=app&&app.scrollHeight>app.clientHeight+20;
+    scroll=canScroll&&rect?(y<rect.top+70?-7:y>rect.bottom-110?7:0):0;
+    if(ev.cancelable)ev.preventDefault()};
   const tick=()=>{if(!active)return;if(scroll&&app){app.scrollBy(0,scroll);if(!raf)raf=requestAnimationFrame(paint)}requestAnimationFrame(tick)};
-  const finish=ev=>{
-    if(ev.pointerId!==pid)return;
-    active=false;
-    removeEventListener('pointermove',move,true);
-    removeEventListener('pointerup',finish,true);
-    removeEventListener('pointercancel',cancel,true);
+  const end=save=>{active=false;removeEventListener('pointermove',move,true);removeEventListener('pointerup',finish,true);removeEventListener('pointercancel',cancel,true);
     if(raf)cancelAnimationFrame(raf);
-    c.style.transform='';c.classList.remove('draggingCard');target&&target.classList.remove('dropTarget');
-    if(moved){
-      const {best,after}=aim();
-      if(best){
-        const ref=after?best.nextElementSibling:best;
-        if(ref!==c&&ref!==c.nextElementSibling)grid.insertBefore(c,ref);
-        saveOrderFrom(grid);
-      }
-    }
-    try{o.releasePointerCapture(pid)}catch(_){}
-  };
-  const cancel=ev=>{if(ev.pointerId!==pid)return;active=false;
-    removeEventListener('pointermove',move,true);removeEventListener('pointerup',finish,true);removeEventListener('pointercancel',cancel,true);
-    if(raf)cancelAnimationFrame(raf);
-    c.style.transform='';c.classList.remove('draggingCard');target&&target.classList.remove('dropTarget');
-  };
-  addEventListener('pointermove',move,true);
-  addEventListener('pointerup',finish,true);
-  addEventListener('pointercancel',cancel,true);
+    /* glide into the new place */
+    c.style.transition='transform .2s cubic-bezier(.2,.8,.2,1)';c.style.transform='';
+    setTimeout(()=>{c.style.transition='';c.classList.remove('draggingCard')},210);
+    if(save&&moved)saveOrderFrom(grid);try{o.releasePointerCapture(pid)}catch(_){}};
+  const finish=ev=>{if(ev.pointerId===pid)end(true)};
+  const cancel=ev=>{if(ev.pointerId===pid)end(true)};
+  addEventListener('pointermove',move,true);addEventListener('pointerup',finish,true);addEventListener('pointercancel',cancel,true);
   try{o.setPointerCapture(pid)}catch(_){}
   requestAnimationFrame(tick);
 }

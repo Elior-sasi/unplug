@@ -632,15 +632,14 @@ nav.bar:before{transition:right .38s cubic-bezier(.3,1.35,.5,1),transform .2s ea
 /* Stable compact edit controls; no changes to card image or layout. */
 .reordering .card .editActions{display:contents}
 .reordering .card .edCorner{position:absolute!important;width:34px!important;height:34px!important;bottom:auto!important;right:auto!important;transform:none!important;z-index:5}
-.reordering .card .edDel{top:8px!important;left:8px!important}
-.reordering .card .edFav{top:8px!important;left:48px!important}
-.reordering .card .edSize{top:8px!important;left:88px!important}
-.reordering .card .edIcon{top:8px!important;left:128px!important}
+.reordering .card .edCorner,.reordering .card .edCorner.edDel{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important}
+.reordering .card .edDel{top:8px!important;left:6px!important}
+.reordering .card .edFav{top:8px!important;left:42px!important}
+.reordering .card .edSize{top:8px!important;left:78px!important}
+.reordering .card .edIcon{top:8px!important;left:114px!important}
 .reordering .card:not(.wide) .ic{opacity:.25}
-.reordering .card.dropTarget{outline:3px solid #6fa8ff!important;outline-offset:2px}
 .reordering .card.draggingCard{z-index:30;box-shadow:0 20px 44px #000c;opacity:.95}
 /* the selected room tab: blue, like the selected tab in the bottom bar */
-.chips .chip[aria-pressed="true"]{color:#6fa8ff!important}
 .chips .chip[aria-pressed="true"]::after{background:#6fa8ff!important}
 .reordering .reBar{position:relative;top:auto;width:max-content;max-width:100%;margin:0 0 10px;padding:0!important;background:transparent;border:0;box-shadow:none}
 .reordering #view{padding-bottom:calc(var(--nav-h,80px) + env(safe-area-inset-bottom) + 110px)!important}
@@ -1924,7 +1923,7 @@ if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched().catch(()=>{})}
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active')&&!(typeof REORDER!=='undefined'&&REORDER))loadDevices()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CFG.key){loadDevices();loadSched().catch(()=>{})}});
 </script>
-<script src="extras.js?v=26"></script>
+<script src="extras.js?v=27"></script>
 <script src="smart.js?v=3"></script>
 <script src="motion.js?v=3"></script>
 <script src="washer.js?v=2"></script>
