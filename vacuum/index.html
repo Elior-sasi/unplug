@@ -213,6 +213,8 @@ header .circ{width:52px!important;height:52px!important;background:var(--dv-card
 #pMain .pw.on{background:var(--dv-acc)!important;color:var(--dv-acc-ink)!important}
 .pin[aria-pressed="true"],.chip[aria-pressed="true"],.seg button[aria-pressed="true"],.tools .chip[aria-pressed="true"],.cm button[aria-pressed="true"],.tabs2 button[aria-pressed="true"]{background:var(--dv-sel)!important;color:#fff!important;border-color:var(--dv-sel)!important}
 .sw[aria-checked="true"]{background:var(--dv-sel)!important}
+button.sending{opacity:.6;position:relative}button.sending::after{content:'';position:absolute;inset-inline-start:10px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){button.sending::after{animation:none}}
 </style>
 <link rel="stylesheet" href="../device.css?v=1">
 </head>
@@ -294,29 +296,48 @@ async function loadMap(force){if(!linked)return;const x=D&&D.state,busy=x&&(x.ru
   if(!force&&!busy&&mapD&&Date.now()-mapAt<5*60000)return;
   window.MAPLOAD=true;draw();
   try{const j=await Promise.race([api('/mova/map'),new Promise((_,r)=>setTimeout(()=>r(new Error('השרת לא ענה תוך 60 שניות')),60000))]);window.MAPLOAD=false;loadMap._again=0;mapAt=Date.now();window.MAPERR=j.map?'':'השואב לא שלח מפה';if(j.map){mapD=j.map;MV.map=j.map;MV.mapAt=mapAt;refreshSheet();mvDraw()}draw()}catch(e){/* the first call after a quiet while often times out while the server wakes up: try once more before showing an error */if(!loadMap._again){loadMap._again=1;setTimeout(()=>loadMap(true),2500);return}loadMap._again=0;window.MAPLOAD=false;window.MAPERR=String(e&&e.message||e).slice(0,200);draw()}}
-async function send(path,body,ok){buzz();try{const j=await api(path,body);if(j&&j.state){D=Object.assign({},D,j);delete D.sent;MV.d=D}ok&&toast(ok);draw();refreshSheet()}catch(e){toast(e.message);load()}}
+let LASTBTN=null;document.addEventListener('pointerdown',e=>{LASTBTN=e.target.closest&&e.target.closest('button')},true);document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')LASTBTN=document.activeElement},true);
+/* answer the tap at once: the button dims with a spinner and "שולח..." until the vacuum's cloud replies */
+async function send(path,body,ok){buzz();const b=LASTBTN&&LASTBTN.isConnected?LASTBTN:null;if(b){b.classList.add('sending');b.setAttribute('aria-busy','true')}toast('שולח לשואב...');
+  try{await send2(path,body,ok)}finally{if(b){b.classList.remove('sending');b.removeAttribute('aria-busy')}}}
+async function send2(path,body,ok){try{const j=await api(path,body);if(j&&j.state){D=Object.assign({},D,j);delete D.sent;MV.d=D}ok&&toast(ok);draw();refreshSheet()}catch(e){toast(e.message);load()}}
 const act=(a,ok,extra)=>send('/mova/act',Object.assign({a},extra||{}),ok);
 const setv=(k,v,ok)=>send('/mova/set',{k,v},ok);
 
 /* ---------- map image: crop the empty margins and lighten the floor so the map is big and clear ---------- */
 let mapView=null,mapBusy='';
 function mapImg(){if(!mapD||!mapD.png)return null;const key=mapD.png.length+':'+mapD.png.slice(-48);
-  if(mapView&&mapView.key===key){mapView.rooms=mapRooms(mapView.box);return mapView}
+  if(mapView&&mapView.key===key){mapView.rooms=mapRooms(mapView.box);if(mapView.paint)mapView.src=mapView.paint(sel);return mapView}
   if(mapBusy!==key){mapBusy=key;const im=new Image();im.onload=()=>{try{mapView=cropMap(im,key)}catch(e){mapView={key,src:im.src,box:null,rooms:mapD.rooms||[]}}if(mapBusy===key){sig.pMap='';draw();refreshSheet()}};im.src='data:image/png;base64,'+mapD.png}
   return null}
+/* each room gets its own soft colour; only rooms picked for cleaning turn blue */
+const ROOM_TINT=[[92,108,138],[128,112,82],[80,122,108],[122,92,112],[98,122,78],[106,96,140],[138,104,90],[78,110,124]],SEL_TINT=[61,139,255],FLOOR_TINT=[78,78,84];
 function cropMap(im,key){const W=im.naturalWidth,H=im.naturalHeight,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.drawImage(im,0,0);
   const px=g.getImageData(0,0,W,H),a=px.data,bg=[a[0],a[1],a[2],a[3]];
   const isBg=i=>a[i+3]<16||(Math.abs(a[i]-bg[0])+Math.abs(a[i+1]-bg[1])+Math.abs(a[i+2]-bg[2])<30&&Math.abs(a[i+3]-bg[3])<30);
+  const N=W*H,floor=new Uint8Array(N),lab=new Int16Array(N).fill(-1);
   let x0=W,y0=H,x1=-1,y1=-1;
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const p=y*W+x,i=p*4;
     if(isBg(i)){a[i+3]=0;continue}
     if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
-    for(let k=0;k<3;k++)a[i+k]=Math.round(255-(255-a[i+k])*.8)}
+    const mx=Math.max(a[i],a[i+1],a[i+2]),mn=Math.min(a[i],a[i+1],a[i+2]);
+    if(a[i+3]>200&&(mx-mn>40&&mx>90||mx-mn<=40&&mx>=90&&mx<=200))floor[p]=1;
+    else for(let k=0;k<3;k++)a[i+k]=Math.round(255-(255-a[i+k])*.8)}
   if(x1<0)return {key,src:im.src,box:null,rooms:mapD.rooms||[]};
+  /* grow every room from its label at the same pace; walls between rooms stop it */
+  const R=mapD.rooms||[],ids=R.map(r=>r.id);let q=[];
+  R.forEach((r,ri)=>{let sx=Math.round(r.px/100*W),sy=Math.round(r.py/100*H),best=-1,bd=1e9;
+    for(let dy=-12;dy<=12;dy++)for(let dx=-12;dx<=12;dx++){const X=sx+dx,Y=sy+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const p=Y*W+X;if(floor[p]&&lab[p]<0&&dx*dx+dy*dy<bd){bd=dx*dx+dy*dy;best=p}}
+    if(best>=0){lab[best]=ri;q.push(best)}});
+  while(q.length){const nq=[];for(const p of q){const x=p%W,ri=lab[p];for(const n of [x>0?p-1:-1,x<W-1?p+1:-1,p-W,p+W])if(n>=0&&n<N&&floor[n]&&lab[n]<0){lab[n]=ri;nq.push(n)}}q=nq}
   const pad=Math.round(Math.max(x1-x0,y1-y0)*.04);x0=Math.max(0,x0-pad);y0=Math.max(0,y0-pad);x1=Math.min(W-1,x1+pad);y1=Math.min(H-1,y1+pad);
-  g.putImageData(px,0,0);const cw=x1-x0+1,ch=y1-y0+1,o=document.createElement('canvas');o.width=cw;o.height=ch;o.getContext('2d').drawImage(c,x0,y0,cw,ch,0,0,cw,ch);
-  const box={W,H,x0,y0,cw,ch};
-  return {key,src:o.toDataURL('image/png'),box,rooms:mapRooms(box)}}
+  const cw=x1-x0+1,ch=y1-y0+1,o=document.createElement('canvas');o.width=cw;o.height=ch;const og=o.getContext('2d');
+  const box={W,H,x0,y0,cw,ch};let last='',lastSrc='';
+  const paint=S=>{const k=ids.map(id=>S&&S.has(id)?1:0).join('');if(k===last&&lastSrc)return lastSrc;
+    for(let p=0;p<N;p++){if(!floor[p])continue;const i=p*4,ri=lab[p],col=ri<0?FLOOR_TINT:S&&S.has(ids[ri])?SEL_TINT:ROOM_TINT[ri%ROOM_TINT.length];a[i]=col[0];a[i+1]=col[1];a[i+2]=col[2];a[i+3]=255}
+    g.putImageData(px,0,0);og.clearRect(0,0,cw,ch);og.drawImage(c,x0,y0,cw,ch,0,0,cw,ch);last=k;lastSrc=o.toDataURL('image/png');lastFull='';return lastSrc};
+  let lastFull='';const full=S=>{paint(S);return lastFull||(lastFull=c.toDataURL('image/png'))};
+  return {key,src:paint(sel),paint,full,box,rooms:mapRooms(box)}}
 /* room labels always come from the latest map data (a rename doesn't change the picture), placed on the cropped picture */
 function mapRooms(b){const R=(mapD&&mapD.rooms)||[];if(!b)return R;
   return R.map(r=>Object.assign({},r,{px:+(((r.px/100*b.W)-b.x0)/b.cw*100).toFixed(2),py:+(((r.py/100*b.H)-b.y0)/b.ch*100).toFixed(2)}))}
@@ -586,7 +607,7 @@ function mvDraw(){if(!MVW)return;const m=MVW,el=m.el,pins=mapD&&mapD.rooms||[],t
         <div class="mv-zoom"><button id="zIn" aria-label="הגדלה">+</button><button id="zOut" aria-label="הקטנה">−</button></div></div>
       <div class="mv-b"><div class="tabs2" role="group" aria-label="מצב המפה"><button data-mvmode="clean">ניקוי חדרים</button><button data-mvmode="edit">עריכת המפה</button></div><div id="mvBot" style="display:flex;flex-direction:column;gap:10px"></div></div>`;
     mvPointer(el.querySelector('#mvS'))}
-  const img=el.querySelector('#mvIn img');const src='data:image/png;base64,'+(mapD&&mapD.png);if(img.getAttribute('src')!==src){img.src=src;img.onload=()=>{if(!m.base)mvFitView()}}
+  const img=el.querySelector('#mvIn img');const mvw=mapImg(),src=mvw&&mvw.full?mvw.full(m.mode==='clean'?sel:null):'data:image/png;base64,'+(mapD&&mapD.png);if(img.getAttribute('src')!==src){img.src=src;img.onload=()=>{if(!m.base)mvFitView()}}
   el.querySelector('svg.ov').innerHTML=zoneSvg();
   const ph=pins.map(r=>`<button class="pin" style="left:${r.px}%;top:${r.py}%" data-room="${r.id}" aria-pressed="${picked(r.id)}">${esc(r.name)}</button>`).join('');
   const ob=((mapD&&mapD.zones&&mapD.zones.obstacles)||[]).map(o=>`<button class="obs${o.ign?' ign':''}" style="left:${o.p[0]}%;top:${o.p[1]}%" data-obs="${esc(o.i)}" aria-label="${esc(o.t)}${o.ign?', מתעלמים ממנו':''}${o.pic?', יש תמונה':''}">!</button>`).join('');
