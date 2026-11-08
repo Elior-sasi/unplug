@@ -1074,7 +1074,7 @@ const IN_APP=!!(window.HOMEON_APP&&window.webkit&&window.webkit.messageHandlers&
 const nativeCall=msg=>window.webkit.messageHandlers.homeon.postMessage(msg);
 /* Live Switcher V4 status comes from the native iPhone TCP integration.
    The browser cannot query the device's LAN TCP socket directly. */
-const HEATER_LINK={checked:false,connected:false,on:false,left:0,error:''};
+const HEATER_LINK={checked:false,connected:false,on:false,left:0,error:'',watts:0,auto:0,notify:false};
 let heaterLinkBusy=false;
 async function syncHeaterLink(){
   if(!IN_APP||heaterLinkBusy||META.ember===false)return;
@@ -1084,7 +1084,7 @@ async function syncHeaterLink(){
     const raw=await nativeCall({action:'heater',cmd:'state'});
     const state=typeof raw==='string'?JSON.parse(raw):raw;
     if(!state||state.ok!==true||typeof state.on!=='boolean')throw new Error('אין חיווי מהדוד');
-    Object.assign(HEATER_LINK,{checked:true,connected:true,on:state.on,left:Math.max(0,Number(state.left)||0),error:''});
+    Object.assign(HEATER_LINK,{checked:true,connected:true,on:state.on,left:Math.max(0,Number(state.left)||0),error:'',watts:Number(state.watts)||0,auto:Number(state.auto)||0,notify:!!state.notify});
   }catch(e){
     Object.assign(HEATER_LINK,{checked:true,connected:false,on:false,left:0,error:String(e?.message||e).slice(0,180)});
   }finally{
@@ -1107,7 +1107,8 @@ window.HOH={EMBER,inApp:()=>!!IN_APP,link:()=>HEATER_LINK,devArt:(d,w)=>devArt(d
   sync:()=>syncHeaterLink().then(()=>HEATER_LINK),
   cmd:async(cmd,m)=>{const raw=await nativeCall({action:'heater',cmd,m:m||0});const v=typeof raw==='string'?JSON.parse(raw):raw;
     if(!v||v.ok!==true||typeof v.on!=='boolean')throw new Error('לא התקבל אישור מהדוד');
-    Object.assign(HEATER_LINK,{checked:true,connected:true,on:v.on,left:Math.max(0,Number(v.left)||0),error:''});render();return HEATER_LINK},
+    Object.assign(HEATER_LINK,{checked:true,connected:true,on:v.on,left:Math.max(0,Number(v.left)||0),error:'',watts:Number(v.watts)||0,auto:Number(v.auto)||HEATER_LINK.auto,notify:v.notify!=null?!!v.notify:HEATER_LINK.notify});render();return HEATER_LINK},
+  native:async o=>{const raw=await nativeCall(Object.assign({action:'heater'},o));const v=typeof raw==='string'?JSON.parse(raw):raw;if(!v||v.ok!==true)throw new Error('הדוד לא ענה');return v},
   log:t=>{LSset('unplug_ember_last',JSON.stringify({t,at:hm(new Date())}));addLog(dname(EMBER),t)},
   history:()=>LOG.filter(l=>l.name===dname(EMBER)).slice(0,20),
   clearHistory:()=>{LOG=LOG.filter(l=>l.name!==dname(EMBER));LSset('unplug_log',JSON.stringify(LOG));try{localStorage.removeItem('unplug_ember_last')}catch(e){}},

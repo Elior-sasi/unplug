@@ -26,6 +26,20 @@ header .sub{font-size:.9rem;color:var(--mut)}
 .adj.mi{left:14px}.adj.pl{right:14px}
 .dial .pre{fill:none;stroke:#ff9a3d88;stroke-width:14;stroke-linecap:round}
 .last{font-size:.95rem;color:var(--mut);text-align:center;margin:0}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.seg button{flex:1 1 22%;min-height:52px;border-radius:16px;background:var(--card2);font-weight:700;font-size:1rem;padding:4px 6px}
+.seg button[aria-pressed="true"]{background:var(--acc);color:var(--ink)}
+.sw{width:56px;height:34px;border-radius:999px;background:#48484a;position:relative;flex:none;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;right:3px;width:28px;height:28px;border-radius:50%;background:#fff;transition:right .2s}
+.sw[aria-checked="true"]{background:var(--acc)}
+.sw[aria-checked="true"]::after{right:25px}
+.lbl{font-weight:700;margin:4px 4px 8px}
+.tm{display:flex;gap:10px;margin-bottom:14px}.tm label{flex:1;display:flex;flex-direction:column;gap:6px;font-weight:700}
+.tm input{min-height:52px;border-radius:16px;background:var(--card2);color:#fff;border:0;padding:0 12px;font-size:1.15rem;font-family:inherit}
+.wide{width:100%;min-height:56px;border-radius:999px;background:var(--acc);color:var(--ink);font-weight:800;font-size:1.05rem;margin-top:8px}
+.wide.sec{background:var(--card2);color:#fff}
+.kpis{display:flex;gap:8px;margin-bottom:14px}.kpis div{flex:1;background:var(--card2);border-radius:16px;padding:12px;text-align:center}.kpis b{display:block;font-size:1.35rem}.kpis span{font-size:.85rem;color:var(--mut)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:120px;margin:4px 0 6px;direction:ltr}.bars i{flex:1;background:#ff9a3d99;border-radius:4px 4px 0 0;min-height:2px}.bars i.today{background:var(--acc)}
 .dial{position:relative;width:260px;aspect-ratio:1;margin:0 auto -8%;container-type:inline-size}
 .dial svg{width:100%;height:100%;display:block}
 .trk{stroke:#3a3a3c;stroke-width:14;fill:none;stroke-linecap:round}
@@ -112,6 +126,13 @@ const I={power:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
  refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>'};
 const DUR=[[15,'15 דק׳'],[30,'30 דק׳'],[45,'45 דק׳'],[60,'שעה'],[90,'שעה וחצי'],[120,'שעתיים'],[0,'ללא טיימר']];
 const mins=m=>m===0?'ללא טיימר':(DUR.find(d=>d[0]===m)||[0,m+' דק׳'])[1];
+const PRESET={15:'קצר',30:'מקלחת',45:'שתי מקלחות',60:'אמבטיה'};
+const DN=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'],DNL=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const hhmm=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const toMin=v=>{const[a,b]=String(v||'0:0').split(':').map(Number);return (a||0)*60+(b||0)};
+const daysTxt=s=>s.once?'פעם אחת':s.days.length===7?'כל יום':s.days.join()==='0,1,2,3,4'?'א׳-ה׳':s.days.map(i=>DN[i]).join(' ');
+const hrs=sec=>{const h=Math.round(sec/3600);return h===1?'שעה':h===2?'שעתיים':h+' שעות'};
+let SC=null,SE=null,ST=null,SR='week';
 const when=t=>{const d=new Date(t),n=new Date(),k=Math.round((new Date(n.getFullYear(),n.getMonth(),n.getDate())-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/864e5),hm=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
   return k<=0?'היום '+hm:k===1?'אתמול '+hm:d.toLocaleDateString('he-IL',{weekday:'long'})+' '+hm};
 let pick=LS.get('ember_pick',30),total=LS.get('ember_total',30),busy=false,tick=null,L=H.link();
@@ -133,7 +154,7 @@ function draw(){
   const state=!app?'בדפדפן':checking?'בודק...':!linked?'לא מחובר':on?'דולק':'כבוי';
   const choose=linked&&!on;
   const bigTxt=on&&left?`${left}<small>דק׳</small>`:choose?(pick?`${pick}<small>דק׳</small>`:'ללא טיימר'):state;
-  const st=on?(left?'נשארו':'דולק ללא טיימר'):choose?'כבוי · בוחרים זמן':linked?'המים לא מתחממים':'';
+  const st=on?(left?'נשארו':'דולק ללא טיימר'):choose?'כבוי'+(PRESET[pick]?' · '+PRESET[pick]:''):linked?'המים לא מתחממים':'';
   const pa=A0+SPAN*Math.max(.001,pick?Math.min(1,pick/120):1);
   const endAt=on&&left?new Date(Date.now()+left*60000).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'';
   part('pHero',`<div class="hero" role="group" aria-label="${esc(on?(left?`דולק, נשארו ${left} דקות, יכבה ב-${endAt}`:'דולק ללא טיימר'):state)}"><div class="dial${on?' on':''}"><svg viewBox="0 0 300 300" aria-hidden="true">${ticks}<path class="trk" d="${arc(A0,A0+SPAN)}"/>${on?`<path class="val" d="${arc(A0,a)}"/><circle class="knob" r="13" cx="${kx}" cy="${ky}"/>`:choose?`<path class="pre" d="${arc(A0,pa)}"/>`:''}</svg>
@@ -148,16 +169,22 @@ function draw(){
   part('pMain',`<div class="mainrow">${on?`<button class="sq" id="add15" aria-label="עוד 15 דקות">${I.plus}<span aria-hidden="true">15 דק׳</span></button>`:''}
     <button class="pw${on?' on':''}" id="power" aria-pressed="${!!on}"${busy?' disabled':''}${on?'':` aria-label="הדלקה ל-${esc(mins(pick))}"`}>${I.power}<span>${busy?'שולח...':on?'כיבוי':'הדלקה'}</span></button></div>`);
   const hl=(H.history()||[]).find(l=>/^הדלקה/.test(l.text||''));
-  part('pDur',hl?`<p class="last">הדלקה אחרונה: ${esc(when(hl.t))}${/ל-/.test(hl.text)?', '+esc(hl.text.replace(/^הדלקה ל-/,'')):''}</p>`:'');
+  const nx=SC&&SC.next?SC.next:null;
+  part('pDur',(hl||nx)?`${nx?`<p class="last">התזמון הבא: ${esc(nextTxt(nx))}</p>`:''}${hl?`<p class="last">הדלקה אחרונה: ${esc(when(hl.t))}${/ל-/.test(hl.text)?', '+esc(hl.text.replace(/^הדלקה ל-/,'')):''}</p>`:''}`:'');
   part('pMore',moreHtml(true));fit()}
 function moreHtml(app){const last=LS.get('unplug_ember_last',null);
-  const items=[app&&H.inApp()&&['full',I.clock,'תזמונים וסטטיסטיקה','המסך המלא של הדוד'],
+  const lk=H.link(),on2=app&&H.inApp()&&lk.connected,nS=SC?(SC.list||[]).length:null;
+  const items=[on2&&['sched',I.clock,'תזמונים',nS==null?'הדלקה קבועה לפי ימים ושעות':nS?(nS===1?'תזמון אחד פעיל':nS+' תזמונים פעילים'):'אין תזמונים פעילים'],
+    on2&&['auto',I.clock,'כיבוי אוטומטי',lk.auto?'אחרי '+hrs(lk.auto)+' אם שוכחים':'אם שוכחים את הדוד דולק'],
+    on2&&['stats',I.list,'צריכה','שעות חימום, קוט״ש ועלות'],
     H.inApp()&&['setup',I.wifi,'חיבור מחדש של Switcher V4','אם הדוד הוחלף או עבר רשת'],
+    app&&H.inApp()&&['full',I.clock,'המסך של Ember','המסך הישן של הדוד'],
     ['hist',I.list,'היסטוריה',last?`אחרון: ${last.t} ב-${last.at}`:'פעולות מ-HomeOn'],
     ['room',I.home,'חדר',H.roomOf(E)||'בלי חדר'],
     ['hide',I.eye,'הסתרת הדוד מ-HomeOn','אפשר להחזיר מהוספת מכשיר']].filter(Boolean);
   const open=$('moreDet')?$('moreDet').open:false;
-  return `<details class="more" id="moreDet"${open?' open':''}><summary>הגדרות נוספות${I.chev}</summary>${items.map(([k,ic,t,s])=>`<button class="it" data-open="${k}"><span class="ico" aria-hidden="true">${ic}</span><span class="g"><span class="t">${t}</span><span class="s">${esc(s)}</span></span><span aria-hidden="true" style="color:var(--mut)">${I.left}</span></button>`).join('')}</details>`}
+  const nt=on2?`<div class="it"><span class="ico" aria-hidden="true">${I.clock}</span><span class="g"><span class="t" id="ntL">התראה כשהדוד נכבה</span><span class="s">הודעה לטלפון כשהמים מוכנים</span></span><button class="sw" role="switch" id="htNotify" aria-checked="${!!lk.notify}" aria-labelledby="ntL"></button></div>`:'';
+  return `<details class="more" id="moreDet"${open?' open':''}><summary>הגדרות נוספות${I.chev}</summary>${nt}${items.map(([k,ic,t,s])=>`<button class="it" data-open="${k}"><span class="ico" aria-hidden="true">${ic}</span><span class="g"><span class="t">${t}</span><span class="s">${esc(s)}</span></span><span aria-hidden="true" style="color:var(--mut)">${I.left}</span></button>`).join('')}</details>`}
 
 async function cmd(c,m,okText,logText){if(busy)return;busy=true;buzz();draw();
   try{await H.cmd(c,m);if(c==='on'){total=m||0;LS.set('ember_total',total)}if(c==='add'){total=Math.max(total,Math.ceil(H.link().left/60))}
@@ -165,6 +192,32 @@ async function cmd(c,m,okText,logText){if(busy)return;busy=true;buzz();draw();
   catch(e){toast('הדוד לא ענה. בדוק שהאייפון ברשת של הבית')}
   busy=false;draw()}
 async function refresh(){try{await H.sync()}catch(e){}draw()}
+const newer=e=>/unknown|לא ענה/.test(String(e&&e.message||e))?'צריך את הגרסה החדשה של HomeOn באייפון':String(e&&e.message||e);
+function nextTxt(n){const now=new Date(),d=now.getDay(),mins=now.getHours()*60+now.getMinutes();let best=null;
+  for(const k of (n.once?[d]:n.days)){let delta=((k-d+7)%7)*1440+n.start-mins;if(delta<0)delta+=7*1440;if(best==null||delta<best)best=delta}
+  const at=new Date(now.getTime()+best*60000),k=Math.floor((new Date(at.getFullYear(),at.getMonth(),at.getDate())-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);
+  return (k===0?'היום':k===1?'מחר':'יום '+DNL[at.getDay()])+' '+hhmm(n.start)}
+async function loadSched(){if(!H.native)return;try{SC=await H.native({cmd:'schedules'});if(!SC.list)SC=null}catch(e){SC=null}draw()}
+async function schedCall(o,ok){try{const v=await H.native(o);if(!v.list)throw new Error('unknown');SC=Object.assign({},SC,v);toast(ok);loadSched();openSched()}catch(e){toast(newer(e));openSched()}}
+function keepTimes(){const a=$('scS'),z=$('scE');if(a&&a.value)SE.start=toMin(a.value);if(z&&z.value)SE.end=toMin(z.value)}
+function openSched(){
+  if(SE){const e=SE;return sheet(e.src.slot!=null||e.src.parked?'עריכת תזמון':'תזמון חדש',`<div class="tm"><label>מהשעה<input type="time" id="scS" value="${hhmm(e.start)}"></label><label>עד השעה<input type="time" id="scE" value="${hhmm(e.end)}"></label></div>
+    <div class="lbl" id="scDL">ימים</div><div class="seg" role="group" aria-labelledby="scDL">${DN.map((n,i)=>`<button data-sd="${i}" aria-pressed="${e.days.includes(i)}" aria-label="יום ${DNL[i]}" style="flex:1 1 11%;padding:0">${n}</button>`).join('')}</div>
+    <button class="wide" id="scSave">שמירה בדוד</button>${e.src.slot!=null||e.src.parked?`<button class="wide sec" id="scDel">מחיקה</button>`:''}<button class="wide sec" id="scBack">חזרה לרשימה</button>`)}
+  const L=SC?(SC.list||[]):[],P=SC?(SC.parked||[]):[];
+  const row=(x,act)=>`<div class="it"><button class="g" ${act?`data-sc="${x.slot}"`:`data-pk="${esc(x.id)}"`} style="text-align:start"><span class="t">${hhmm(x.start)}-${hhmm(x.end)}</span><span class="s">${esc(daysTxt(x))}${act?'':' · מושבת'}</span></button><button class="sw" role="switch" ${act?`data-sct="${x.slot}"`:`data-pkt="${esc(x.id)}"`} aria-checked="${act}" aria-label="${hhmm(x.start)} ${esc(daysTxt(x))} פעיל"></button></div>`;
+  sheet('תזמונים',`<p class="note" style="margin:0 4px 12px">התזמונים שמורים בדוד עצמו, ועובדים גם כשהטלפון לא בבית.</p>${SC?'':'<p class="note" style="margin:0 4px 12px">טוען...</p>'}${L.length||P.length?`<div class="grp">${L.map(x=>row(x,true)).join('')}${P.map(x=>row(x,false)).join('')}</div>`:SC?'<p class="note" style="margin:0 4px">אין עדיין תזמונים.</p>':''}<button class="wide" id="scNew">${I.plus}תזמון חדש</button>`);
+  if(!SC)loadSched().then(()=>{if(SH&&!SE&&SC)openSched()})}
+function openAuto(){const cur=Math.round((H.link().auto||0)/3600);
+  sheet('כיבוי אוטומטי',`<p class="note" style="margin:0 4px 12px">אם הדוד נשאר דולק בלי טיימר, הוא ייכבה לבד אחרי:</p><div class="seg" role="group" aria-label="אחרי כמה זמן">${[1,2,3,4,6,8,12,24].map(h=>`<button data-ah="${h}" aria-pressed="${cur===h}">${hrs(h*3600)}</button>`).join('')}</div>`)}
+async function openStats(){
+  if(!ST){sheet('צריכה','<p class="note">טוען...</p>');try{ST=await H.native({cmd:'stats'});if(!ST.days)throw new Error('unknown')}catch(e){ST=null;return sheet('צריכה',`<p class="note">${esc(newer(e))}</p>`)}}
+  const n=SR==='day'?1:SR==='week'?7:30,D=ST.days.slice(-n),min=D.reduce((a,d)=>a+d.min,0),kwh=D.reduce((a,d)=>a+d.kwh,0),mx=Math.max(1,...D.map(d=>d.min));
+  const hm=m=>{m=Math.round(m);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')};
+  sheet('צריכה',`<div class="seg" role="group" aria-label="תקופה">${[['day','היום'],['week','שבוע'],['month','חודש']].map(([k,t])=>`<button data-sr="${k}" aria-pressed="${SR===k}">${t}</button>`).join('')}</div>
+    <div class="kpis"><div><b>${hm(min)}</b><span>שעות חימום</span></div><div><b>${kwh.toFixed(1)}</b><span>קוט״ש</span></div><div><b>₪${Math.round(kwh*(ST.tariff||0.64))}</b><span>עלות משוערת</span></div></div>
+    ${n>1?`<div class="bars" role="img" aria-label="דקות חימום ביום">${D.map((d,i)=>`<i class="${i===D.length-1?'today':''}" style="height:${Math.round(d.min/mx*100)}%"></i>`).join('')}</div><p class="note" style="text-align:center">דקות חימום ביום${SR==='week'?', משמאל לימין עד היום':''}</p>`:''}
+    <p class="note" style="margin-top:10px">נספרים חימומים שהאפליקציה ראתה. העלות לפי ${(ST.tariff||0.64).toFixed(2)} ₪ לקוט״ש.</p>`)}
 
 /* sheets: history */
 let SH=null;
@@ -181,6 +234,21 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.dataset.m!=null&&b.classList.contains('chip')){pick=+b.dataset.m;LS.set('ember_pick',pick);
     if(H.link().on)return cmd('on',pick,'הטיימר עודכן ל-'+mins(pick),'הדלקה ל-'+mins(pick));draw();return say('נבחר '+mins(pick))}
   if(b.id==='refresh'){toast('בודק חיבור...');return refresh()}
+  if(b.id==='htNotify'){const on=b.getAttribute('aria-checked')!=='true';b.setAttribute('aria-checked',on);return H.native({cmd:'notify',on}).then(v=>{H.link().notify=!!v.notify;toast(on?'תקבל הודעה כשהדוד נכבה':'ההודעה כבויה')}).catch(e=>{b.setAttribute('aria-checked',!on);toast(newer(e))})}
+  if(b.dataset.open==='sched'){SE=null;return openSched()}
+  if(b.dataset.sc!=null||b.dataset.pk!=null){const x=b.dataset.sc!=null?(SC.list||[]).find(s=>s.slot===+b.dataset.sc):(SC.parked||[]).find(p=>p.id===b.dataset.pk);if(!x)return;SE={src:b.dataset.sc!=null?{slot:x.slot}:{parked:x.id},days:x.days.slice(),start:x.start,end:x.end,active:b.dataset.sc!=null};return openSched()}
+  if(b.dataset.sct!=null||b.dataset.pkt!=null){const act=b.dataset.sct!=null,x=act?(SC.list||[]).find(s=>s.slot===+b.dataset.sct):(SC.parked||[]).find(p=>p.id===b.dataset.pkt);if(!x)return;b.disabled=true;
+    return schedCall(Object.assign({cmd:'schedSave',days:x.days,start:x.start,end:x.end,active:!act},act?{slot:x.slot}:{parked:x.id}),act?'התזמון הושבת':'התזמון הופעל')}
+  if(b.id==='scNew'){SE={src:{},days:[0,1,2,3,4],start:390,end:435,active:true};return openSched()}
+  if(b.dataset.sd!=null&&SE){keepTimes();const i=+b.dataset.sd;SE.days.includes(i)?SE.days=SE.days.filter(x=>x!==i):SE.days.push(i);SE.days.sort();openSched();const q=SH&&SH.querySelector(`[data-sd="${i}"]`);q&&q.focus();return}
+  if(b.id==='scSave'&&SE){keepTimes();if(!SE.days.length)return toast('צריך לפחות יום אחד');if(SE.end===SE.start)return toast('שעת הסיום צריכה להיות אחרי ההתחלה');
+    b.disabled=true;return schedCall(Object.assign({cmd:'schedSave',days:SE.days,start:SE.start,end:SE.end,active:SE.active},SE.src),'התזמון נשמר בדוד').then(()=>{SE=null;openSched()})}
+  if(b.id==='scDel'&&SE){if(!confirm('למחוק את התזמון?'))return;return schedCall(Object.assign({cmd:'schedDelete'},SE.src),'התזמון נמחק').then(()=>{SE=null;openSched()})}
+  if(b.id==='scBack'){SE=null;return openSched()}
+  if(b.dataset.open==='auto')return openAuto();
+  if(b.dataset.ah){b.disabled=true;return H.native({cmd:'autoOff',m:+b.dataset.ah*60}).then(v=>{Object.assign(H.link(),{auto:Number(v.auto)||+b.dataset.ah*3600});toast('הדוד ייכבה לבד אחרי '+hrs(+b.dataset.ah*3600));openAuto();draw()}).catch(e=>{toast(newer(e));openAuto()})}
+  if(b.dataset.open==='stats'){ST=null;return openStats()}
+  if(b.dataset.sr){SR=b.dataset.sr;return openStats()}
   if(b.id==='setup'||b.dataset.open==='setup')return H.after(()=>H.setup().catch(()=>{}));
   if(b.dataset.web)return H.after(()=>H.web(b.dataset.web));
   if(b.dataset.open==='full')return H.after(()=>H.full());
@@ -200,7 +268,7 @@ addEventListener('resize',fit);document.addEventListener('toggle',()=>setTimeout
 let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
 document.addEventListener('touchmove',e=>{if(e.target.closest('.scrim'))return;const t=e.touches[0];if(Math.abs(t.clientX-tx)>Math.abs(t.clientY-ty))return;if(app.style.overflowY==='hidden')e.preventDefault()},{passive:false});
 
-draw();if(H.inApp())refresh();
+draw();if(H.inApp()){refresh().then(()=>{if(H.link().connected)loadSched()})}
 /* the countdown moves every 30 s; the heater itself is asked every minute */
 setInterval(()=>{const l=H.link();if(l.on&&l.left>30){l.left-=30;draw()}},30000);
 setInterval(()=>{if(document.visibilityState==='visible'&&H.inApp()&&!busy)refresh()},60000);
