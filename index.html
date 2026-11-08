@@ -1091,7 +1091,21 @@ const emberGo=(path)=>{
     return nativeCall({action:'heater',cmd,m}).then(r=>{try{const o=JSON.parse(r);toast(o.on?'הדוד דולק'+(o.left?' · עוד '+Math.round(o.left/60)+' דק׳':''):'הדוד כבוי')}catch(e){}}).catch(()=>toast('הדוד לא עונה - צריך להיות ב-WiFi של הבית'))}
   const t=Date.now();location.href='ember://'+path;
   setTimeout(()=>{if(document.visibilityState==='visible'&&Date.now()-t<2600)toast('Ember לא נפתח - צריך את הגרסה החדשה של Ember על הטלפון')},1800)};
+/* what the full-screen water heater page (boiler/index.html, in a frame) borrows from HomeOn */
+window.HOH={EMBER,inApp:()=>!!IN_APP,link:()=>HEATER_LINK,devArt:(d,w)=>devArt(d,w),dname:d=>dname(d),roomOf:d=>roomOf(d),
+  sync:()=>syncHeaterLink().then(()=>HEATER_LINK),
+  cmd:async(cmd,m)=>{const raw=await nativeCall({action:'heater',cmd,m:m||0});const v=typeof raw==='string'?JSON.parse(raw):raw;
+    if(!v||v.ok!==true||typeof v.on!=='boolean')throw new Error('לא התקבל אישור מהדוד');
+    Object.assign(HEATER_LINK,{checked:true,connected:true,on:v.on,left:Math.max(0,Number(v.left)||0),error:''});render();return HEATER_LINK},
+  log:t=>{LSset('unplug_ember_last',JSON.stringify({t,at:hm(new Date())}));addLog(dname(EMBER),t)},
+  history:()=>LOG.filter(l=>l.name===dname(EMBER)).slice(0,20),
+  after:fn=>{const f=document.querySelector('.breeze');if(f)f.remove();document.querySelector('.app').removeAttribute('aria-hidden');setTimeout(fn,50)},
+  setup:()=>nativeCall({action:'heaterSetup'}),full:()=>emberGo('open'),web:p=>emberGo(p),
+  pickRoom:()=>pickRoom(EMBER,()=>render()),hide:()=>{META.ember=false;saveMeta();render();toast('הדוד הוסתר. אפשר להחזיר אותו מהוספת מכשיר')}};
 function openEmber(){
+  if(typeof openFrame==='function'&&!window.EMBER_SHEET)return openFrame(EMBER,'/unplug/boiler/?in=unplug','דוד');
+  openEmberSheet()}
+function openEmberSheet(){
   const mins=m=>m<60?m+' דק׳':m===60?'שעה':m===90?'שעה וחצי':'שעתיים';
   sheet(esc(dname(EMBER)),`<div id="emB" style="display:flex;flex-direction:column;gap:14px"></div>`,(el,close)=>{
     const body=el.querySelector('#emB');

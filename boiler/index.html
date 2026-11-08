@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>דוד</title>
+<style>
+:root{color-scheme:dark;--bg:#000;--card:#1c1c1e;--card2:#2c2c2e;--card3:#3a3a3c;--fg:#fff;--mut:#aeaeb2;--line:#ffffff14;--acc:#ff9a3d;--ink:#1f0e00;--on:#3d8bff;--on-txt:#6fa8ff;--bad:#ff6961;
+ --f:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Hebrew",system-ui,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:17px;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+:focus-visible{outline:3px solid #ffc48a;outline-offset:3px;border-radius:14px}
+svg{width:22px;height:22px;flex:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#app{height:100%;overflow:hidden;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px calc(env(safe-area-inset-bottom,0px) + 24px);max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;gap:10px;min-height:52px}
+.circ{width:44px;height:44px;border-radius:50%;background:var(--card2);display:grid;place-items:center;flex:none}
+header .tt{flex:1;min-width:0}
+header h1{margin:0;font-size:1.6rem;font-weight:700;line-height:1.1}
+header .sub{font-size:.9rem;color:var(--mut)}
+.hero{background:var(--card);border-radius:28px;padding:14px 12px 4px}
+.dial{position:relative;width:260px;aspect-ratio:1;margin:0 auto -8%;container-type:inline-size}
+.dial svg{width:100%;height:100%;display:block}
+.trk{stroke:#3a3a3c;stroke-width:14;fill:none;stroke-linecap:round}
+.val{stroke:#8e8e93;stroke-width:14;fill:none;stroke-linecap:round;transition:stroke .4s}
+.dial.on .val{stroke:var(--acc)}
+.tick{stroke:#5a5a5e;stroke-width:3;stroke-linecap:round}
+.knob{fill:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
+.ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4% 18% 0}
+.big{font-size:24cqw;font-weight:700;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.big small{font-size:.38em;font-weight:600;margin-inline-start:4px}
+.big.word{font-size:15cqw}
+.st{font-size:1.05rem;font-weight:600;color:var(--mut);margin-top:6px}
+.dial.on .st{color:var(--acc)}
+.st2{font-size:.95rem;font-weight:600;margin-top:6px;color:#ddd}
+.mainrow{display:flex;gap:10px}
+.sq{flex:0 0 84px;min-height:62px;border-radius:20px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.85rem;font-weight:700}
+.pw{flex:1;min-height:62px;border-radius:999px;background:var(--acc);color:var(--ink);display:flex;align-items:center;justify-content:center;gap:10px;font-size:1.25rem;font-weight:700}
+.pw.on{background:var(--on);color:#fff}
+h2{font-size:1.1rem;margin:2px 4px -4px;font-weight:700}
+.row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 2px}
+.row::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;display:flex;align-items:center;gap:8px;min-height:46px;padding:0 16px;border-radius:999px;background:var(--card);font-size:.95rem;font-weight:700;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--acc);color:var(--ink)}
+.chip[aria-pressed="true"]::before{content:"✓ "}
+details.more{background:var(--card);border-radius:22px}
+details.more summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:58px;padding:0 16px;font-weight:700;cursor:pointer}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary svg{transition:transform .2s}
+details.more[open] summary svg{transform:rotate(180deg)}
+.it{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 16px;border-top:1px solid var(--line);text-align:start;width:100%}
+.it .ico{width:36px;height:36px;border-radius:50%;background:var(--card2);display:grid;place-items:center;color:var(--acc);flex:none}
+.it .ico svg{width:19px;height:19px}
+.it .g{flex:1;min-width:0}.it .t{display:block;font-weight:600}.it .s{display:block;font-size:.88rem;color:var(--mut);margin-top:2px}
+.warn{background:#2c2c2e;border-radius:20px;padding:14px 16px;line-height:1.45;font-weight:600}
+.warn.bad{background:#3a1512;border:1px solid #ff453a88}
+.note{font-size:.92rem;color:var(--mut);line-height:1.45;margin:0 4px}
+.scrim{position:fixed;inset:0;background:#0008;z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:620px;max-height:88vh;overflow:auto;background:var(--card);border-radius:38px 38px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 20px)}
+.sh-h{display:flex;align-items:center;gap:10px;margin-bottom:12px;min-height:48px}.sh-h h3{flex:1;margin:0;font-size:1.35rem}.sh-h .circ{background:var(--card3)}
+.grp{background:var(--card2);border-radius:20px;overflow:hidden}.grp .it:first-child{border-top:0}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);margin:auto;max-width:420px;background:#2c2c2e;border:1px solid #ffffff14;border-radius:18px;padding:12px 16px;text-align:center;font-weight:600;z-index:30}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="circ" id="back" aria-label="חזרה ל-HomeOn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    <div class="tt"><h1>דוד</h1><div class="sub" id="sub">Switcher V4</div></div>
+  </header>
+  <main id="main" style="display:flex;flex-direction:column;gap:14px"></main>
+</div>
+<div id="live" class="sr" role="status" aria-live="polite"></div>
+<script>
+(function(){
+const P=window.parent!==window?window.parent:null;
+if(!P||!P.HOH){location.replace('/unplug/');return}
+const H=P.HOH,E=H.EMBER;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const say=t=>{$('live').textContent='';setTimeout(()=>$('live').textContent=t,30)};
+let tt;const toast=t=>{document.querySelector('.toast')?.remove();const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.append(e);say(t);clearTimeout(tt);tt=setTimeout(()=>e.remove(),2600)};
+const buzz=()=>{try{P.webkit.messageHandlers.homeon.postMessage({action:'haptic'})}catch(e){}};
+const LS={get:(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const I={power:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+ chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+ left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>',
+ x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+ wifi:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg>',
+ list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/></svg>',
+ eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c5 0 9 6 9 6a17 17 0 0 1-3 3.6M6.6 6.6C4.3 8.2 3 12 3 12s4 6 9 6a9 9 0 0 0 4.4-1.1"/></svg>',
+ refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>'};
+const DUR=[[15,'15 דק׳'],[30,'30 דק׳'],[45,'45 דק׳'],[60,'שעה'],[90,'שעה וחצי'],[120,'שעתיים'],[0,'ללא טיימר']];
+const mins=m=>m===0?'ללא טיימר':(DUR.find(d=>d[0]===m)||[0,m+' דק׳'])[1];
+let pick=LS.get('ember_pick',30),total=LS.get('ember_total',30),busy=false,tick=null,L=H.link();
+
+const C=150,R=133,A0=135,SPAN=270;
+const pt=(d,r)=>{const a=d*Math.PI/180;return[C+(r||R)*Math.cos(a),C+(r||R)*Math.sin(a)]};
+const arc=(a1,a2)=>{const[x1,y1]=pt(a1),[x2,y2]=pt(a2);return`M${x1} ${y1}A${R} ${R} 0 ${a2-a1>180?1:0} 1 ${x2} ${y2}`};
+const ticks=Array.from({length:9},(_,i)=>{const d=A0+SPAN*i/8,[x1,y1]=pt(d,108),[x2,y2]=pt(d,116);return`<line class="tick" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`}).join('');
+let sig={};
+function part(id,html){let el=$(id);if(!el){el=document.createElement('div');el.id=id;$('main').append(el)}if(sig[id]===html)return el;
+  const a=document.activeElement,k=el.contains(a)&&a?(a.id?'#'+a.id:a.dataset.m?`[data-m="${a.dataset.m}"]`:a.dataset.open?`[data-open="${a.dataset.open}"]`:a.tagName==='SUMMARY'?'summary':null):null;
+  el.innerHTML=html;sig[id]=html;el.hidden=!html;if(k){const n=el.querySelector(k);n&&n.focus({preventScroll:true})}return el}
+
+function draw(){
+  L=H.link();const nm=H.dname(E);$('sub').textContent=(nm&&nm!=='דוד'?nm:'Switcher V4')+(H.roomOf(E)?' · '+H.roomOf(E):'');
+  const app=H.inApp(),linked=app&&L.connected,checking=app&&!L.checked,on=linked&&L.on,left=linked?Math.ceil((L.left||0)/60):0;
+  if(on&&left>total)total=left;
+  const frac=on?(left?Math.min(1,left/Math.max(total,1)):1):0,a=A0+SPAN*Math.max(.001,frac),[kx,ky]=pt(a);
+  const state=!app?'בדפדפן':checking?'בודק...':!linked?'לא מחובר':on?'דולק':'כבוי';
+  const bigTxt=on&&left?`${left}<small>דק׳</small>`:state;
+  const st=on?(left?'נשארו':'דולק ללא טיימר'):linked?'המים לא מתחממים':'';
+  const endAt=on&&left?new Date(Date.now()+left*60000).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'';
+  part('pHero',`<div class="hero" role="group" aria-label="${esc(on?(left?`דולק, נשארו ${left} דקות, יכבה ב-${endAt}`:'דולק ללא טיימר'):state)}"><div class="dial${on?' on':''}"><svg viewBox="0 0 300 300" aria-hidden="true">${ticks}<path class="trk" d="${arc(A0,A0+SPAN)}"/>${on?`<path class="val" d="${arc(A0,a)}"/><circle class="knob" r="13" cx="${kx}" cy="${ky}"/>`:''}</svg>
+    <div class="ctr" aria-hidden="true"><div class="big${on&&left?'':' word'}">${bigTxt}</div>${st?`<div class="st">${esc(st)}</div>`:''}${endAt?`<div class="st2">יכבה ב-${endAt}</div>`:''}</div></div></div>`);
+  if(!app){part('pMsg',`<div class="warn">שליטה ישירה בדוד עובדת רק באפליקציית HomeOn המותקנת באייפון, כשהאייפון ברשת של הבית.</div>`);
+    part('pMain',`<button class="pw" data-web="on?m=${pick}">${I.power}<span>פתיחה ב-Ember</span></button>`);part('pDur','');part('pMore',moreHtml(false));return fit()}
+  if(!linked&&!checking){part('pMsg',`<div class="warn${L.error?' bad':''}" role="alert">${esc(L.error?'הדוד לא ענה. האייפון וה-Switcher צריכים להיות באותה רשת Wi-Fi.':'הדוד עוד לא מחובר ל-HomeOn.')}</div>`);
+    part('pMain',`<div class="mainrow"><button class="sq" id="refresh" aria-label="בדיקת חיבור">${I.refresh}<span aria-hidden="true">בדיקה</span></button><button class="pw" id="setup">${I.wifi}<span>חיבור Switcher V4</span></button></div>`);
+    part('pDur','');part('pMore',moreHtml(true));return fit()}
+  part('pMsg','');
+  part('pMain',`<div class="mainrow"><button class="sq" id="add15"${on?'':' disabled'} aria-label="עוד 15 דקות">${I.plus}<span aria-hidden="true">15 דק׳</span></button>
+    <button class="pw${on?' on':''}" id="power" aria-pressed="${!!on}"${busy?' disabled':''}>${I.power}<span>${busy?'שולח...':on?'כיבוי':'הדלקה ל-'+mins(pick)}</span></button></div>`);
+  part('pDur',`<h2 id="hD">${on?'להדליק מחדש ל-':'להדליק ל-'}</h2><div class="row" role="group" aria-labelledby="hD">${DUR.map(([m,t])=>`<button class="chip" data-m="${m}" aria-pressed="${pick===m}">${t}</button>`).join('')}</div>`);
+  part('pMore',moreHtml(true));fit()}
+function moreHtml(app){const last=LS.get('unplug_ember_last',null);
+  const items=[app&&H.inApp()&&['full',I.clock,'תזמונים וסטטיסטיקה','המסך המלא של הדוד'],
+    H.inApp()&&['setup',I.wifi,'חיבור מחדש של Switcher V4','אם הדוד הוחלף או עבר רשת'],
+    ['hist',I.list,'היסטוריה',last?`אחרון: ${last.t} ב-${last.at}`:'פעולות מ-HomeOn'],
+    ['room',I.home,'חדר',H.roomOf(E)||'בלי חדר'],
+    ['hide',I.eye,'הסתרת הדוד מ-HomeOn','אפשר להחזיר מהוספת מכשיר']].filter(Boolean);
+  const open=$('moreDet')?$('moreDet').open:false;
+  return `<details class="more" id="moreDet"${open?' open':''}><summary>הגדרות נוספות${I.chev}</summary>${items.map(([k,ic,t,s])=>`<button class="it" data-open="${k}"><span class="ico" aria-hidden="true">${ic}</span><span class="g"><span class="t">${t}</span><span class="s">${esc(s)}</span></span><span aria-hidden="true" style="color:var(--mut)">${I.left}</span></button>`).join('')}</details>`}
+
+async function cmd(c,m,okText,logText){if(busy)return;busy=true;buzz();draw();
+  try{await H.cmd(c,m);if(c==='on'){total=m||0;LS.set('ember_total',total)}if(c==='add'){total=Math.max(total,Math.ceil(H.link().left/60))}
+    logText&&H.log(logText);toast(okText)}
+  catch(e){toast('הדוד לא ענה. בדוק שהאייפון ברשת של הבית')}
+  busy=false;draw()}
+async function refresh(){try{await H.sync()}catch(e){}draw()}
+
+/* sheets: history */
+let SH=null;
+function sheet(title,html){closeSheet();const s=document.createElement('div');s.className='scrim';s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh-h"><h3 id="shT" tabindex="-1">${esc(title)}</h3><button class="circ" data-x aria-label="סגירה">${I.x}</button></div>${html}</div>`;
+  s.addEventListener('click',e=>{if(e.target===s||e.target.closest('[data-x]'))closeSheet()});s.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+  document.body.append(s);$('app').setAttribute('aria-hidden','true');SH=s;s.querySelector('#shT').focus()}
+function closeSheet(){if(SH){SH.remove();SH=null;$('app').removeAttribute('aria-hidden')}}
+
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(b.id==='back'){try{P.postMessage('unplug-close','*')}catch(_){}return}
+  if(b.id==='power'){const on=H.link().on;return on?cmd('off',0,'הדוד כבה','כיבוי'):cmd('on',pick,'הדוד דולק'+(pick?' ל-'+mins(pick):''),'הדלקה ל-'+mins(pick))}
+  if(b.id==='add15')return cmd('add',15,'נוספו 15 דקות','הוספת 15 דק׳');
+  if(b.dataset.m!=null&&b.classList.contains('chip')){pick=+b.dataset.m;LS.set('ember_pick',pick);
+    if(H.link().on)return cmd('on',pick,'הטיימר עודכן ל-'+mins(pick),'הדלקה ל-'+mins(pick));draw();return say('נבחר '+mins(pick))}
+  if(b.id==='refresh'){toast('בודק חיבור...');return refresh()}
+  if(b.id==='setup'||b.dataset.open==='setup')return H.after(()=>H.setup().catch(()=>{}));
+  if(b.dataset.web)return H.after(()=>H.web(b.dataset.web));
+  if(b.dataset.open==='full')return H.after(()=>H.full());
+  if(b.dataset.open==='room')return H.after(()=>H.pickRoom());
+  if(b.dataset.open==='hide')return H.after(()=>H.hide());
+  if(b.dataset.open==='hist'){const h=H.history(),f=t=>new Date(t).toLocaleString('he-IL',{weekday:'short',hour:'2-digit',minute:'2-digit'});
+    return sheet('היסטוריה',h.length?`<div class="grp">${h.map(l=>`<div class="it"><span class="g"><span class="t">${esc(l.text)}</span><span class="s">${esc(f(l.t))}</span></span></div>`).join('')}</div>`:'<p class="note">עוד לא בוצעו פעולות בדוד מ-HomeOn.</p>')}
+});
+
+/* one screen, no scrolling, like the AC page */
+const app=$('app');
+function fit(){const dl=document.querySelector('.dial'),hero=document.querySelector('.hero'),more=$('moreDet');app.style.overflowY='hidden';
+  if(dl&&hero&&!(more&&more.open)){let w=Math.min(300,hero.clientWidth-60);dl.style.width=w+'px';while(w>170&&app.scrollHeight>app.clientHeight+1){w-=10;dl.style.width=w+'px'}}
+  app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
+addEventListener('resize',fit);document.addEventListener('toggle',()=>setTimeout(fit,30),true);
+let tx=0,ty=0;document.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
+document.addEventListener('touchmove',e=>{if(e.target.closest('.scrim'))return;const t=e.touches[0];if(Math.abs(t.clientX-tx)>Math.abs(t.clientY-ty))return;if(app.style.overflowY==='hidden')e.preventDefault()},{passive:false});
+
+draw();if(H.inApp())refresh();
+/* the countdown moves every 30 s; the heater itself is asked every minute */
+setInterval(()=>{const l=H.link();if(l.on&&l.left>30){l.left-=30;draw()}},30000);
+setInterval(()=>{if(document.visibilityState==='visible'&&H.inApp()&&!busy)refresh()},60000);
+})();
+</script>
+</body>
+</html>
