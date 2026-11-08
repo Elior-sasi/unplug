@@ -367,7 +367,7 @@ document.documentElement.classList.add('in-unplug');
 addEventListener('DOMContentLoaded',()=>{const h=document.querySelector('header.top');if(!h)return;const b=document.createElement('button');b.className='menu-btn';b.id='unplugBack';b.setAttribute('aria-label','חזרה ל-HomeOn');
 b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
 b.onclick=()=>{try{parent.postMessage('unplug-close','*')}catch(e){}};h.insertBefore(b,h.firstChild);
-const h1=h.querySelector('h1');if(h1){const w=document.createElement('div');w.style.cssText='flex:1;min-width:0';h1.before(w);w.append(h1);const sb=document.createElement('div');sb.className='hoSub';sb.textContent='קלייה בשקע חכם';w.append(sb)}
+const h1=h.querySelector('h1');if(h1){const w=document.createElement('div');w.style.cssText='flex:1;min-width:0';h1.before(w);w.append(h1);const sb=document.createElement('div');sb.className='hoSub';sb.textContent='טוסטר בשקע חכם';w.append(sb)}
 const hero=document.getElementById('hero'),T=window.TST;if(hero&&T){const R=T.R,S=T.S,save=T.save,render=T.render,extend=T.extend,buzz=T.buzz,SHADE_NAME=T.SHADE_NAME;
   /* like the AC: a dial in the card - the time in the middle, the arc shows how long (or how much is left) */
   const C=150,Rr=133,A0=135,SPAN=270,pt=(d)=>{const a=d*Math.PI/180;return[C+Rr*Math.cos(a),C+Rr*Math.sin(a)]};
