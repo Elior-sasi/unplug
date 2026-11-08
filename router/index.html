@@ -269,6 +269,11 @@ html,body{background:radial-gradient(120% 65% at 50% 30%,#0e1d33 0%,#070c14 50%,
 header.top{position:static!important;pointer-events:auto!important;display:flex!important;align-items:center;min-height:60px;margin-bottom:4px}
 header.top .brand{position:static!important;width:auto!important;height:auto!important;overflow:visible!important;clip:auto!important;font-size:2rem!important;font-weight:800!important;flex:1}
 header.top .menu-btn,#unplugBack{width:52px!important;height:52px!important;background:#1c1c1ecc!important}
+
+/* no title row */
+header.top{position:absolute!important;top:22px;inset-inline:26px;pointer-events:none!important;min-height:0}
+header.top button{pointer-events:auto}
+header.top .brand{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
 </style>
 
 <div class="app" id="app">

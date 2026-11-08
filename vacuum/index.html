@@ -189,6 +189,11 @@ header h1{font-size:2rem!important;font-weight:800!important}
 header .circ{width:52px!important;height:52px!important;background:#1c1c1ecc!important}
 .vhero .vst{padding-inline-start:0!important}
 .card,.vhero{background:#1c1c1ecc!important}
+
+/* no title row: back floats in the corner of the first card; the name stays for VoiceOver */
+header{position:absolute!important;top:8px;inset-inline-start:24px;min-height:0!important;z-index:4}
+header .tt{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+.vhero .vst{padding-inline-start:52px!important}
 </style>
 </head>
 <body>

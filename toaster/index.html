@@ -413,7 +413,7 @@ const hero=document.getElementById('hero'),T=window.TST;if(hero&&T){const R=T.R,
   const app=document.getElementById('app');const fit=()=>{if(!app)return;const bar=document.querySelector('.bottom-bar');if(bar)app.style.setProperty('padding-bottom',Math.ceil(innerHeight-bar.getBoundingClientRect().top+16)+'px','important');app.style.overflowY='hidden';
     const dl=document.querySelector('.hoDial'),more=document.getElementById('moreDet');
     const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));
-    if(dl&&!(more&&more.open)){const w=Math.round(Math.min(260,innerWidth-80,innerHeight*.3));dl.style.width=w+'px';
+    if(dl&&!(more&&more.open)){const w=Math.round(Math.min(290,innerWidth-70,innerHeight*.36));dl.style.width=w+'px';
       for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}}
     app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'};
   addEventListener('resize',fit);document.getElementById('moreDet')?.addEventListener('toggle',()=>setTimeout(fit,50));setTimeout(fit,300);setInterval(fit,1500);
@@ -521,6 +521,11 @@ html.in-unplug .profiles{padding-bottom:0!important}
 html.in-unplug .more summary{min-height:60px!important}
 html.in-unplug.fc3 .app{gap:8px!important}
 html.in-unplug.fc2 #unplugBack,html.in-unplug.fc2 header.top #menuBtn{width:44px!important;height:44px!important}html.in-unplug.fc2 .hoSteps{height:52px!important}html.in-unplug.fc2 .power{min-height:52px!important;height:52px!important}html.in-unplug.fc3 .bottom-bar .bb{min-height:52px!important}
+
+/* no title row: back and ⋯ float in the top corners */
+html.in-unplug .app>header.top{position:absolute!important;top:calc(env(safe-area-inset-top,0px) + 12px);left:16px;right:16px;z-index:4;pointer-events:none!important;min-height:0!important}
+html.in-unplug .app>header.top button{pointer-events:auto}
+html.in-unplug header.top h1{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
 </style>
 </head>
 <body>

@@ -153,6 +153,13 @@ body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,
 .st2{font-size:.85rem;white-space:nowrap}
 .fc3 #main{gap:8px!important}.fc3 #app{gap:8px!important}.fc3 .ctl{margin-bottom:8px}.fc3 .ebar b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fc3 #app{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 76px)!important}
 .fc2 .pw{min-height:52px!important;height:52px}.fc3 .ebar button{min-height:52px!important}
+
+/* no title row: back and ⋯ float in the top corners, the dial starts at the top; the name stays for VoiceOver */
+header{position:absolute!important;top:calc(env(safe-area-inset-top,0px) + 12px);left:16px;right:16px;z-index:4;pointer-events:none;min-height:0!important}
+header button{pointer-events:auto}
+header .tt{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+header .hd-l{margin-inline-start:auto}
+#app{position:relative}
 </style>
 </head>
 <body>
@@ -348,7 +355,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 const app=$('app');
 function fit(){const dl=document.querySelector('.dial'),hero=document.querySelector('.hero'),more=$('moreDet');app.style.overflowY='hidden';
   const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));
-  if(dl&&hero&&!(more&&more.open)){const w=Math.round(Math.min(260,innerWidth-80,innerHeight*.3));dl.style.width=w+'px';
+  if(dl&&hero&&!(more&&more.open)){const w=Math.round(Math.min(290,innerWidth-70,innerHeight*.36));dl.style.width=w+'px';
     for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
 addEventListener('resize',fit);document.addEventListener('toggle',()=>setTimeout(fit,30),true);
