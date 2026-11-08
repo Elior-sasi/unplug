@@ -428,6 +428,12 @@ addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0];i
 .in-unplug .prof[aria-pressed="true"] svg,.in-unplug .prof[aria-pressed="true"] b{color:#6fa8ff!important}
 .in-unplug .bb-t b,.in-unplug .bb-ic{color:#6fa8ff!important}
 html.in-unplug,html.in-unplug body{overscroll-behavior:none}
+/* no title bar: back button and menu float on the top corners of the toaster card; the title stays for VoiceOver */
+.in-unplug .app>header.top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 22px);inset-inline:26px;z-index:4;pointer-events:none}
+.in-unplug .app>header.top button{pointer-events:auto}
+.in-unplug header.top h1,.in-unplug header.top .hoSub,.in-unplug header.top h1+.hoSub{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+.in-unplug header.top>div:not(.top-r){flex:1}
+.in-unplug header.top #menuBtn{width:44px!important;height:44px!important;background:#2c2c2e!important;color:#fff!important}
 .in-unplug .app{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 128px)!important}
 .in-unplug .hoDial{position:relative;width:240px;aspect-ratio:1;margin:0 auto -11%}
 .in-unplug .hoDial svg{width:100%;height:100%;display:block}

@@ -152,6 +152,12 @@ select,input[type=time],input[type=email],input[type=password]{font:inherit;font
 .login label{font-weight:600}
 .login .e{color:var(--bad);min-height:1.2em;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* no title bar: the back button floats on the top corner of the first card; the title stays for VoiceOver only */
+#app{position:relative}
+header{position:absolute;top:10px;inset-inline-start:26px;min-height:0;z-index:4}
+header .tt{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+.vhero{padding-inline-start:68px}
 </style>
 </head>
 <body>

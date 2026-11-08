@@ -34,6 +34,12 @@ nav.tabs{left:50%!important;right:auto!important;bottom:calc(12px + env(safe-are
 nav.tabs button{flex:1;border-radius:999px;color:rgba(255,255,255,.85)!important;font-size:.72rem;font-weight:600;justify-content:center}
 nav.tabs button.on{color:#6fa8ff!important;background:linear-gradient(145deg,#ffb36b3d,#ff9a3d14 55%,#ffd2a826);box-shadow:inset 0 0 0 1px #ffc58a66}
 .app{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
+/* no title bar: back button and menu float on the top corners of the status card; title and mode stay for VoiceOver */
+header.top{position:absolute;top:22px;inset-inline:26px;z-index:4;pointer-events:none}
+header.top button{pointer-events:auto}
+header.top .brand,#modePill{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+.hero-top{padding-top:40px}
+header.top .menu-btn{width:44px;height:44px;background:#2c2c2e;border:0;color:#fff}
 </style>
 <script>
 /* Inside HomeOn: title "ראוטר" with a back button, like every HomeOn screen */
