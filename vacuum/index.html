@@ -157,7 +157,9 @@ select,input[type=time],input[type=email],input[type=password]{font:inherit;font
 #app{position:relative}
 header{position:absolute;top:10px;inset-inline-start:26px;min-height:0;z-index:4}
 header .tt{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
-.vhero{padding-inline-start:68px}
+.rb{min-width:0;flex:1}.rb>span{width:min(60px,15vw);height:min(60px,15vw)}
+.vhero{position:relative}.vhero .vst{padding-inline-start:52px;min-height:44px;display:flex;align-items:center}
+header{top:10px;inset-inline-start:12px}
 </style>
 </head>
 <body>
@@ -288,9 +290,8 @@ function draw(){
   const maint=D&&!busy&&!paused&&cons.length?(due?(due===1?'חלק אחד להחלפה':due+' חלקים להחלפה'):'תחזוקה: הכול תקין'):'';
   const stats=[last,lastInfo,maint].filter(Boolean).join('. ');
   part('pHero',`<div class="vhero${busy?' on':''}" role="group" aria-label="${esc(x?stateName(x)+'. '+(bat!=null?'סוללה '+bat+' אחוז. ':'')+sub2+(stats?'. '+stats:''):'מתחבר')}">
-    <div class="vimg" aria-hidden="true">${art(1)}</div>
     <div class="vtx" aria-hidden="true"><div class="vst">${esc(x?stateName(x):'מתחבר...')}</div><div class="vsub">${esc([sub2,bat!=null?'סוללה '+pct(bat):''].filter(Boolean).join(' · '))}</div>
-      ${bat!=null?`<div class="vbat${bat<=20?' low':''}"><i style="width:${bat}%"></i></div>`:''}${last?`<div class="vstat">${esc(last)}${lastInfo?`<br>${esc(lastInfo)}`:''}</div>`:''}${maint?`<div class="vstat">${esc(maint)}</div>`:''}</div></div>`);
+      ${bat!=null?`<div class="vbat${bat<=20?' low':''}"><i style="width:${bat}%"></i></div>`:''}${last?`<div class="vstat">${esc(last)}${lastInfo?' · '+esc(lastInfo):''}</div>`:''}${maint?`<div class="vstat">${esc(maint)}</div>`:''}</div><div class="vimg" aria-hidden="true">${art(1)}</div></div>`);
   part('pErr',x&&(x.error||x.has_error)?`<div class="err" role="alert"><span>${esc(ERR_HE[x.error]||('השואב מדווח על תקלה'+(x.error?' (קוד '+x.error+')':'')))}</span><button data-a="clear">הבנתי</button></div>`:'');
   /* the map: tap rooms to pick them; the corner button opens it big, with editing */
   const mvw=mapImg(),rooms=(D&&D.rooms)||[],pins=mvw&&mvw.rooms.length?mvw.rooms:null;
