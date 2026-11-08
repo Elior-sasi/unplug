@@ -999,7 +999,7 @@ function viewDevices(v){
     if(d&&d.id==='router'){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openRouter'}):openRouter();return}
     if(d&&d.id==='mova-e30-ultra'){c.querySelector('.open').onclick=()=>window.openMova&&openMova();return}
     if(d&&d.id==='oralb-io2'){c.querySelector('.open').onclick=()=>openToothbrush();return}
-    if(d&&d.virtual){c.querySelector('.open').onclick=()=>openEmber();const pb=c.querySelector('[data-ember]');if(pb)pb.onclick=async()=>{if(IN_APP&&!HEATER_LINK.connected)return openEmber();await emberGo('toggle');if(IN_APP)setTimeout(syncHeaterLink,1500)};return}
+    if(d&&d.virtual){c.querySelector('.open').onclick=()=>openEmber();const pb=c.querySelector('[data-ember]');if(pb)pb.onclick=async()=>{if(IN_APP&&!HEATER_LINK.connected)return openEmber();if(IN_APP){HEATER_LINK.on=!HEATER_LINK.on;render()}await emberGo('toggle');if(IN_APP)setTimeout(syncHeaterLink,1500)};return}
     c.querySelector('.open').onclick=()=>openDevice(d);
     const pw=c.querySelector('.pw');if(pw)pw.onclick=()=>{if(!d.online)return toast('המכשיר מנותק');send(d,[{code:powerCode(d),value:!isOn(d)}])}});
   $('reOn')&&($('reOn').onclick=()=>typeof setReorder==='function'&&setReorder(!REORDER));

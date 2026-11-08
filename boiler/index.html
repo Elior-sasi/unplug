@@ -287,10 +287,12 @@ function moreHtml(app){const last=LS.get('unplug_ember_last',null);
   const nt=on2?`<div class="it"><span class="ico" aria-hidden="true">${I.clock}</span><span class="g"><span class="t" id="ntL">התראה כשהדוד נכבה</span><span class="s">הודעה לטלפון כשהמים מוכנים</span></span><button class="sw" role="switch" id="htNotify" aria-checked="${!!lk.notify}" aria-labelledby="ntL"></button></div>`:'';
   return `<details class="more" id="moreDet"${open?' open':''}><summary>הגדרות נוספות${I.chev}</summary>${nt}${items.map(([k,ic,t,s])=>`<button class="it" data-open="${k}"><span class="ico" aria-hidden="true">${ic}</span><span class="g"><span class="t">${t}</span><span class="s">${esc(s)}</span></span><span aria-hidden="true" style="color:var(--mut)">${I.left}</span></button>`).join('')}</details>`}
 
-async function cmd(c,m,okText,logText){if(busy)return;busy=true;buzz();draw();
+async function cmd(c,m,okText,logText){if(busy)return;busy=true;buzz();
+  /* show the new state at once; the heater's reply confirms it */
+  const L=H.link(),prev={on:L.on,left:L.left};if(c==='on'){L.on=true;L.left=(m||0)*60}else if(c==='off'){L.on=false;L.left=0}draw();
   try{await H.cmd(c,m);if(c==='on'){total=m||0;LS.set('ember_total',total)}if(c==='add'){total=Math.max(total,Math.ceil(H.link().left/60))}
     logText&&H.log(logText);toast(okText)}
-  catch(e){toast('הדוד לא ענה. בדוק שהאייפון ברשת של הבית')}
+  catch(e){Object.assign(L,prev);toast('הדוד לא ענה. בדוק שהאייפון ברשת של הבית')}
   busy=false;draw()}
 async function refresh(){try{await H.sync()}catch(e){}draw()}
 const newer=e=>/unknown|לא ענה/.test(String(e&&e.message||e))?'צריך את הגרסה החדשה של HomeOn באייפון':String(e&&e.message||e);

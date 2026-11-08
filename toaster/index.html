@@ -796,25 +796,27 @@ function showQR(uc,j){
 /* ---------- commands ---------- */
 function onCmds(sec){const c=[{code:CAP.power,value:true}];if(CAP.cd)c.push({code:CAP.cd,value:Math.min(CAP.cdMax,Math.round(sec))});return c}
 async function send(cmds){
-  R.busy=true;$('power').disabled=true;
+  R.busy=true;
   try{await api('/command',{id:DEV.id,commands:cmds});return true}
   catch(e){toast(netMsg(e));return false}
-  finally{R.busy=false;$('power').disabled=false}
+  finally{R.busy=false}
 }
 const live=()=>linked&&DEV&&CAP;
 
-async function turnOn(name,rounds){
+async function turnOn(name,rounds){if(R.busy)return;
   R.justDone=false;R.rounds=rounds||1;R.midDone=false;
   const sec=S.min*60;
-  if(live()&&!(await send(onCmds(sec))))return;
-  R.on=true;R.total=sec;R.endAt=Date.now()+sec*1000;
+  /* the toaster shows "on" the moment you tap; if the plug doesn't confirm, it goes back */
+  R.on=true;R.total=sec;R.endAt=Date.now()+sec*1000;render();
+  if(live()&&!(await send(onCmds(sec)))){R.on=false;R.endAt=0;render();return}
   S.log.push({t:Date.now(),n:name||fmtMin(S.min)+' דק׳'});if(S.log.length>2000)S.log=S.log.slice(-2000);
   save();render();toast(R.rounds>1?'התקע הודלק - לחץ את הידית. באמצע אזכיר ללחוץ שוב':'התקע הודלק - לחץ את הידית');
   armPush(name);
 }
-async function turnOff(msg){
-  if(live()&&!(await send([{code:CAP.power,value:false}])))return;
-  R.on=false;R.endAt=0;render();if(msg)toast(msg);nativeCancel();
+async function turnOff(msg){if(R.busy)return;
+  const was={endAt:R.endAt};R.on=false;R.endAt=0;render();
+  if(live()&&!(await send([{code:CAP.power,value:false}]))){R.on=true;R.endAt=was.endAt;render();return}
+  if(msg)toast(msg);nativeCancel();
   if(live()&&S.push)api('/push/cancel').catch(()=>{});
 }
 async function extend(){
