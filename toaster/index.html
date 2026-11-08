@@ -412,8 +412,8 @@ const hero=document.getElementById('hero'),T=window.TST;if(hero&&T){const R=T.R,
   /* scroll only when there is really more than one screen (e.g. "more settings" open) */
   const app=document.getElementById('app');const fit=()=>{if(!app)return;const bar=document.querySelector('.bottom-bar');if(bar)app.style.setProperty('padding-bottom',Math.ceil(innerHeight-bar.getBoundingClientRect().top+16)+'px','important');app.style.overflowY='hidden';
     const dl=document.querySelector('.hoDial'),more=document.getElementById('moreDet');
-    const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));
-    if(dl&&!(more&&more.open)){const w=Math.round(Math.min(290,innerWidth-70,innerHeight*.36));dl.style.width=w+'px';
+    const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;
+    if(dl&&!(more&&more.open)){['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));const w=Math.round(Math.min(290,innerWidth-70,innerHeight*.36));dl.style.width=w+'px';
       for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}}
     app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'};
   addEventListener('resize',fit);document.getElementById('moreDet')?.addEventListener('toggle',()=>setTimeout(fit,50));setTimeout(fit,300);setInterval(fit,1500);
