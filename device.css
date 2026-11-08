@@ -1,0 +1,44 @@
+/* HomeOn device pages - one design language.
+   Every device page (heater, AC, toaster, vacuum, router, and any new device) links this file LAST.
+   Rules:
+   - background: dark with a soft glow; neutral when off, warm (--dv-warm) while heating/running, cool while cooling
+   - no title bar: back (top right) and ⋯ (top left) float in the corners, 52px circles; the name stays for VoiceOver
+   - the main control (dial / map / dashboard) comes first, then the controls row, then one wide power pill
+   - the power pill is dark when the device is off and orange when it is on/running
+   - "selected" is always blue (--dv-sel); orange means "on / heat / main action"
+   - quick choices are tiles (96px, icon over text), then "הגדרות נוספות", then the floating bottom bar
+   - day pickers are 48px circles; switches are blue when on
+   New pages can use the dv- classes below directly (see /unplug/_template/). */
+:root{
+  --dv-bg:#000;--dv-card:#1c1c1ecc;--dv-card2:#2c2c2e;--dv-line:#ffffff14;--dv-fg:#fff;--dv-mut:#aeaeb2;
+  --dv-acc:#ff9a3d;--dv-acc-ink:#1f0e00;--dv-sel:#3d8bff;--dv-sel-soft:#3d8bff2e;--dv-sel-txt:#6fa8ff;
+  --dv-g1:#1c1c1e;--dv-g2:#0b0b0c;--dv-warm1:#2b1609;--dv-warm2:#120a05;--dv-cool1:#0e1d33;--dv-cool2:#070c14;
+  --dv-r-tile:24px;--dv-r-card:28px;--dv-round:64px;--dv-corner:52px;--dv-pill:64px;--dv-tile:96px;--dv-gap:12px}
+html.glow-warm{--dv-g1:var(--dv-warm1);--dv-g2:var(--dv-warm2)}
+html.glow-cool{--dv-g1:var(--dv-cool1);--dv-g2:var(--dv-cool2)}
+html.dv,html.dv body{background:radial-gradient(120% 65% at 50% 30%,var(--dv-g1) 0%,var(--dv-g2) 50%,#000 100%) fixed #000!important;color:var(--dv-fg)}
+@media (prefers-reduced-motion:no-preference){html.dv,html.dv body{transition:background .6s}}
+
+/* generic components for new pages */
+.dv-page{min-height:100dvh;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 110px);max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:var(--dv-gap);position:relative}
+.dv-corners{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:16px;right:16px;display:flex;justify-content:space-between;pointer-events:none;z-index:4}
+.dv-corners button{pointer-events:auto}
+.dv-circle{width:var(--dv-corner);height:var(--dv-corner);border-radius:50%;background:var(--dv-card);display:grid;place-items:center;color:#fff;border:0}
+.dv-title{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+.dv-ctl{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dv-round{width:var(--dv-round);height:var(--dv-round);border-radius:50%;background:var(--dv-card);display:grid;place-items:center;font-size:2rem;font-weight:500;color:#fff;border:0}
+.dv-chip{min-height:48px;padding:0 18px;border-radius:999px;background:var(--dv-card);display:flex;align-items:center;gap:8px;font-weight:600;color:#fff;border:0}
+.dv-chip[aria-pressed="true"]{background:var(--dv-sel-soft);color:var(--dv-sel-txt)}
+.dv-power{width:100%;min-height:var(--dv-pill);border-radius:999px;background:var(--dv-card);color:#fff;font-weight:700;font-size:1.1rem;display:flex;align-items:center;justify-content:center;gap:10px;border:0}
+.dv-power[aria-pressed="true"]{background:var(--dv-acc);color:var(--dv-acc-ink)}
+.dv-label{color:var(--dv-mut);font-weight:600;font-size:1rem;margin:0 4px}
+.dv-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dv-tile{height:var(--dv-tile);border-radius:var(--dv-r-tile);background:var(--dv-card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;border:0;padding:6px 2px}
+.dv-tile svg{width:28px;height:28px}
+.dv-tile[aria-pressed="true"]{background:var(--dv-sel-soft);outline:1.5px solid #3d8bff66;color:var(--dv-sel-txt)}
+.dv-more{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:60px;padding:0 16px;border-radius:22px;background:var(--dv-card);font-weight:700;color:#fff;border:0}
+.dv-bar{position:fixed;left:max(16px,calc((100vw - 608px)/2));right:max(16px,calc((100vw - 608px)/2));bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;gap:6px;padding:6px;border-radius:30px;background:rgba(36,30,26,.92);border:1px solid #ff9a3d33;box-shadow:0 10px 30px #0009;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);z-index:5}
+.dv-days{display:flex;justify-content:space-between;gap:4px}
+.dv-days button{width:48px;height:48px;border-radius:50%;background:var(--dv-card2);color:#fff;font-weight:700;border:0}
+.dv-days button[aria-pressed="true"]{background:var(--dv-sel)}
+.dv-switch[aria-checked="true"]{background:var(--dv-sel)!important}

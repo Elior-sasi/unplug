@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Template for a new HomeOn device page. Copy this folder, rename, and fill in the device.
+     The look comes from /unplug/device.css (see the rules at the top of that file). Keep:
+     corners (back + ⋯), main control, controls row, one power pill, tiles, "הגדרות נוספות", bottom bar. -->
+<html lang="he" dir="rtl" class="dv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>מכשיר</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Hebrew",system-ui,sans-serif;font-size:17px}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid #ffc48a;outline-offset:3px}
+body{-webkit-user-select:none;user-select:none}
+.dial{width:min(290px,calc(100vw - 70px),36vh);aspect-ratio:1;margin:20px auto -6%;border-radius:50%;display:grid;place-items:center;font-size:4rem;font-weight:200}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<link rel="stylesheet" href="../device.css?v=1">
+</head>
+<body>
+<main class="dv-page">
+  <div class="dv-corners">
+    <button class="dv-circle" id="back" aria-label="חזרה ל-HomeOn">›</button>
+    <button class="dv-circle" id="menu" aria-label="הגדרות המכשיר">⋯</button>
+  </div>
+  <h1 class="dv-title">מכשיר</h1>
+  <div class="dial" role="group" aria-label="מצב המכשיר">--</div>
+  <div class="dv-ctl"><button class="dv-round" aria-label="יותר">+</button><button class="dv-chip" aria-pressed="false">אפשרות</button><button class="dv-round" aria-label="פחות">−</button></div>
+  <button class="dv-power" id="power" aria-pressed="false">הדלקה</button>
+  <div class="dv-label" id="qL">בחירה מהירה</div>
+  <div class="dv-tiles" role="group" aria-labelledby="qL"><button class="dv-tile" aria-pressed="true">א</button><button class="dv-tile" aria-pressed="false">ב</button><button class="dv-tile" aria-pressed="false">ג</button><button class="dv-tile" aria-pressed="false">ד</button></div>
+  <button class="dv-more" id="more">הגדרות נוספות</button>
+</main>
+<nav class="dv-bar" aria-label="מצב"><button class="dv-chip" style="flex:1">מצב</button><button class="dv-chip" style="flex:1">עוצמה</button></nav>
+<script>
+/* opened inside HomeOn as a frame; back closes it */
+document.getElementById('back').onclick=()=>{try{parent.postMessage('unplug-close','*')}catch(e){}};
+/* glow: neutral when off, warm when on (use glow-cool for cooling) */
+document.getElementById('power').onclick=e=>{const on=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',on);document.documentElement.classList.toggle('glow-warm',on)};
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="he" dir="rtl">
+<html lang="he" dir="rtl" class="dv">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -202,7 +202,19 @@ header .tt{position:absolute!important;width:1px!important;height:1px!important;
 /* map labels: small, so many rooms fit; the selection count is already on the button */
 #mcard .pin{min-height:24px;padding:1px 8px;font-size:12px;border-width:1px}
 .mpill{display:none!important}
+
+/* ---------- device.css language: corners on top, power pill dark when idle and orange while cleaning ---------- */
+header{position:absolute!important;top:calc(env(safe-area-inset-top,0px) + 12px)!important;right:16px!important;left:auto!important;inset-inline-start:auto!important;margin:0!important;z-index:4}
+header .circ{width:52px!important;height:52px!important;background:var(--dv-card)!important}
+#app{padding-top:calc(env(safe-area-inset-top,0px) + 76px)!important;margin-top:0!important;height:100%!important}
+.vhero .vst{padding-inline-start:0!important}
+.vhero,.mcard,details.more,.rb>span{background:var(--dv-card)!important}
+#pMain .pw{background:var(--dv-card)!important;color:#fff!important}
+#pMain .pw.on{background:var(--dv-acc)!important;color:var(--dv-acc-ink)!important}
+.pin[aria-pressed="true"],.chip[aria-pressed="true"],.seg button[aria-pressed="true"],.tools .chip[aria-pressed="true"],.cm button[aria-pressed="true"],.tabs2 button[aria-pressed="true"]{background:var(--dv-sel)!important;color:#fff!important;border-color:var(--dv-sel)!important}
+.sw[aria-checked="true"]{background:var(--dv-sel)!important}
 </style>
+<link rel="stylesheet" href="../device.css?v=1">
 </head>
 <body>
 <div id="app">
@@ -326,6 +338,7 @@ function draw(){
   if($('login')){$('main').innerHTML='';sig={}}
   const x=D&&D.state;
   const busy=x&&(x.running||BUSY.has(x.state)),paused=x&&(x.paused||x.state===3),home=x&&(x.docked||HOME.has(x.state));
+  document.documentElement.classList.toggle('glow-warm',!!busy);
   const prog=x&&x.running&&x.progress?x.progress:null;
   const room=x&&x.room&&D.rooms?(D.rooms.find(r=>r.id===x.room)||{}).name:null;
   const sub2=!x?(err||'מתחבר...'):busy||paused?[room?'ב'+room:'',x.area?x.area+' מ״ר':'',x.time?x.time+' דק׳':'',prog!=null?'התקדמות '+pct(prog):''].filter(Boolean).join(' · '):(x.drying&&x.drying_left?'מייבש, נשארו '+x.drying_left+' דק׳':(x.charging===1||x.state===6?'בעמדה, נטען':home?'בעמדה':''));
