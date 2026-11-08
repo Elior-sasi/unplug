@@ -532,7 +532,7 @@ html.ts-big.in-unplug .profiles{align-items:stretch}
 /* iOS zooms into any field under 16px when zoom is allowed */
 input,select,textarea{font-size:max(16px,1em)!important}
 </style>
-<link rel="stylesheet" href="../device.css?v=1">
+<link rel="stylesheet" href="../device.css?v=2">
 <script>/* HomeOn text size (settings) applies here too */(function(){const a=()=>{let s='100';try{const v=localStorage.getItem('unplug_ts');if(['100','115','130','150'].includes(v))s=v}catch(e){}document.documentElement.style.fontSize=s+'%';document.documentElement.classList.toggle('ts-big',s!=='100')};a();addEventListener('storage',e=>{if(e.key==='unplug_ts')a()})})();</script>
 </head>
 <body>

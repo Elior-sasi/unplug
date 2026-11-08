@@ -42,3 +42,7 @@ html.dv,html.dv body{background:radial-gradient(120% 65% at 50% 30%,var(--dv-g1)
 .dv-days button{width:48px;height:48px;border-radius:50%;background:var(--dv-card2);color:#fff;font-weight:700;border:0}
 .dv-days button[aria-pressed="true"]{background:var(--dv-sel)}
 .dv-switch[aria-checked="true"]{background:var(--dv-sel)!important}
+
+/* corner buttons (back, menu, settings): a lighter circle with a thin light edge, so they stand out on the black background */
+:root{--dv-btn:#2c2c2e;--dv-btn-edge:inset 0 0 0 1.5px rgba(255,255,255,.32)}
+.dv-circle,header.top .menu-btn,.hoBack,#unplugBack,.dv-corners button,#back.circ,#menu.circ,#mvX.circ{background:var(--dv-btn)!important;box-shadow:var(--dv-btn-edge)!important;border:0!important}
