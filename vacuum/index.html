@@ -300,7 +300,7 @@ let LASTBTN=null;document.addEventListener('pointerdown',e=>{LASTBTN=e.target.cl
 /* answer the tap at once: the button dims with a spinner and "שולח..." until the vacuum's cloud replies */
 async function send(path,body,ok){buzz();const b=LASTBTN&&LASTBTN.isConnected?LASTBTN:null;if(b){b.classList.add('sending');b.setAttribute('aria-busy','true')}toast('שולח לשואב...');
   try{await send2(path,body,ok)}finally{if(b){b.classList.remove('sending');b.removeAttribute('aria-busy')}}}
-async function send2(path,body,ok){try{const j=await api(path,body);if(j&&j.state){D=Object.assign({},D,j);delete D.sent;MV.d=D}ok&&toast(ok);draw();refreshSheet()}catch(e){toast(e.message);load()}}
+async function send2(path,body,ok){try{const j=await api(path,body);if(j&&j.state){D=Object.assign({},D,j);delete D.sent;MV.d=D}else{setTimeout(load,1500);setTimeout(load,4500)}ok&&toast(ok);draw();refreshSheet()}catch(e){toast(e.message);load()}}
 const act=(a,ok,extra)=>send('/mova/act',Object.assign({a},extra||{}),ok);
 const setv=(k,v,ok)=>send('/mova/set',{k,v},ok);
 
