@@ -74,17 +74,17 @@ function quickActions(d){
 function bindLongPress(v){
   v.querySelectorAll('.card[data-id]').forEach(c=>{
     const o=c.querySelector('.open');if(!o)return;
-    let timer=null,startX=0,startY=0,longFired=false;
+    let timer=null,x=0,y=0,fired=false;
     const cancel=()=>{if(timer!==null){clearTimeout(timer);timer=null}};
     o.addEventListener('pointerdown',e=>{
       if(REORDER||e.button>0)return;
-      cancel();longFired=false;startX=e.clientX;startY=e.clientY;
-      timer=setTimeout(()=>{timer=null;longFired=true;try{navigator.vibrate?.(12)}catch(_){}cardMenu(c)},550);
+      fired=false;x=e.clientX;y=e.clientY;cancel();
+      timer=setTimeout(()=>{timer=null;fired=true;try{navigator.vibrate?.(12)}catch(_){}setReorder(true)},480);
     });
-    o.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-startX,e.clientY-startY)>12)cancel()});
+    o.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-x,e.clientY-y)>10)cancel()});
     ['pointerup','pointercancel','pointerleave'].forEach(ev=>o.addEventListener(ev,cancel));
-    o.addEventListener('click',e=>{if(longFired||REORDER){e.preventDefault();e.stopImmediatePropagation();longFired=false}},true);
-    o.addEventListener('contextmenu',e=>{e.preventDefault();cancel();if(!REORDER){longFired=true;cardMenu(c)}});
+    o.addEventListener('click',e=>{if(fired||REORDER){e.preventDefault();e.stopImmediatePropagation();fired=false}},true);
+    o.addEventListener('contextmenu',e=>{e.preventDefault();cancel();if(!REORDER){fired=true;setReorder(true)}});
   });
 }
 
