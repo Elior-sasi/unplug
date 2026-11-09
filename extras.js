@@ -72,12 +72,19 @@ function quickActions(d){
   });
 }
 function bindLongPress(v){
-  v.querySelectorAll('.card').forEach(c=>{let t=0,x0=0,y0=0,fired=false;const o=c.querySelector('.open');
-    o.addEventListener('pointerdown',e=>{if(REORDER)return;fired=false;x0=e.clientX;y0=e.clientY;t=setTimeout(()=>{fired=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}setReorder(true)},480)});
-    o.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-x0,e.clientY-y0)>10)clearTimeout(t)});
-    ['pointerup','pointercancel','pointerleave'].forEach(n=>o.addEventListener(n,()=>clearTimeout(t)));
-    o.addEventListener('click',e=>{if(fired||REORDER){e.stopImmediatePropagation();e.preventDefault();fired=false}},true);
-    o.addEventListener('contextmenu',e=>e.preventDefault());
+  v.querySelectorAll('.card[data-id]').forEach(c=>{
+    const o=c.querySelector('.open');if(!o)return;
+    let timer=null,startX=0,startY=0,longFired=false;
+    const cancel=()=>{if(timer!==null){clearTimeout(timer);timer=null}};
+    o.addEventListener('pointerdown',e=>{
+      if(REORDER||e.button>0)return;
+      cancel();longFired=false;startX=e.clientX;startY=e.clientY;
+      timer=setTimeout(()=>{timer=null;longFired=true;try{navigator.vibrate?.(12)}catch(_){}cardMenu(c)},550);
+    });
+    o.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-startX,e.clientY-startY)>12)cancel()});
+    ['pointerup','pointercancel','pointerleave'].forEach(ev=>o.addEventListener(ev,cancel));
+    o.addEventListener('click',e=>{if(longFired||REORDER){e.preventDefault();e.stopImmediatePropagation();longFired=false}},true);
+    o.addEventListener('contextmenu',e=>{e.preventDefault();cancel();if(!REORDER){longFired=true;cardMenu(c)}});
   });
 }
 
@@ -153,21 +160,23 @@ function bindReorder(v){
 
 /* smooth drag: the card follows the finger, a placeholder keeps its spot, neighbours slide (FLIP) */
 /* edit mode, like Smart Life: tap a card for its options */
-function cardMenu(c){const id=c.dataset.id,nm=c.querySelector('.nm')?.textContent||'',wide=layoutSize(id),fav=!!META.fav[id],hid=!!(META.hidden||{})[id];
-  sheet(esc(nm),`<div class="list">
-    <button class="row row-btn" data-cm="fav"><span class="grow t">${fav?'הסרה מהמועדפים':'הוספה למועדפים'}</span>${svg('star',2.2)}</button>
-    <button class="row row-btn" data-cm="room"><span class="grow t">שינוי חדר</span>${svg('chev',2.2)}</button>
-    <button class="row row-btn" data-cm="icon"><span class="grow t">שם ותמונה</span>${svg('edit',2.2)}</button>
-    <button class="row row-btn" data-cm="size"><span class="grow t">${wide?'כרטיס קטן':'כרטיס רחב'}</span>${svg('grid',2.2)}</button>
-    <button class="row row-btn" data-cm="hide"><span class="grow t">${hid?'הצגה במסך':'הסתרה מהמסך'}</span>${svg(hid?'plus':'close',2.2)}</button></div>
-    <p class="s" style="margin:10px 4px 0">לשינוי הסדר: לוחצים על כרטיס וגוררים אותו.</p>`,(el,close)=>el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{const k=b.dataset.cm;close();
-      if(k==='room'){
-        const d=[...DEVS,EMBER,ROUTER,MOVA,ORALB].find(x=>x.id===id);
-        if(d&&typeof pickRoom==='function')pickRoom(d,()=>render());
-        else toast('לא ניתן לשייך חדר למכשיר זה כרגע');
-        return;
-      }
-      const t={fav:'[data-fav]',icon:'[data-icon]',size:'[data-size]',hide:'[data-hide]'}[k];const live=document.querySelector(`.card[data-id="${CSS.escape(id)}"] ${t}`);live&&live.click()}))}
+function cardMenu(c){
+ const id=c.dataset.id,nm=c.querySelector('.nm')?.textContent||'',wide=layoutSize(id),fav=!!META.fav[id],hid=!!(META.hidden||{})[id];
+ sheet(esc(nm),`<div class="list">
+ <button class="row row-btn" data-cm="size"><span class="grow t">${wide?'הקטנת הכרטיס':'הגדלת הכרטיס'}</span>${svg('grid',2.2)}</button>
+ <button class="row row-btn" data-cm="fav"><span class="grow t">${fav?'הסרה מהמועדפים':'הוספה למועדפים'}</span>${svg('star',2.2)}</button>
+ <button class="row row-btn" data-cm="room"><span class="grow t">שינוי חדר</span>${svg('chev',2.2)}</button>
+ <button class="row row-btn" data-cm="icon"><span class="grow t">שם ותמונה</span>${svg('edit',2.2)}</button>
+ <button class="row row-btn" data-cm="hide"><span class="grow t">${hid?'הצגה במסך':'הסתרה מהמסך'}</span>${svg(hid?'plus':'close',2.2)}</button></div>
+ <p class="s">לשינוי סדר הכרטיסים השתמש בעריכת המסך.</p>`,(el,close)=>el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{
+ const k=b.dataset.cm;close();
+ if(k==='size'){META.viewSizes=META.viewSizes||{};const scope=layoutScope();META.viewSizes[scope]=META.viewSizes[scope]||{};META.viewSizes[scope][id]=wide?'s':'w';saveMeta();render();return}
+ if(k==='fav'){META.fav[id]?delete META.fav[id]:META.fav[id]=true;saveMeta();render();return}
+ if(k==='hide'){META.hidden=META.hidden||{};META.hidden[id]?delete META.hidden[id]:META.hidden[id]=true;saveMeta();render();return}
+ if(k==='room'){const d=[...DEVS,typeof EMBER!=='undefined'?EMBER:null,typeof ROUTER!=='undefined'?ROUTER:null,typeof MOVA!=='undefined'?MOVA:null,typeof ORALB!=='undefined'?ORALB:null,typeof GTV!=='undefined'?GTV:null].find(x=>x&&x.id===id);if(d&&typeof pickRoom==='function')pickRoom(d,()=>render());else toast('שיוך חדר אינו זמין לכרטיס זה');return}
+ if(k==='icon'){const d=[...DEVS,typeof EMBER!=='undefined'?EMBER:null,typeof ROUTER!=='undefined'?ROUTER:null,typeof MOVA!=='undefined'?MOVA:null,typeof ORALB!=='undefined'?ORALB:null,typeof GTV!=='undefined'?GTV:null].find(x=>x&&x.id===id)||{id,name:nm,category:'other'};editCardDetails(d)}
+ }))}
+
 function flip(grid,mutate){
   const items=[...grid.children],before=new Map(items.map(el=>[el,el.getBoundingClientRect()]));
   mutate();
