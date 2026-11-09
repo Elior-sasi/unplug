@@ -1191,15 +1191,16 @@ window.HOH={EMBER,inApp:()=>!!IN_APP,link:()=>HEATER_LINK,devArt:(d,w)=>devArt(d
 function waterbarCfg(){try{return JSON.parse(localStorage.getItem('homeon_waterbar_cfg')||'{}')}catch(e){return {}}}
 function openWaterbar(){
  const cfg=waterbarCfg();
+ const installed=cfg.installed||'2026-09-08';
  const nextFriday=()=>{const d=new Date(),delta=(5-d.getDay()+7)%7;d.setDate(d.getDate()+delta);return d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})};
  sheet('בר מים נועם 2',`<div style="display:grid;gap:16px;text-align:right;direction:rtl;font-size:1.1rem">
- <p>💧 ניהול תחזוקה ומידע על מצב שבת. אין חיבור ישיר לבר המים.</p>
+ <p>💧 ניהול תחזוקה ומידע על מצב שבת. אין חיבור ישיר לבר המים.</p>\n <label>תאריך התקנה / החלפת סנן אחרונה <input id="wbInstalled" type="date" value="${esc(installed)}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
  <label>תאריך החלפת הסנן הבא <input id="wbFilter" type="date" value="${esc(cfg.filterDate||'')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
  <label>שעת כניסה משוערת למצב שבת ביום שישי <input id="wbShabbat" type="time" value="${esc(cfg.shabbatTime||'')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
  <p>יום שישי הקרוב: ${nextFriday()}. השעה שתזין היא לצורכי מעקב בלבד, ולא נלקחת מבר המים. יש לבדוק את זמן המעבר המדויק על המכשיר.</p>
  <p>לפי היצרן, נועם 2 עובר למצב שבת וחג אוטומטית. אין כאן אישור שהמעבר התרחש בפועל.</p>
  <button id="wbSave" class="btn pri" style="min-height:52px;font-size:1.15rem">שמירה</button>
- </div>`,(el,close)=>{el.querySelector('#wbSave').onclick=()=>{const filterDate=el.querySelector('#wbFilter').value,shabbatTime=el.querySelector('#wbShabbat').value;localStorage.setItem('homeon_waterbar_cfg',JSON.stringify({filterDate,shabbatTime}));close();render();toast('פרטי בר המים נשמרו במכשיר')}})
+ </div>`,(el,close)=>{el.querySelector('#wbSave').onclick=()=>{const installed=el.querySelector('#wbInstalled').value,filterDate=el.querySelector('#wbFilter').value,shabbatTime=el.querySelector('#wbShabbat').value;localStorage.setItem('homeon_waterbar_cfg',JSON.stringify({installed,filterDate,shabbatTime}));close();render();toast('פרטי בר המים נשמרו במכשיר')}})
 }
 function openEmber(){
   if(typeof openFrame==='function'&&!window.EMBER_SHEET)return openFrame(EMBER,'/unplug/boiler/?in=unplug','דוד');
