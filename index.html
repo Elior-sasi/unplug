@@ -993,6 +993,10 @@ function render(){
   if(TAB!=='devices'||!CFG.key)v._h=null;
   ({devices:viewDevices,scenes:viewScenes,sched:viewSched,settings:viewSettings})[TAB](v);
 }
+/* Layout is per home + view; legacy global layout remains the initial default. */
+const layoutScope=()=>String(META.home||'h1')+'::'+String(ROOM||'all');
+const layoutSize=id=>{const v=META.viewSizes?.[layoutScope()];return v&&Object.prototype.hasOwnProperty.call(v,id)?v[id]==='w':(META.size||{})[id]==='w'};
+const layoutOrder=id=>META.viewOrders?.[layoutScope()]?.[id]??(META.order||{})[id]??999;
 function roomOf(d){return META.rooms[d.id]||''}
 function watts(d){const f=readOf(d,'cur_power');return d.online&&d.status.cur_power!=null?(+d.status.cur_power)/10**(+(f&&f.values&&f.values.scale)||0):0}
 function viewDevices(v){
@@ -1005,7 +1009,7 @@ function viewDevices(v){
   const q=isCmd?'':Q.trim().toLowerCase();
   let list=DEVS.filter(d=>((typeof REORDER!=='undefined'&&REORDER)||!(META.hidden||{})[d.id])&&(ROOM==='all'||(ROOM==='fav'?META.fav[d.id]:ROOM==='off'?!d.online:roomOf(d)===ROOM)));
   if(q)list=list.filter(d=>(dname(d)+' '+catOf(d)[0]+' '+roomOf(d)).toLowerCase().includes(q));
-  list=list.slice().sort((x,y)=>(META.order?.[x.id]??999)-(META.order?.[y.id]??999)||(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0));
+  list=list.slice().sort((x,y)=>(layoutOrder(x.id))-(layoutOrder(y.id))||(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0));
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
   const chips=[['all','הכול'],['fav','מועדפים'],...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
   const H=`<form class="search" id="qF" role="search" autocomplete="off">${svg('search')}<label class="sr" for="q">חיפוש מכשיר או פקודה</label><input id="q" type="search" enterkeyhint="go" placeholder="חיפוש או פקודה" aria-describedby="qHint" value="${esc(Q)}" autocomplete="off"><button type="button" class="cmdMic" id="cmdMic" aria-label="הכתבה קולית">${svg('mic',2.2)}</button><span class="sr" id="qHint">אפשר לכתוב שם של מכשיר, או פקודה כמו: תכבה את המזגן בעוד שעה</span></form>`+
@@ -1013,11 +1017,11 @@ function viewDevices(v){
       (typeof attentionHtml==='function'&&ROOM==='all'&&!q&&!isCmd?attentionHtml():'')+(typeof liveStripHtml==='function'?liveStripHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
    (typeof groupsHtml==='function'&&ROOM==='all'&&!q?groupsHtml():'')+
    `<div class="chips" role="group" aria-label="חדרים">${chips.map(([k,t])=>`<button class="chip" data-room="${esc(k)}" aria-pressed="${ROOM===k}">${esc(t)}</button>`).join('')}<button class="chip add" id="roomAdd" aria-label="חדר חדש">${svg('plus',2.4)}</button><button class="chip add" id="roomEdit" aria-label="ניהול חדרים ושיוך מכשירים"><span style="display:inline-grid;transform:rotate(-90deg)">${svg('chev',2.4)}</span></button></div>`+
-   (list.length||ROOM==='all'&&!q?`<div class="grid" role="list">${(()=>{const pv=ROOM==='all'&&!q&&!list.some(d=>d.id==='gtv')?`<div class="card" role="listitem" data-id="preview-projector" data-preview="projector"><button class="open" id="projectorPreviewEntry" aria-label="פתיחת שלט המקרן"></button><div class="ic" aria-hidden="true">${artFor((META.icons||{})["preview-projector"]||"custom_magcubic_hy350_gtv_projector",STYLE())}</div><div class="nm">${esc((META.names||{})["preview-projector"]||"שלט המקרן")}</div><div class="st">HY350 GTV · הדמיה</div></div>`:'';const items=list.map(d=>[META.order?.[d.id]??999,card(d)]);if(pv)items.push([META.order?.['preview-projector']??-1,pv]);
+   (list.length||ROOM==='all'&&!q?`<div class="grid" role="list">${(()=>{const pv=ROOM==='all'&&!q&&!list.some(d=>d.id==='gtv')?`<div class="card" role="listitem" data-id="preview-projector" data-preview="projector"><button class="open" id="projectorPreviewEntry" aria-label="פתיחת שלט המקרן"></button><div class="ic" aria-hidden="true">${artFor((META.icons||{})["preview-projector"]||"custom_magcubic_hy350_gtv_projector",STYLE())}</div><div class="nm">${esc((META.names||{})["preview-projector"]||"שלט המקרן")}</div><div class="st">HY350 GTV · הדמיה</div></div>`:'';const items=list.map(d=>[layoutOrder(d.id),card(d)]);if(pv)items.push([META.viewOrders?.[layoutScope()]?.['preview-projector']??META.order?.['preview-projector']??-1,pv]);
   if(!(META.hidden||{})['preview-beurer-bf500']||typeof REORDER!=='undefined'&&REORDER){
     const id='preview-beurer-bf500',name=esc((META.names||{})[id]||'משקל חכם'),hidden=!!(META.hidden||{})[id];
     const tile=`<div class="card${hidden?' hiddenCard':''}" role="listitem" data-id="preview-beurer-bf500" data-preview="scale"><button class="open" id="beurerScaleEntry" aria-label="פתיחת משקל חכם Beurer BF500"></button><div class="ic" aria-hidden="true"><img src="real/custom/beurer-bf500.png?v=1" alt="Beurer BF500" class="real" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:contain"></div><div class="nm">${name}</div><div class="st">Beurer BF500 · טרם חובר</div></div>`;
-    if(ROOM==='all'&&!q||ROOM==='fav'&&META.fav[id]||q&&('משקל חכם beurer bf500').includes(q))items.push([META.order?.[id]??998,tile]);
+    if(ROOM==='all'&&!q||ROOM==='fav'&&META.fav[id]||q&&('משקל חכם beurer bf500').includes(q))items.push([META.viewOrders?.[layoutScope()]?.[id]??META.order?.[id]??998,tile]);
   }return items.map((x,i)=>[x[0],i,x[1]]).sort((x,y)=>x[0]-y[0]||x[1]-y[1]).map(x=>x[2]).join('')})()}</div>`:`<div class="empty"><b>${busy?'טוען מכשירים...':q?'לא נמצא מכשיר':ROOM!=='all'?ROOM==='fav'?'אין עדיין מועדפים':'אין מכשירים בחדר הזה':'אין מכשירים בבית הזה'}</b>${!busy&&!q&&ROOM!=='fav'&&window.DEVS_ALL.length?'<button class="btn wide" id="emAs" style="margin-top:12px">שיוך מכשירים</button>':''}${busy||q?'':ROOM==='fav'?'כדי להוסיף מועדפים, פתח מכשיר וסמן אותו בכוכב, או לחץ על הכוכב במצב עריכת המסך.':'מכשירים חדשים מוסיפים ב-Smart Life, ואז הם מופיעים כאן לבד.'}</div>`);
   /* same screen as before: keep the existing cards, so pictures don't blink on every refresh */
   const HK=H+'|'+(typeof REORDER!=='undefined'&&REORDER?1:0)+'|'+ROOM;if(v._h===HK&&v.firstElementChild)return;v._h=HK;v.innerHTML=H;
@@ -1250,40 +1254,40 @@ function openEmberSheet(){
 const favButton=d=>""; /* no star on the cards: favorites live in the "מועדפים" tab; add or remove from the card menu */
 function card(d){
   if(d.id==='oralb-io2'){const nm=esc(dname(d));const status=typeof brushCardStatus==='function'?brushCardStatus():'טעינה ותזכורת להחלפת ראש';
-    return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
+    return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="${esc(d.id)}">
       <button class="open" aria-label="${cardLabel(d)}, ${esc(status)}. פרטי מברשת"></button>
       <div class="ic">${devArt(d)}</div>
       <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}
       <div class="st" aria-hidden="true">${esc(status)}</div>
       ${favButton(d)}</div>`}
   if(d.id==='mova-e30-ultra'){const nm=esc(dname(d));
-    return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
+    return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="${esc(d.id)}">
       <button class="open" aria-label="${cardLabel(d)}, שואב שוטף, ${esc(window.movaCardText?movaCardText():'')}. פתיחה"></button>
       <div class="ic">${devArt(d)}</div>
       <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}
       <div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${esc(window.movaCardText?movaCardText():'')}</div>
       ${favButton(d)}</div>`}
   if(d.id==='gtv'){const nm=esc(dname(d));
-    return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="gtv">
+    return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="gtv">
      <button class="open" aria-label="${cardLabel(d)}, שלט לטלוויזיה${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <button class="pw" aria-label="${nm}: הדלקה או כיבוי">${svg('power',2.6)}</button>
      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}שלט</div>${favButton(d)}</div>`}
   if(d.id==='router'){const nm=esc(dname(d));
-    return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="router">
+    return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="router">
      <button class="open" aria-label="${cardLabel(d)}, ראוטר${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}מכשירים, מהירות ו-WiFi</div>${favButton(d)}</div>`}
   if(d.virtual){const nm=esc(dname(d));
     const status=IN_APP?(HEATER_LINK.checked?(HEATER_LINK.connected?(HEATER_LINK.on?'דולק':'כבוי'):'לא מחובר'):'בודק חיבור...'):'דרך Ember (ללא חיווי)';
-    return `<div class="card${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}">
+    return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="${esc(d.id)}">
      <button class="open" aria-label="${cardLabel(d)}, דוד חכם, ${status}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      ${(IN_APP?HEATER_LINK.connected:true)?`<button class="pw" data-ember aria-label="${nm}: הדלקה או כיבוי">${svg('power',2.6)}</button>`:''}
      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}${esc(status)}</div>${favButton(d)}</div>`}
   const [cat,ic]=catOf(d),on=isOn(d),pc=powerCode(d),nm=esc(dname(d));
   const c=(ART[iconOf(d)]||ART.dev).p.t,wide=AC.has(d.category)||iconOf(d)==='ac'&&!pc;
-  return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${(META.size||{})[d.id]==='w'?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
+  return `<div class="card${on?' is-on':''}${d.online?'':' off-line'}${layoutSize(d.id)?' wide':''}" role="listitem" data-id="${esc(d.id)}" style="--c1:${c[0]};--c2:${c[1]}">
    <button class="open" aria-label="${cardLabel(d)}, ${esc(cat)}${roomOf(d)?', '+esc(roomOf(d)):''}, ${esc(stateText(d))}${META.fav[d.id]?', מועדף':''}. פתיחת הגדרות"></button>
    <div class="ic${photoOf(d)?' photo':''}">${devArt(d)}</div>
    ${pc?`<button class="pw" role="switch" aria-checked="${on}" aria-label="${nm} פועל" ${d.online?'':'aria-disabled="true"'}>${svg('power',2.6)}</button>`:''}
