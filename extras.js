@@ -156,10 +156,17 @@ function bindReorder(v){
 function cardMenu(c){const id=c.dataset.id,nm=c.querySelector('.nm')?.textContent||'',wide=(META.size||{})[id]==='w',fav=!!META.fav[id],hid=!!(META.hidden||{})[id];
   sheet(esc(nm),`<div class="list">
     <button class="row row-btn" data-cm="fav"><span class="grow t">${fav?'הסרה מהמועדפים':'הוספה למועדפים'}</span>${svg('star',2.2)}</button>
+    <button class="row row-btn" data-cm="room"><span class="grow t">שינוי חדר</span>${svg('chev',2.2)}</button>
     <button class="row row-btn" data-cm="icon"><span class="grow t">שם ותמונה</span>${svg('edit',2.2)}</button>
     <button class="row row-btn" data-cm="size"><span class="grow t">${wide?'כרטיס קטן':'כרטיס רחב'}</span>${svg('grid',2.2)}</button>
     <button class="row row-btn" data-cm="hide"><span class="grow t">${hid?'הצגה במסך':'הסתרה מהמסך'}</span>${svg(hid?'plus':'close',2.2)}</button></div>
     <p class="s" style="margin:10px 4px 0">לשינוי הסדר: לוחצים על כרטיס וגוררים אותו.</p>`,(el,close)=>el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{const k=b.dataset.cm;close();
+      if(k==='room'){
+        const d=[...DEVS,EMBER,ROUTER,MOVA,ORALB].find(x=>x.id===id);
+        if(d&&typeof pickRoom==='function')pickRoom(d,()=>render());
+        else toast('לא ניתן לשייך חדר למכשיר זה כרגע');
+        return;
+      }
       const t={fav:'[data-fav]',icon:'[data-icon]',size:'[data-size]',hide:'[data-hide]'}[k];const live=document.querySelector(`.card[data-id="${CSS.escape(id)}"] ${t}`);live&&live.click()}))}
 function flip(grid,mutate){
   const items=[...grid.children],before=new Map(items.map(el=>[el,el.getBoundingClientRect()]));
