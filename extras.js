@@ -118,7 +118,7 @@ function editCardDetails(d){
 }
 /* ---------- reorder (drag, plus arrow buttons for VoiceOver) ---------- */
 function setReorder(on){REORDER=on;document.body.classList.toggle('reordering',on);const eb=document.getElementById('editBtn');eb&&eb.setAttribute('aria-pressed',on);render();}
-function saveOrderFrom(grid){const cards=[...grid.querySelectorAll('.card[data-id]')];const ids=new Set(cards.map(c=>c.dataset.id));const prior=Object.entries(META.order||{}).filter(([id])=>!ids.has(id));META.order=Object.fromEntries([...prior,...cards.map((c,i)=>[c.dataset.id,i+(+grid.dataset.base||0)])]);saveMeta()}
+function saveOrderFrom(grid){const cards=[...grid.querySelectorAll('.card[data-id]')];const scope=layoutScope();META.viewOrders=META.viewOrders||{};const previous=META.viewOrders[scope]||{};META.viewOrders[scope]={...previous,...Object.fromEntries(cards.map((c,i)=>[c.dataset.id,i+(+grid.dataset.base||0)]))};saveMeta()}
 function bindReorder(v){
   if(!REORDER)return;
   META.size=META.size||{};META.hidden=META.hidden||{};
@@ -129,7 +129,7 @@ function bindReorder(v){
     sheet('הוספת כרטיס',`<div class="list">${hs.map(d=>`<button class="row row-btn" data-unh="${esc(d.id)}"><span class="mini">${devArt(d)}</span><span class="grow t">${esc(dname(d))}</span>${svg('plus')}</button>`).join('')}</div>`,(el,cl)=>el.querySelectorAll('[data-unh]').forEach(b=>b.onclick=()=>{delete META.hidden[b.dataset.unh];saveMeta();cl();render()}))};
   v.querySelectorAll('.grid').forEach((grid,gi)=>{grid.dataset.base=gi*100;
     grid.querySelectorAll('.card').forEach(c=>{
-      const id=c.dataset.id;if(!id)return;const nm=esc(c.querySelector('.nm').textContent),wide=META.size[id]==='w';
+      const id=c.dataset.id;if(!id)return;const nm=esc(c.querySelector('.nm').textContent),wide=layoutSize(id);
       if(META.hidden[id])c.classList.add('hiddenCard');
       c.insertAdjacentHTML('beforeend',`<div class="editActions" role="group" aria-label="פעולות עריכה עבור ${nm}"><button class="edCorner edFav" data-fav aria-pressed="${!!META.fav[id]}" aria-label="מועדף - ${nm}">${svg('star',2.4)}</button><button class="edCorner edDel" data-hide aria-label="${META.hidden[id]?'הצגת':'הסתרת'} ${nm}">${svg(META.hidden[id]?'plus':'close',2.6)}</button><button class="edCorner edSize" data-size aria-label="${wide?'כרטיס מרובע':'כרטיס מלבני'} - ${nm}">${svg(wide?'close':'plus',2.6)}</button><button class="edCorner edIcon" data-icon aria-label="עריכת שם וסמליל - ${nm}" title="עריכת שם וסמליל">${svg('edit',2.4)}</button></div>`);
       // Editing controls must win hit testing over the full-card drag surface.
@@ -140,7 +140,7 @@ function bindReorder(v){
       });
       c.querySelector('[data-fav]').onclick=e=>{e.stopPropagation();META.fav[id]?delete META.fav[id]:META.fav[id]=true;saveMeta();render()};
       c.querySelector('[data-hide]').onclick=e=>{e.stopPropagation();META.hidden[id]?delete META.hidden[id]:META.hidden[id]=true;saveMeta();render()};
-      c.querySelector('[data-size]').onclick=e=>{e.stopPropagation();wide?delete META.size[id]:META.size[id]='w';saveMeta();render()};
+      c.querySelector('[data-size]').onclick=e=>{e.stopPropagation();META.viewSizes=META.viewSizes||{};const scope=layoutScope();META.viewSizes[scope]=META.viewSizes[scope]||{};META.viewSizes[scope][id]=wide?'s':'w';saveMeta();render()};
       c.querySelector('[data-icon]').onclick=e=>{e.stopPropagation();const d=window.DEVS_ALL.find(x=>x.id===id)||[typeof EMBER!=='undefined'?EMBER:null,typeof ROUTER!=='undefined'?ROUTER:null,typeof MOVA!=='undefined'?MOVA:null,typeof ORALB!=='undefined'?ORALB:null,typeof GTV!=='undefined'?GTV:null].find(x=>x&&x.id===id);if(!d&&id==='preview-projector')return editCardDetails({id,name:(META.names||{})[id]||'שלט המקרן',category:'tv'});if(!d&&id==='preview-beurer-bf500')return editCardDetails({id,name:(META.names||{})[id]||'משקל חכם',category:'other'});if(!d)return toast('המכשיר לא נמצא');editCardDetails(d)};
       c.querySelector('[data-size]').innerHTML=wide?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
       c.insertAdjacentHTML('beforeend',`<div class="reBtns"><button data-mv="-1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} קדימה">${svg('chev',2.4)}</button><button data-mv="1" aria-label="הזזת ${esc(c.querySelector('.nm').textContent)} אחורה">${svg('chev',2.4)}</button></div>`);
@@ -153,7 +153,7 @@ function bindReorder(v){
 
 /* smooth drag: the card follows the finger, a placeholder keeps its spot, neighbours slide (FLIP) */
 /* edit mode, like Smart Life: tap a card for its options */
-function cardMenu(c){const id=c.dataset.id,nm=c.querySelector('.nm')?.textContent||'',wide=(META.size||{})[id]==='w',fav=!!META.fav[id],hid=!!(META.hidden||{})[id];
+function cardMenu(c){const id=c.dataset.id,nm=c.querySelector('.nm')?.textContent||'',wide=layoutSize(id),fav=!!META.fav[id],hid=!!(META.hidden||{})[id];
   sheet(esc(nm),`<div class="list">
     <button class="row row-btn" data-cm="fav"><span class="grow t">${fav?'הסרה מהמועדפים':'הוספה למועדפים'}</span>${svg('star',2.2)}</button>
     <button class="row row-btn" data-cm="room"><span class="grow t">שינוי חדר</span>${svg('chev',2.2)}</button>
