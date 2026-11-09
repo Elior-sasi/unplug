@@ -1188,20 +1188,42 @@ window.HOH={EMBER,inApp:()=>!!IN_APP,link:()=>HEATER_LINK,devArt:(d,w)=>devArt(d
   setup:()=>nativeCall({action:'heaterSetup'}),full:()=>emberGo('open'),web:p=>emberGo(p),
   pickRoom:()=>pickRoom(EMBER,()=>render()),hide:()=>{META.ember=false;saveMeta();render();toast('הדוד הוסתר. אפשר להחזיר אותו מהוספת מכשיר')}};
 /* Offline maintenance card: no network control or verified device state. */
+const WATERBAR_SCHEDULE=[
+ ['15:39','18:19','16:39','19:19'],['16:06','18:46','17:06','19:46'],
+ ['16:29','19:09','17:29','20:09'],['16:50','19:30','17:50','20:30'],
+ ['17:12','19:52','18:12','20:52'],['17:28','20:08','18:28','21:08'],
+ ['17:26','20:06','18:26','21:06'],['17:03','19:43','18:03','20:43'],
+ ['16:26','19:06','17:26','20:06'],['15:47','18:27','16:47','19:27'],
+ ['15:21','18:01','16:21','19:01'],['15:19','17:59','16:19','18:59']
+];
 function waterbarCfg(){try{return JSON.parse(localStorage.getItem('homeon_waterbar_cfg')||'{}')}catch(e){return {}}}
+function waterbarIsSummer(d){
+ const y=d.getFullYear(),lastSunday=m=>{const x=new Date(y,m,0);x.setDate(x.getDate()-x.getDay());return x};
+ const march=lastSunday(3);march.setDate(march.getDate()-2);march.setHours(2,0,0,0);
+ const october=lastSunday(10);october.setHours(2,0,0,0);
+ return d>=march&&d<october;
+}
+function waterbarClock(){
+ const now=new Date(),summer=waterbarIsSummer(now),i=summer?2:0;
+ const nextFriday=new Date(now);nextFriday.setDate(now.getDate()+(5-now.getDay()+7)%7);nextFriday.setHours(0,0,0,0);
+ const entry=WATERBAR_SCHEDULE[nextFriday.getMonth()][i],exit=WATERBAR_SCHEDULE[nextFriday.getMonth()][i+1];
+ const asDate=(day,time)=>{const [h,m]=time.split(':').map(Number);const x=new Date(day);x.setHours(h,m,0,0);return x};
+ const friStart=asDate(nextFriday,entry),satEnd=asDate(new Date(nextFriday.getFullYear(),nextFriday.getMonth(),nextFriday.getDate()+1),exit);
+ let active=now>=friStart&&now<satEnd;
+ if(now.getDay()===6){const prev=new Date(now);prev.setDate(now.getDate()-1);const prevEntry=WATERBAR_SCHEDULE[prev.getMonth()][i];active=now>=asDate(prev,prevEntry)&&now<asDate(now,WATERBAR_SCHEDULE[prev.getMonth()][i+1]);}
+ return {active,entry,exit,summer,friday:nextFriday.toLocaleDateString('he-IL',{day:'numeric',month:'long'}),month:nextFriday.getMonth()};
+}
 function openWaterbar(){
- const cfg=waterbarCfg();
- const installed=cfg.installed||'2026-09-08';
+ const cfg=waterbarCfg(),clock=waterbarClock(),installed=cfg.installed||'2026-09-08';
  const recommendedFilter=installed?(()=>{const [y,m,d]=installed.split('-').map(Number);const dt=new Date(y,m-1+6,d);return [dt.getFullYear(),String(dt.getMonth()+1).padStart(2,'0'),String(dt.getDate()).padStart(2,'0')].join('-')})():'';
- const nextFriday=()=>{const d=new Date(),delta=(5-d.getDay()+7)%7;d.setDate(d.getDate()+delta);return d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})};
  sheet('בר מים נועם 2',`<div style="display:grid;gap:16px;text-align:right;direction:rtl;font-size:1.1rem">
- <p>💧 ניהול תחזוקה ומידע על מצב שבת. אין חיבור ישיר לבר המים.</p>\n <label>תאריך התקנה / החלפת סנן אחרונה <input id="wbInstalled" type="date" value="${esc(installed)}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
- <label>תאריך החלפת הסנן הבא (עד 6 חודשים, או מוקדם יותר לפי שימוש) <input id="wbFilter" type="date" value="${esc(cfg.filterDate||'2027-03-08')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
- <label>שעת כניסה משוערת למצב שבת ביום שישי <input id="wbShabbat" type="time" value="${esc(cfg.shabbatTime||'')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
- <p>יום שישי הקרוב: ${nextFriday()}. השעה שתזין היא לצורכי מעקב בלבד, ולא נלקחת מבר המים. יש לבדוק את זמן המעבר המדויק על המכשיר.</p>
- <p>לפי היצרן, נועם 2 עובר למצב שבת וחג אוטומטית. אין כאן אישור שהמעבר התרחש בפועל.</p>
+ <p>💧 ${clock.active?'לפי לוח הזמנים: במצב שבת':'לפי לוח הזמנים: במצב חול'} — חישוב לפי שעון המכשיר שלך, לא חיווי חי מבר המים.</p>
+ <p><strong>כניסה:</strong> יום שישי ${clock.friday}, ${clock.entry} · <strong>יציאה:</strong> מוצאי שבת ${clock.exit} (${clock.summer?'שעון קיץ':'שעון חורף'})</p>
+ <label>תאריך התקנה / החלפת סנן אחרונה <input id="wbInstalled" type="date" value="${esc(installed)}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
+ <label>תאריך החלפת הסנן הבא <input id="wbFilter" type="date" value="${esc(cfg.filterDate||recommendedFilter)}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
+ <p>לוח הזמנים נקבע לפי הטבלה שסיפקת. אין צורך בהזנת שעות ידנית. ייתכנו הבדלים אם שעון בר המים אינו מכוון.</p>
  <button id="wbSave" class="btn pri" style="min-height:52px;font-size:1.15rem">שמירה</button>
- </div>`,(el,close)=>{el.querySelector('#wbSave').onclick=()=>{const installed=el.querySelector('#wbInstalled').value,filterDate=el.querySelector('#wbFilter').value,shabbatTime=el.querySelector('#wbShabbat').value;localStorage.setItem('homeon_waterbar_cfg',JSON.stringify({installed,filterDate,shabbatTime}));close();render();toast('פרטי בר המים נשמרו במכשיר')}})
+ </div>`,(el,close)=>{el.querySelector('#wbSave').onclick=()=>{const installed=el.querySelector('#wbInstalled').value,filterDate=el.querySelector('#wbFilter').value;localStorage.setItem('homeon_waterbar_cfg',JSON.stringify({installed,filterDate}));close();render();toast('פרטי בר המים נשמרו במכשיר')}})
 }
 function openEmber(){
   if(typeof openFrame==='function'&&!window.EMBER_SHEET)return openFrame(EMBER,'/unplug/boiler/?in=unplug','דוד');
@@ -1298,7 +1320,7 @@ function card(d){
      <button class="open" aria-label="${cardLabel(d)}, ראוטר${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}מכשירים, מהירות ו-WiFi</div>${favButton(d)}</div>`}
-  if(d.id==='waterbar-noam2'){const nm=esc(dname(d));const cfg=waterbarCfg();const status='החלפת סנן: '+(cfg.filterDate||'2027-03-08');return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="waterbar-noam2"><button class="open" aria-label="${nm}, פרטי תחזוקה ומצב שבת משוער. פתיחה"></button><div class="ic" style="font-size:3rem" aria-hidden="true">💧</div><div class="nm">${nm}</div><div class="st">${esc(status)} · מצב שבת אוטומטי (ללא חיווי חי)</div></div>`}
+  if(d.id==='waterbar-noam2'){const nm=esc(dname(d));const cfg=waterbarCfg();const clock=waterbarClock();const status=(clock.active?'לפי לוח הזמנים: מצב שבת':'לפי לוח הזמנים: מצב חול')+' · כניסה '+clock.entry+' · יציאה '+clock.exit+' · סנן '+(cfg.filterDate||'08.03.2027');return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="waterbar-noam2"><button class="open" aria-label="${nm}, פרטי תחזוקה ומצב שבת משוער. פתיחה"></button><div class="ic" style="font-size:3rem" aria-hidden="true">💧</div><div class="nm">${nm}</div><div class="st">${esc(status)} · מצב שבת אוטומטי (ללא חיווי חי)</div></div>`}
   if(d.virtual){const nm=esc(dname(d));
     const status=IN_APP?(HEATER_LINK.checked?(HEATER_LINK.connected?(HEATER_LINK.on?('דולק'+(HEATER_LINK.left>0?' · נשארו '+Math.ceil(HEATER_LINK.left/60)+' דק׳':'')):'כבוי') :'מצב לא ידוע'):'בודק חיבור...'):'מצב לא ידוע · פתח לבדיקת הדוד';
     return `<div class="card${IN_APP&&HEATER_LINK.connected&&HEATER_LINK.on?' on':''}${layoutSize(d.id)?' wide':''}" role="listitem" data-id="${esc(d.id)}">
