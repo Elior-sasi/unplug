@@ -1195,7 +1195,7 @@ function openWaterbar(){
  const nextFriday=()=>{const d=new Date(),delta=(5-d.getDay()+7)%7;d.setDate(d.getDate()+delta);return d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})};
  sheet('בר מים נועם 2',`<div style="display:grid;gap:16px;text-align:right;direction:rtl;font-size:1.1rem">
  <p>💧 ניהול תחזוקה ומידע על מצב שבת. אין חיבור ישיר לבר המים.</p>\n <label>תאריך התקנה / החלפת סנן אחרונה <input id="wbInstalled" type="date" value="${esc(installed)}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
- <label>תאריך החלפת הסנן הבא <input id="wbFilter" type="date" value="${esc(cfg.filterDate||'')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
+ <label>תאריך החלפת הסנן הבא <input id="wbFilter" type="date" value="${esc(cfg.filterDate||'2027-03-08')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
  <label>שעת כניסה משוערת למצב שבת ביום שישי <input id="wbShabbat" type="time" value="${esc(cfg.shabbatTime||'')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
  <p>יום שישי הקרוב: ${nextFriday()}. השעה שתזין היא לצורכי מעקב בלבד, ולא נלקחת מבר המים. יש לבדוק את זמן המעבר המדויק על המכשיר.</p>
  <p>לפי היצרן, נועם 2 עובר למצב שבת וחג אוטומטית. אין כאן אישור שהמעבר התרחש בפועל.</p>
@@ -1297,7 +1297,7 @@ function card(d){
      <button class="open" aria-label="${cardLabel(d)}, ראוטר${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}מכשירים, מהירות ו-WiFi</div>${favButton(d)}</div>`}
-  if(d.id==='waterbar-noam2'){const nm=esc(dname(d));const cfg=waterbarCfg();const status=cfg.filterDate?'סנן: '+cfg.filterDate:'הגדר מועד החלפת סנן';return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="waterbar-noam2"><button class="open" aria-label="${nm}, פרטי תחזוקה ומצב שבת משוער. פתיחה"></button><div class="ic" style="font-size:3rem" aria-hidden="true">💧</div><div class="nm">${nm}</div><div class="st">${esc(status)} · מצב שבת אוטומטי (ללא חיווי חי)</div></div>`}
+  if(d.id==='waterbar-noam2'){const nm=esc(dname(d));const cfg=waterbarCfg();const status='החלפת סנן: '+(cfg.filterDate||'2027-03-08');return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="waterbar-noam2"><button class="open" aria-label="${nm}, פרטי תחזוקה ומצב שבת משוער. פתיחה"></button><div class="ic" style="font-size:3rem" aria-hidden="true">💧</div><div class="nm">${nm}</div><div class="st">${esc(status)} · מצב שבת אוטומטי (ללא חיווי חי)</div></div>`}
   if(d.virtual){const nm=esc(dname(d));
     const status=IN_APP?(HEATER_LINK.checked?(HEATER_LINK.connected?(HEATER_LINK.on?('דולק'+(HEATER_LINK.left>0?' · נשארו '+Math.ceil(HEATER_LINK.left/60)+' דק׳':'')):'כבוי') :'מצב לא ידוע'):'בודק חיבור...'):'מצב לא ידוע · פתח לבדיקת הדוד';
     return `<div class="card${IN_APP&&HEATER_LINK.connected&&HEATER_LINK.on?' on':''}${layoutSize(d.id)?' wide':''}" role="listitem" data-id="${esc(d.id)}">
