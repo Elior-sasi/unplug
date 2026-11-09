@@ -1219,17 +1219,18 @@ function openWaterbar(){
  const recommendedFilter=installed?(()=>{const [y,m,d]=installed.split('-').map(Number);const dt=new Date(y,m-1+6,d);return [dt.getFullYear(),String(dt.getMonth()+1).padStart(2,'0'),String(dt.getDate()).padStart(2,'0')].join('-')})():'';
  const filter=cfg.filterDate||recommendedFilter;
  const days=filter?(()=>{const [y,m,d]=filter.split('-').map(Number);return Math.ceil((new Date(y,m-1,d)-new Date().setHours(0,0,0,0))/86400000)})():null;
+ const filterDisplay=filter?(()=>{const [y,m,d]=filter.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'})})():'לא נקבע';
  const due=days===null?'לא הוגדר תאריך':days<0?'באיחור של '+Math.abs(days)+' ימים':days===0?'החלפה היום':'עוד '+days+' ימים';
  sheet('בר מים נועם 2',`<div class="wb-form" style="direction:rtl;text-align:right;display:flex;flex-direction:column;gap:12px">
  <div class="dhero"><div class="dh-art" aria-hidden="true"><img src="real/custom/afikim_noam2_water_dispenser.png" alt="" style="width:100%;max-height:180px;object-fit:contain"></div><div class="dh-state">${clock.active?'מצב שבת':'מצב חול'}</div><div class="dh-sub">מצב משוער לפי לוח הזמנים · ללא חיווי חי</div></div>
  <div class="sec-h"><h2>שבת הקרובה</h2></div>
  <div class="readouts"><div class="ro"><div class="k">כניסה · יום שישי ${esc(clock.friday)}</div><div class="n">${esc(clock.entry)}</div></div><div class="ro"><div class="k">יציאה · מוצאי שבת</div><div class="n">${esc(clock.exit)}</div></div></div>
  <div class="sec-h"><h2>תחזוקת סנן</h2></div>
- <div class="readouts"><div class="ro"><div class="k">החלפת סנן הבאה</div><div class="n" style="font-size:1.12rem">${esc(due)}</div></div><div class="ro"><div class="k">תאריך החלפה</div><div class="n" style="font-size:1.08rem">${esc(filter||'לא נקבע')}</div></div></div>
- <details style="border-top:1px solid #ffffff1b;padding-top:12px"><summary style="cursor:pointer;font-weight:700;padding:10px 0">הגדרות תחזוקה</summary>
- <div class="field"><label for="wbInstalled">תאריך התקנה / החלפת סנן אחרונה</label><input id="wbInstalled" type="date" value="${esc(installed)}" style="width:100%;min-width:0"></div>
+ <div class="readouts"><div class="ro"><div class="k">החלפת סנן הבאה</div><div class="n" style="font-size:1.12rem">${esc(due)}</div></div><div class="ro"><div class="k">תאריך החלפה</div><div class="n" style="font-size:1rem;overflow-wrap:normal;white-space:normal;line-height:1.5">${esc(filterDisplay)}</div></div></div>
+ <details id="wbMaintenance" style="border-top:1px solid #ffffff1b;padding-top:12px"><summary style="cursor:pointer;font-weight:700;padding:10px 0">הגדרות תחזוקה</summary>
+ <div style="padding-top:12px"><div class="field"><label for="wbInstalled">תאריך התקנה / החלפת סנן אחרונה</label><input id="wbInstalled" type="date" value="${esc(installed)}" style="width:100%;min-width:0"></div>
  <div class="field"><label for="wbFilter">תאריך החלפת הסנן הבא</label><input id="wbFilter" type="date" value="${esc(filter)}" style="width:100%;min-width:0"></div>
- <button id="wbSave" class="btn pri wide" style="min-height:48px">שמירת תאריכים</button></details>
+ <button id="wbSave" class="btn pri wide" style="min-height:48px">שמירת תאריכים</button></div></details>
  <p class="s">הזמנים מחושבים לפי הטבלה שסיפקת ושעון הטלפון. מצב המכשיר בפועל עשוי להיות שונה.</p>
  </div>`,(el,close)=>{el.querySelector('#wbSave').onclick=()=>{const installed=el.querySelector('#wbInstalled').value,filterDate=el.querySelector('#wbFilter').value;localStorage.setItem('homeon_waterbar_cfg',JSON.stringify({installed,filterDate}));close();render();toast('פרטי בר המים נשמרו במכשיר')}})
 }
