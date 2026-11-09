@@ -898,7 +898,7 @@ function deviceModel(d){
   }
   return '';
 }
-function modelLine(d){const m=deviceModel(d);return m?`<div class="model" aria-hidden="true" title="${esc(m)}">(${esc(m)})</div>`:''}
+function modelLine(d){const m=deviceModel(d);return m?`<div class="model" aria-hidden="true" title="${esc(m)}">${esc(m)}</div>`:''}
 function cardLabel(d){const m=deviceModel(d);return esc(dname(d))+(m?', דגם '+esc(m):'')}
 const fmtNum=(raw,f)=>{const v=f&&f.values||{};const sc=+v.scale||0;const n=(+raw)/10**sc;const u=v.unit?unitHe(v.unit):'';return(sc?n.toFixed(Math.min(sc,1)):String(n))+(u?(/^[°%]$/.test(u)?'':' ')+u:'')};
 const unitHe=u=>({'℃':'°','°C':'°','W':'וואט','V':'וולט','mA':'מיליאמפר','kwh':'קוט״ש','kWh':'קוט״ש','s':'שנ׳','min':'דק׳','%':'%'}[u]??u);
@@ -1014,7 +1014,7 @@ function viewDevices(v){
   if(q)list=list.filter(d=>(dname(d)+' '+catOf(d)[0]+' '+roomOf(d)).toLowerCase().includes(q));
   list=list.slice().sort((x,y)=>(layoutOrder(x.id))-(layoutOrder(y.id))||(META.fav[y.id]?1:0)-(META.fav[x.id]?1:0));
   const W=DEVS.reduce((t,d)=>t+watts(d),0),hasW=DEVS.some(d=>d.status.cur_power!=null);
-  const chips=[['all','הכול'],['fav','מועדפים'],...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים · ${offN}`]]:[])];
+  const chips=[['all','הכול'],['fav','מועדפים'],...rooms.map(r=>[r,r]),...(offN?[['off',`מנותקים (${offN})`]]:[])];
   const H=`<form class="search" id="qF" role="search" autocomplete="off">${svg('search')}<label class="sr" for="q">חיפוש מכשיר או פקודה</label><input id="q" type="search" enterkeyhint="go" placeholder="חיפוש או פקודה" aria-describedby="qHint" value="${esc(Q)}" autocomplete="off"><button type="button" class="cmdMic" id="cmdMic" aria-label="הכתבה קולית">${svg('mic',2.2)}</button><span class="sr" id="qHint">אפשר לכתוב שם של מכשיר, או פקודה כמו: תכבה את המזגן בעוד שעה</span></form>`+
       (isCmd?`<button class="btn pri wide qDo" id="qDo">${svg('play')}בצע: ${esc(cmdP.actions.map(a=>dname(a.d)).slice(0,3).join(', ')+(cmdP.actions.length>3?` ועוד ${cmdP.actions.length-3}`:''))}${cmdP.when?' ב-'+hm(cmdP.when):''}</button>`:'')+
       (typeof attentionHtml==='function'&&ROOM==='all'&&!q&&!isCmd?attentionHtml():'')+(typeof liveStripHtml==='function'?liveStripHtml():'')+(SCENES.length?`<div class="quick"><button class="btn pri" id="sc0">${svg('play')}${esc(SCENES[0].name)}</button></div>`:'')+
