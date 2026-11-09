@@ -163,13 +163,13 @@ function bindReorder(v){
 function cardMenu(c){
  const id=c.dataset.id,nm=c.querySelector('.nm')?.textContent||'',wide=layoutSize(id),fav=!!META.fav[id],hid=!!(META.hidden||{})[id];
  sheet(esc(nm),`<div class="list">
- <button class="row row-btn" data-cm="size"><span class="grow t">${wide?'הקטנת הכרטיס':'הגדלת הכרטיס'}</span>${svg('grid',2.2)}</button>
+ <button class="row row-btn" data-cm="move-prev"><span class="grow t">הזזה קדימה</span>${svg('chev',2.2)}</button>\n <button class="row row-btn" data-cm="move-next"><span class="grow t">הזזה אחורה</span>${svg('chev',2.2)}</button>\n <button class="row row-btn" data-cm="reorder"><span class="grow t">סידור כרטיסים בגרירה</span>${svg('grid',2.2)}</button>\n <button class="row row-btn" data-cm="size"><span class="grow t">${wide?'הקטנת הכרטיס':'הגדלת הכרטיס'}</span>${svg('grid',2.2)}</button>
  <button class="row row-btn" data-cm="fav"><span class="grow t">${fav?'הסרה מהמועדפים':'הוספה למועדפים'}</span>${svg('star',2.2)}</button>
  <button class="row row-btn" data-cm="room"><span class="grow t">שינוי חדר</span>${svg('chev',2.2)}</button>
  <button class="row row-btn" data-cm="icon"><span class="grow t">שם ותמונה</span>${svg('edit',2.2)}</button>
  <button class="row row-btn" data-cm="hide"><span class="grow t">${hid?'הצגה במסך':'הסתרה מהמסך'}</span>${svg(hid?'plus':'close',2.2)}</button></div>
- <p class="s">לשינוי סדר הכרטיסים השתמש בעריכת המסך.</p>`,(el,close)=>el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{
- const k=b.dataset.cm;close();
+ <p class="s">אפשר גם להזיז כרטיסים באמצעות גרירה במצב סידור.</p>`,(el,close)=>el.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{
+ const k=b.dataset.cm;close();\n if(k==='reorder'){setReorder(true);return}\n if(k==='move-prev'||k==='move-next'){const live=[...document.querySelectorAll('.card[data-id]')].find(x=>x.dataset.id===id);const grid=live?.closest('.grid');if(!grid){toast('לא נמצאה רשימת הכרטיסים');return}const cards=[...grid.querySelectorAll('.card[data-id]')];const index=cards.indexOf(live),target=cards[index+(k==='move-prev'?-1:1)];if(!target){toast('הכרטיס כבר בקצה הרשימה');return}if(k==='move-prev')grid.insertBefore(live,target);else grid.insertBefore(target,live);saveOrderFrom(grid);render();return}
  if(k==='size'){META.viewSizes=META.viewSizes||{};const scope=layoutScope();META.viewSizes[scope]=META.viewSizes[scope]||{};META.viewSizes[scope][id]=wide?'s':'w';saveMeta();render();return}
  if(k==='fav'){META.fav[id]?delete META.fav[id]:META.fav[id]=true;saveMeta();render();return}
  if(k==='hide'){META.hidden=META.hidden||{};META.hidden[id]?delete META.hidden[id]:META.hidden[id]=true;saveMeta();render();return}
