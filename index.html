@@ -1882,13 +1882,13 @@ function renameRoom(o,after){
   saveMeta();render();toast('השם עודכן');after&&after();return true;
 }
 function manageRooms(focusRoom){
-  const H=META.home,rooms=()=>roomsOf(H),devs=DEVS.filter(d=>homeOf(d)===H);
+  const H=META.home,rooms=()=>roomsOf(H),devs=devicesForHome(H);
   const multi=META.homes.length>1;
   sheet('חדרים בבית '+esc(curHome().name),`<div class="list" id="rl"></div><button class="btn wide" id="ra">${svg('plus')}חדר חדש</button>
     <div class="sec-h"><h2>שיוך מכשירים</h2></div><div class="list" id="dl"></div>`,(el)=>{
     const draw=()=>{
-      el.querySelector('#rl').innerHTML=rooms().length?rooms().map(r=>`<div class="row"><button class="row-btn grow" data-ren="${esc(r)}" aria-label="שינוי שם לחדר ${esc(r)}" style="display:block"><span class="t">${esc(r)} <span aria-hidden="true" style="display:inline-block;width:16px;height:16px;vertical-align:-2px;color:var(--gold)">${svg('edit')}</span></span><br><span class="s">${DEVS.filter(d=>homeOf(d)===H&&roomOf(d)===r).length} מכשירים · הקש לשינוי שם</span></button><button class="icbtn" data-del="${esc(r)}" aria-label="מחיקת חדר ${esc(r)}">${svg('trash')}</button></div>`).join(''):`<div class="row"><span class="s">עוד אין חדרים בבית הזה</span></div>`;
-      el.querySelector('#dl').innerHTML=DEVS.filter(d=>homeOf(d)===H).map(d=>`<div class="ctl"><div class="ctl-h"><span class="mini">${devArt(d)}</span><span class="t grow" style="flex:1">${esc(dname(d))}</span></div>
+      el.querySelector('#rl').innerHTML=rooms().length?rooms().map(r=>`<div class="row"><button class="row-btn grow" data-ren="${esc(r)}" aria-label="שינוי שם לחדר ${esc(r)}" style="display:block"><span class="t">${esc(r)} <span aria-hidden="true" style="display:inline-block;width:16px;height:16px;vertical-align:-2px;color:var(--gold)">${svg('edit')}</span></span><br><span class="s">${devs.filter(d=>roomOf(d)===r).length} מכשירים · הקש לשינוי שם</span></button><button class="icbtn" data-del="${esc(r)}" aria-label="מחיקת חדר ${esc(r)}">${svg('trash')}</button></div>`).join(''):`<div class="row"><span class="s">עוד אין חדרים בבית הזה</span></div>`;
+      el.querySelector('#dl').innerHTML=devs.map(d=>`<div class="ctl"><div class="ctl-h"><span class="mini">${devArt(d)}</span><span class="t grow" style="flex:1">${esc(dname(d))}</span></div>
         <div class="field"><label for="ra_${esc(d.id)}" class="sr">חדר של ${esc(dname(d))}</label><select id="ra_${esc(d.id)}" data-dr="${esc(d.id)}"><option value="">ללא חדר</option>${rooms().map(r=>`<option${roomOf(d)===r?' selected':''}>${esc(r)}</option>`).join('')}</select></div>
         ${multi?`<div class="field"><label for="hm_${esc(d.id)}">בית</label><select id="hm_${esc(d.id)}" data-dh="${esc(d.id)}">${META.homes.map(h=>`<option value="${h.id}"${homeOf(d)===h.id?' selected':''}>${esc(h.name)}</option>`).join('')}</select></div>`:''}</div>`).join('')||`<div class="row"><span class="s">אין מכשירים בבית הזה</span></div>`;
       el.querySelectorAll('[data-dr]').forEach(x=>x.onchange=()=>{x.value?META.rooms[x.dataset.dr]=x.value:delete META.rooms[x.dataset.dr];saveMeta();render();toast('נשמר')});
