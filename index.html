@@ -745,12 +745,14 @@ const homeDevices=()=>DEVS.filter(inHome)
   .concat(META.router===false?[]:[ROUTER].filter(inHome))
   .concat(META.mova===false?[]:[MOVA].filter(inHome))
   .concat(META.oralb===false?[]:[ORALB].filter(inHome))
+  .concat(META.waterbar===false?[]:[WATERBAR].filter(inHome))
   .concat(typeof GTV!=='undefined'&&META.tv?[GTV].filter(inHome):[]);
 const devicesForHome=h=>DEVS.filter(d=>homeOf(d)===h)
   .concat(META.ember===false?[]:[EMBER].filter(d=>homeOf(d)===h))
   .concat(META.router===false?[]:[ROUTER].filter(d=>homeOf(d)===h))
   .concat(META.mova===false?[]:[MOVA].filter(d=>homeOf(d)===h))
   .concat(META.oralb===false?[]:[ORALB].filter(d=>homeOf(d)===h))
+  .concat(META.waterbar===false?[]:[WATERBAR].filter(d=>homeOf(d)===h))
   .concat(typeof GTV!=='undefined'&&META.tv?[GTV].filter(d=>homeOf(d)===h):[]);
 const roomHomeOf=r=>META.homes.some(h=>h.id===META.roomHome[r])?META.roomHome[r]:META.homes[0].id;
 const roomsOf=h=>META.roomList.filter(r=>roomHomeOf(r)===h);
@@ -1046,6 +1048,7 @@ function viewDevices(v){
   v.querySelectorAll('.card').forEach(c=>{const d=DEVS.find(x=>x.id===c.dataset.id);
      const fb=c.querySelector('[data-fav-toggle]');if(fb&&d){fb.onclick=e=>{e.stopPropagation();META.fav[d.id]?delete META.fav[d.id]:META.fav[d.id]=true;saveMeta();render()}}
 
+    if(c.dataset.id==='waterbar-noam2'){c.querySelector('.open').onclick=()=>openWaterbar();return}
     if(!d)return; /* preview cards (projector, scale) keep their own handlers */
     if(d&&d.id==='gtv'){c.querySelector('.open').onclick=()=>openProjectorPreview(d);const p=c.querySelector('.pw');if(p)p.onclick=()=>openProjectorPreview(d);return}
     if(d&&d.id==='router'){c.querySelector('.open').onclick=()=>IN_APP?nativeCall({action:'openRouter'}):openRouter();return}
@@ -1068,6 +1071,7 @@ function groupedRooms(list,rooms){
 }
 /* Switcher water heater - controlled by the Ember app on the phone (home WiFi), via ember:// links */
 const EMBER={id:'ember',name:'דוד',category:'ember',online:true,virtual:true,status:{},functions:[],statusRange:[]};
+const WATERBAR={id:'waterbar-noam2',name:'בר מים נועם 2',category:'waterbar',online:false,virtual:true,status:{},functions:[],statusRange:[]};
 const ROUTER={id:'router',name:'ראוטר',category:'router',online:true,virtual:true,status:{},functions:[],statusRange:[]};
 const MOVA={id:'mova-e30-ultra',name:'MOVA E30 Ultra',category:'vacuum',online:true,virtual:true,status:{},functions:[],statusRange:[]};
 const ORALB={id:'oralb-io2',name:'מברשת השיניים שלי',category:'toothbrush',online:true,virtual:true,status:{},functions:[],statusRange:[]};
@@ -1183,6 +1187,20 @@ window.HOH={EMBER,inApp:()=>!!IN_APP,link:()=>HEATER_LINK,devArt:(d,w)=>devArt(d
   after:fn=>{const f=document.querySelector('.breeze');if(f)f.remove();document.querySelector('.app').removeAttribute('aria-hidden');setTimeout(fn,50)},
   setup:()=>nativeCall({action:'heaterSetup'}),full:()=>emberGo('open'),web:p=>emberGo(p),
   pickRoom:()=>pickRoom(EMBER,()=>render()),hide:()=>{META.ember=false;saveMeta();render();toast('הדוד הוסתר. אפשר להחזיר אותו מהוספת מכשיר')}};
+/* Offline maintenance card: no network control or verified device state. */
+function waterbarCfg(){try{return JSON.parse(localStorage.getItem('homeon_waterbar_cfg')||'{}')}catch(e){return {}}}
+function openWaterbar(){
+ const cfg=waterbarCfg();
+ const nextFriday=()=>{const d=new Date(),delta=(5-d.getDay()+7)%7;d.setDate(d.getDate()+delta);return d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})};
+ sheet('בר מים נועם 2',`<div style="display:grid;gap:16px;text-align:right;direction:rtl;font-size:1.1rem">
+ <p>💧 ניהול תחזוקה ומידע על מצב שבת. אין חיבור ישיר לבר המים.</p>
+ <label>תאריך החלפת הסנן הבא <input id="wbFilter" type="date" value="${esc(cfg.filterDate||'')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
+ <label>שעת כניסה משוערת למצב שבת ביום שישי <input id="wbShabbat" type="time" value="${esc(cfg.shabbatTime||'')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
+ <p>יום שישי הקרוב: ${nextFriday()}. השעה שתזין היא לצורכי מעקב בלבד, ולא נלקחת מבר המים. יש לבדוק את זמן המעבר המדויק על המכשיר.</p>
+ <p>לפי היצרן, נועם 2 עובר למצב שבת וחג אוטומטית. אין כאן אישור שהמעבר התרחש בפועל.</p>
+ <button id="wbSave" class="btn pri" style="min-height:52px;font-size:1.15rem">שמירה</button>
+ </div>`,(el,close)=>{el.querySelector('#wbSave').onclick=()=>{const filterDate=el.querySelector('#wbFilter').value,shabbatTime=el.querySelector('#wbShabbat').value;localStorage.setItem('homeon_waterbar_cfg',JSON.stringify({filterDate,shabbatTime}));close();render();toast('פרטי בר המים נשמרו במכשיר')}})
+}
 function openEmber(){
   if(typeof openFrame==='function'&&!window.EMBER_SHEET)return openFrame(EMBER,'/unplug/boiler/?in=unplug','דוד');
   openEmberSheet()}
@@ -1278,6 +1296,7 @@ function card(d){
      <button class="open" aria-label="${cardLabel(d)}, ראוטר${roomOf(d)?', '+esc(roomOf(d)):''}. פתיחה"></button>
      <div class="ic">${devArt(d)}</div>
      <div class="nm" aria-hidden="true">${nm}</div>${modelLine(d)}<div class="st" aria-hidden="true">${ROOM==='all'&&roomOf(d)?esc(roomOf(d))+' · ':''}מכשירים, מהירות ו-WiFi</div>${favButton(d)}</div>`}
+  if(d.id==='waterbar-noam2'){const nm=esc(dname(d));const cfg=waterbarCfg();const status=cfg.filterDate?'סנן: '+cfg.filterDate:'הגדר מועד החלפת סנן';return `<div class="card${layoutSize(d.id)?' wide':''}" role="listitem" data-id="waterbar-noam2"><button class="open" aria-label="${nm}, פרטי תחזוקה ומצב שבת משוער. פתיחה"></button><div class="ic" style="font-size:3rem" aria-hidden="true">💧</div><div class="nm">${nm}</div><div class="st">${esc(status)} · מצב שבת אוטומטי (ללא חיווי חי)</div></div>`}
   if(d.virtual){const nm=esc(dname(d));
     const status=IN_APP?(HEATER_LINK.checked?(HEATER_LINK.connected?(HEATER_LINK.on?('דולק'+(HEATER_LINK.left>0?' · נשארו '+Math.ceil(HEATER_LINK.left/60)+' דק׳':'')):'כבוי') :'מצב לא ידוע'):'בודק חיבור...'):'מצב לא ידוע · פתח לבדיקת הדוד';
     return `<div class="card${IN_APP&&HEATER_LINK.connected&&HEATER_LINK.on?' on':''}${layoutSize(d.id)?' wide':''}" role="listitem" data-id="${esc(d.id)}">
