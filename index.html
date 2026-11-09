@@ -110,6 +110,7 @@ nav.bar button[aria-current="page"]{color:var(--acc-txt)}
 .scrim{position:fixed;inset:0;z-index:30;display:flex;justify-content:center}
 .sheet{width:100%;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(120% 40% at 50% 0,#2e2210,transparent 60%),var(--bg);padding:calc(10px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;animation:sheetIn .28s cubic-bezier(.2,.8,.2,1)}
 .sheet>*{width:100%;max-width:608px;margin-inline:auto}
+.sheet{box-sizing:border-box;min-width:0;max-height:100dvh}.sheet>*{box-sizing:border-box;min-width:0}.sheet input{box-sizing:border-box;max-width:100%;min-width:0}.sheet label{display:block;overflow-wrap:anywhere}.sheet p{overflow-wrap:anywhere}.sheet .wb-form{display:grid;gap:14px;min-width:0}.sheet .wb-form input{display:block;width:100%;margin-top:8px;padding:12px;font-size:1rem;min-height:52px}.sheet .wb-form label{font-size:1rem;line-height:1.5}.sheet .wb-form p{font-size:1rem;line-height:1.55;margin:0}
 @keyframes sheetIn{from{transform:translateX(-24px);opacity:0}to{transform:none;opacity:1}}
 .sheet-h{display:flex;align-items:center;gap:10px}
 .sheet-h h2{flex:1;margin:0;font-size:1.6rem;font-weight:700;letter-spacing:-.3px;overflow-wrap:anywhere;text-align:start}
@@ -1216,7 +1217,7 @@ function waterbarClock(){
 function openWaterbar(){
  const cfg=waterbarCfg(),clock=waterbarClock(),installed=cfg.installed||'2026-09-08';
  const recommendedFilter=installed?(()=>{const [y,m,d]=installed.split('-').map(Number);const dt=new Date(y,m-1+6,d);return [dt.getFullYear(),String(dt.getMonth()+1).padStart(2,'0'),String(dt.getDate()).padStart(2,'0')].join('-')})():'';
- sheet('בר מים נועם 2',`<div style="display:grid;gap:16px;text-align:right;direction:rtl;font-size:1.1rem">
+ sheet('בר מים נועם 2',`<div class="wb-form" style="text-align:right;direction:rtl">
  <p>💧 ${clock.active?'לפי לוח הזמנים: במצב שבת':'לפי לוח הזמנים: במצב חול'} — חישוב לפי שעון המכשיר שלך, לא חיווי חי מבר המים.</p>
  <p><strong>כניסה:</strong> יום שישי ${clock.friday}, ${clock.entry} · <strong>יציאה:</strong> מוצאי שבת ${clock.exit} (${clock.summer?'שעון קיץ':'שעון חורף'})</p>
  <label>תאריך התקנה / החלפת סנן אחרונה <input id="wbInstalled" type="date" value="${esc(installed)}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
