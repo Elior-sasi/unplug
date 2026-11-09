@@ -1192,10 +1192,11 @@ function waterbarCfg(){try{return JSON.parse(localStorage.getItem('homeon_waterb
 function openWaterbar(){
  const cfg=waterbarCfg();
  const installed=cfg.installed||'2026-09-08';
+ const recommendedFilter=installed?(()=>{const [y,m,d]=installed.split('-').map(Number);const dt=new Date(y,m-1+6,d);return [dt.getFullYear(),String(dt.getMonth()+1).padStart(2,'0'),String(dt.getDate()).padStart(2,'0')].join('-')})():'';
  const nextFriday=()=>{const d=new Date(),delta=(5-d.getDay()+7)%7;d.setDate(d.getDate()+delta);return d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})};
  sheet('בר מים נועם 2',`<div style="display:grid;gap:16px;text-align:right;direction:rtl;font-size:1.1rem">
  <p>💧 ניהול תחזוקה ומידע על מצב שבת. אין חיבור ישיר לבר המים.</p>\n <label>תאריך התקנה / החלפת סנן אחרונה <input id="wbInstalled" type="date" value="${esc(installed)}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
- <label>תאריך החלפת הסנן הבא <input id="wbFilter" type="date" value="${esc(cfg.filterDate||'2027-03-08')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
+ <label>תאריך החלפת הסנן הבא (עד 6 חודשים, או מוקדם יותר לפי שימוש) <input id="wbFilter" type="date" value="${esc(cfg.filterDate||'2027-03-08')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
  <label>שעת כניסה משוערת למצב שבת ביום שישי <input id="wbShabbat" type="time" value="${esc(cfg.shabbatTime||'')}" style="display:block;width:100%;font-size:1.15rem;padding:12px"></label>
  <p>יום שישי הקרוב: ${nextFriday()}. השעה שתזין היא לצורכי מעקב בלבד, ולא נלקחת מבר המים. יש לבדוק את זמן המעבר המדויק על המכשיר.</p>
  <p>לפי היצרן, נועם 2 עובר למצב שבת וחג אוטומטית. אין כאן אישור שהמעבר התרחש בפועל.</p>
