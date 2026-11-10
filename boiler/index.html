@@ -267,7 +267,7 @@ function draw(){
     part('pDur','');part('pMoreRow','');part('pMore','');return fit()}
   part('pMsg','');
   const i=DUR.findIndex(d=>d[0]===pick);
-  const ctl=on?`<div class="ctl" style="justify-content:center"><button class="pill" id="add15" aria-label="עוד 15 דקות">${I.plus}<span aria-hidden="true">15 דק׳</span></button></div>`
+  const ctl=on?`<div class="ctl" style="justify-content:center;gap:12px"><button class="rc" id="add15" aria-label="הוסף 15 דקות">+</button><span class="pill" aria-live="polite" style="pointer-events:none">נותרו ${left?left+" דק׳":"ללא טיימר"}</span><button class="rc" id="less15" aria-label="הפחת 15 דקות"${!left||left<=15?" disabled":""}>−</button></div>`
     :`<div class="ctl"><button class="rc" id="tPlus" aria-label="יותר זמן. עכשיו ${esc(mins(pick))}"${i>=DUR.length-2?' disabled':''}>+</button>
       <button class="pill" id="tInf" aria-pressed="${pick===0}">${QI.inf}<span>ללא טיימר</span></button>
       <button class="rc" id="tMinus" aria-label="פחות זמן. עכשיו ${esc(mins(pick))}"${i===0?' disabled':''}>−</button></div>`;
@@ -339,6 +339,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.id==='back'){try{P.postMessage('unplug-close','*')}catch(_){}return}
   if(b.id==='power'){const on=H.link().on;return on?cmd('off',0,'הדוד כבה','כיבוי'):cmd('on',pick,'הדוד דולק'+(pick?' ל-'+mins(pick):''),'הדלקה ל-'+mins(pick))}
   if(b.id==='add15')return cmd('add',15,'נוספו 15 דקות','הוספת 15 דק׳');
+  if(b.id==='less15'){const left=Math.ceil(H.link().left/60);if(left<=15)return;return cmd('on',left-15,'הזמן קוצר ב-15 דקות','קיצור ב-15 דק׳')}
   if(b.id==='menu'||b.id==='menu2')return openMenu();
   if(b.id==='tInf'){pick=0;LS.set('ember_pick',0);buzz();draw();return say('ללא טיימר')}
   if(b.dataset.q){const m=+b.dataset.q;pick=m;LS.set('ember_pick',m);buzz();if(H.link().on)return cmd('on',m,'הטיימר עודכן ל-'+mins(m),'הדלקה ל-'+mins(m));draw();return say('נבחר '+mins(m))}
