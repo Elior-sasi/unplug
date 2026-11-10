@@ -1368,7 +1368,7 @@ function openBreeze(d){
 /* the toaster app, inside HomeOn, on the same plug */
 function openToaster(d){LSset('toaster_key',CFG.key);LSset('toaster_dev',d.id);openFrame(d,'/unplug/toaster/?in=unplug','טוסטר')}
 /* device pages: one stable address per version, so the phone keeps them in its cache and they open at once */
-const PAGES_V='20261109c';
+const PAGES_V='20261110-boiler-adjust';
 function openFrame(d,src,what){
   const w=document.createElement('div');w.className='breeze';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label',dname(d));
   w.innerHTML=`<iframe src="${src}${src.includes('?')?'&':'?'}v=${PAGES_V}" title="${esc(what)} - שליטה ב${esc(dname(d))}" allow="clipboard-write"></iframe>`;
