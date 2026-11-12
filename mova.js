@@ -175,6 +175,7 @@ window.openMovaSheet=function(){
     function drawMore(loginOnly){
       sec('mvMore',`<div class="list">
         ${IN_APP?`<button class="row row-btn" id="movaPair"><span class="grow"><span class="t">זיהוי השואב בראוטר</span><br><span class="s">${META.movaMac?(MOVA_WIFI.visible?'מחובר לרשת הבית':'לא נראה ברשת כרגע'):'לא הוגדר'}</span></span>${svg('chev')}</button>`:''}
+        <a class="row row-btn" href="/unplug/mova-voice/" style="text-decoration:none;color:inherit"><span class="grow"><span class="t">אולפן קול בעברית</span><br><span class="s">כתיבת משפטים, השמעת הדגמה ושמירה · עדיין לא משמיע דרך השואב</span></span>${svg('chev')}</a>
         <button class="row row-btn" id="movaRoom"><span class="grow"><span class="t">חדר</span><br><span class="s">${esc(roomOf(MOVA)||'בלי חדר')}</span></span>${svg('chev')}</button>
         ${!loginOnly&&MV.d&&MV.d.model?`<div class="row"><span class="grow"><span class="t">דגם</span><br><span class="s" dir="ltr">${esc(MV.d.model)}${MV.d.fw?' · '+esc(MV.d.fw):''}</span></span></div>`:''}
         ${!loginOnly&&MV.linked?`<button class="row row-btn" id="movaOut"><span class="grow t">ניתוק החשבון מ-HomeOn</span>${svg('close')}</button>`:''}
