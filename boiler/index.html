@@ -121,7 +121,7 @@ header h1{font-size:2rem;font-weight:800}
 .ebar .bi{width:44px;height:44px;border-radius:14px;background:#ff9a3d2e;color:var(--acc);display:grid;place-items:center;flex:none}
 .ebar small{display:block;color:#aeaeb2;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ebar b{display:block;font-size:1.05rem;overflow-wrap:anywhere;line-height:1.15}
 .sw[aria-checked="true"]{background:var(--on)!important}
-.seg button[aria-pressed="true"]{background:#3d8bff!important;color:#fff!important}
+.seg button[aria-pressed="true"]{background:#2f6fdb!important;color:#fff!important}
 
 
 /* no text selection on long-press, anywhere */
@@ -163,7 +163,7 @@ header .hd-l{margin-inline-start:auto}
 
 .ebar small{white-space:normal!important;line-height:1.1}.fc3 .ebar b{white-space:normal!important}
 .dial{margin-top:20px!important}
-.days{display:flex;justify-content:space-between;gap:4px;margin-bottom:8px}.days button{width:48px;height:48px;min-height:48px;flex:0 0 48px;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:700}.days button{background:var(--card2);color:#fff}.days button[aria-pressed="true"]{background:#3d8bff;color:#fff}
+.days{display:flex;justify-content:space-between;gap:4px;margin-bottom:8px}.days button{width:48px;height:48px;min-height:48px;flex:0 0 48px;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:700}.days button{background:var(--card2);color:#fff}.days button[aria-pressed="true"]{background:#2f6fdb;color:#fff}
 
 /* background glow: neutral when off; orange when heating, blue when cooling */
 :root{--g1:#1c1c1e;--g2:#0b0b0c}
@@ -176,7 +176,7 @@ input,select,textarea{font-size:max(16px,1em)!important}
 /* the last-action line stays inside the dial: it wraps instead of running over the ticks */
 .ctr .st2{white-space:normal!important;line-height:1.2;max-width:100%;overflow-wrap:anywhere}
 </style>
-<link rel="stylesheet" href="../device.css?v=3">
+<link rel="stylesheet" href="../device.css?v=4">
 <script>/* HomeOn text size (settings) applies here too */(function(){const a=()=>{let s='100';try{const v=localStorage.getItem('unplug_ts');if(['100','115','130','150'].includes(v))s=v}catch(e){}document.documentElement.style.fontSize=s+'%';document.documentElement.classList.toggle('ts-big',s!=='100')};a();addEventListener('storage',e=>{if(e.key==='unplug_ts')a()})})();</script>
 </head>
 <body>
@@ -375,6 +375,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 /* one screen, no scrolling, like the AC page */
 const app=$('app');
 function fit(){const dl=document.querySelector('.dial'),hero=document.querySelector('.hero'),more=$('moreDet');app.style.overflowY='hidden';
+  /* the bottom bar grows with big text: the page always keeps exactly that much room under its last row */
+  const eb=document.querySelector('.ebar');if(eb&&eb.offsetHeight)app.style.setProperty('padding-bottom',Math.ceil(innerHeight-eb.getBoundingClientRect().top+14)+'px','important');
   const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));
   if(dl&&hero&&!(more&&more.open)){const w=Math.round(Math.min(290,innerWidth-70,innerHeight*.36));dl.style.width=w+'px';
     for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}}

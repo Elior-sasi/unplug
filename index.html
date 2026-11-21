@@ -929,10 +929,13 @@ function toast(t){document.querySelector('.toast')?.remove();const e=document.cr
 async function loadDevices(){
   pullMeta();
   if(!CFG.key||busy)return;busy=true;$('refBtn').setAttribute('aria-busy','true');
-  try{const knownIds=new Set(DEVS.map(d=>d.id));const j=await api('/devices');DEVS=(j.devices||[]).map(x=>applyPending(norm(x)));LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300);setTimeout(()=>loadLocal(!DEVS.every(d=>knownIds.has(d.id))),1200);setTimeout(()=>typeof syncShabbat==='function'&&syncShabbat(false),1500);setTimeout(()=>importTuya(false),800)}
-  catch(e){if(CFG.key)toast(e.message)}
+  try{const knownIds=new Set(DEVS.map(d=>d.id));const j=await api('/devices');OFFLINE=false;DEVS=(j.devices||[]).map(x=>applyPending(norm(x)));LSset('unplug_devs',JSON.stringify(DEVS));render();setTimeout(loadPhotos,300);setTimeout(()=>loadLocal(!DEVS.every(d=>knownIds.has(d.id))),1200);setTimeout(()=>typeof syncShabbat==='function'&&syncShabbat(false),1500);setTimeout(()=>importTuya(false),800)}
+  catch(e){if(CFG.key){const was=OFFLINE;OFFLINE=true;render();if(!was)toast(e.message)}}
   finally{busy=false;$('refBtn').removeAttribute('aria-busy')}
 }
+/* no connection: the last known state stays on screen, the header says so, and it reconnects by itself */
+var OFFLINE=false;
+addEventListener('online',()=>{if(CFG.key)loadDevices()});
 async function loadSched(){if(!CFG.key)throw new Error('אין חיבור לחשבון');const j=await api('/schedules');if(!Array.isArray(j.schedules))throw new Error('השרת לא החזיר רשימת תזמונים תקינה');SCHED=j.schedules;return SCHED}
 /* Tuya's REST "online" flag is often stale (Smart Life itself uses a live channel), so a device counts as
    reachable unless a command to it actually failed. */
@@ -970,7 +973,7 @@ function openLocalDiag(scan){
     <button class="btn wide" id="ldS">חיפוש המכשירים מחדש</button>`,(el)=>{
     const draw=async()=>{let o;try{const r=await nativeCall({action:'tuyaDiag',scan:!!scan});o=typeof r==='string'?JSON.parse(r):r}catch(e){el.querySelector('#ldL').innerHTML='<div class="row"><span class="s">צריך את הגרסה החדשה של HomeOn באייפון</span></div>';return}
       scan=false;const L=el.querySelector('#ldL');if(!L)return;
-      L.innerHTML=(o.devices||[]).map(x=>{const d=DEVS.find(y=>y.id===x.id);return `<div class="row"><span class="grow"><span class="t">${esc(d?dname(d):x.name||'מכשיר')}</span><br><span class="s">${x.found?'ישירות ב-WiFi':o.scanning?'מחפש...':'דרך השרת'+(x.err?' · '+esc(String(x.err).slice(0,60)):'')}</span></span></div>`}).join('')||'<div class="row"><span class="s">אין מכשירים לשליטה ישירה</span></div>';
+      L.innerHTML=(o.devices||[]).map(x=>{const d=DEVS.find(y=>y.id===x.id);return `<div class="row"><span class="grow"><span class="t">${esc(d?dname(d):x.name||'מכשיר')}</span><br><span class="s">${x.found?'ישירות ב-WiFi':o.scanning?'מחפש...':'דרך השרת'+(x.err&&/[\u0590-\u05FF]/.test(x.err)?' · '+esc(String(x.err).slice(0,60)):'')}</span></span></div>`}).join('')||'<div class="row"><span class="s">אין מכשירים לשליטה ישירה</span></div>';
       if(!o.wifi)L.insertAdjacentHTML('afterbegin','<div class="row"><span class="s">האייפון לא מחובר ל-WiFi</span></div>');
       if(o.scanning)setTimeout(draw,2500)};
     draw();el.querySelector('#ldS').onclick=()=>{scan=true;loadLocal(true).then(draw)};
@@ -988,7 +991,7 @@ function render(){
   $('homeBtn').innerHTML=`<span>בית · ${esc(curHome().name)}</span>${svg('chev',2.6)}`;$('homeBtn').setAttribute('aria-label','בית: '+curHome().name+'. החלפה וניהול בתים');
 
   $('title').textContent=!CFG.key||!HD.length?'הבית':on?(on===1?'מכשיר אחד פועל':on+' מכשירים פועלים'):'הכול כבוי';
-  $('sub').textContent=!CFG.key?'לא מחובר':visibleCount===1?'מכשיר אחד':visibleCount?visibleCount+' מכשירים':'';
+  $('sub').textContent=!CFG.key?'לא מחובר':OFFLINE?'אין חיבור לשרת · מוצג המצב האחרון':visibleCount===1?'מכשיר אחד':visibleCount?visibleCount+' מכשירים':'';
   {const ob=$('offBtn');ob.disabled=!on;ob.onclick=async()=>{const ds=HD.filter(d=>d.online&&isOn(d));if(!ds.length||!confirm(`לכבות ${ds.length} מכשירים?`))return;for(const d of ds)await send(d,[{code:powerCode(d),value:false}]);toast('הכול כבוי')}}
   const tabs=[...document.querySelectorAll('nav.bar button')];tabs.forEach(b=>b.dataset.tab===TAB?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));document.querySelector('nav.bar').style.setProperty('--tab',tabs.findIndex(b=>b.dataset.tab===TAB));
   const v=$('view');
@@ -1347,14 +1350,20 @@ function card(d){
 }
 
 /* ---------- sheets ---------- */
-let lastFocus=null;
+let lastFocus=null,lastFocusKey="";
 function sheet(title,html,init){
   document.querySelector('.scrim')?.remove();lastFocus=lastFocus||document.activeElement;
+  /* the screen is redrawn while a sheet is open, so remember how to find the opener again */
+  if(lastFocus&&!lastFocusKey){const c=lastFocus.closest&&lastFocus.closest('[data-id]');const cls=(lastFocus.classList&&lastFocus.classList[0])?'.'+CSS.escape(lastFocus.classList[0]):'';lastFocusKey=lastFocus.id?'#'+CSS.escape(lastFocus.id):!c?'':c===lastFocus?`${cls}[data-id="${CSS.escape(c.dataset.id)}"]`:`[data-id="${CSS.escape(c.dataset.id)}"] ${cls||'button'}`}
   const s=document.createElement('div');s.className='scrim';
   s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sheet-h"><h2 id="shT" tabindex="-1">${title}</h2><button class="icbtn" data-x aria-label="סגירה">${svg('close')}</button></div>${html}</div>`;
-  const close=()=>{s.remove();OPEN=null;document.querySelector('.app').removeAttribute('aria-hidden');try{lastFocus&&lastFocus.focus()}catch(e){}lastFocus=null};
+  const close=()=>{s.remove();OPEN=null;document.querySelector('.app').removeAttribute('aria-hidden');try{const el=lastFocus&&lastFocus.isConnected?lastFocus:lastFocusKey&&document.querySelector(lastFocusKey);el&&el.focus()}catch(e){}lastFocus=null;lastFocusKey=''};
   s.addEventListener('click',e=>{if(e.target===s)close()});s.querySelector('[data-x]').onclick=close;
-  s.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+  s.addEventListener('keydown',e=>{if(e.key==='Escape')return close();
+    /* keyboard focus stays inside the open sheet */
+    if(e.key==='Tab'){const f=[...s.querySelectorAll('button,a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x=>!x.disabled&&x.offsetParent!==null);if(!f.length)return e.preventDefault();
+      const first=f[0],last=f[f.length-1],a=document.activeElement;
+      if(e.shiftKey&&(a===first||!s.contains(a))){e.preventDefault();last.focus()}else if(!e.shiftKey&&(a===last||!s.contains(a))){e.preventDefault();first.focus()}}});
   document.body.append(s);document.querySelector('.app').setAttribute('aria-hidden','true');
   s.querySelector('#shT').focus();init&&init(s.querySelector('.sheet'),close);return close;
 }
@@ -2058,7 +2067,14 @@ $('addBtn').onclick=openAdd;
 setTimeout(()=>{const sp=$('splash');if(!sp)return;sp.classList.add('out');setTimeout(()=>sp.remove(),450)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1500);
 applyPrefs();try{render()}catch(e){console.error(e)}
 function openFromHash(){const m=location.hash.match(/dev=([^&]+)/);if(!m)return;const id=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname);
-  const go=()=>{const d=DEVS.find(x=>x.id===id);if(d){TAB='devices';render();openDevice(d)}};DEVS.length?go():setTimeout(go,2500)}
+  const go=()=>{const d=DEVS.find(x=>x.id===id);if(d){TAB='devices';render();openDevice(d)}};/* wait for the device list however slow the network is (links from the widget, Siri and notifications) */
+  let n=0;const wait=()=>{if(DEVS.length)return go();if(++n<40)setTimeout(wait,400)};wait()}
+/* a redraw (status refresh, a new state) must not throw keyboard / VoiceOver focus back to the top of the page */
+{const draw=render;render=function(){const a=document.activeElement,inView=a&&a!==document.body&&a.closest&&a.closest('#view')&&!document.querySelector('.scrim');let key='';
+  if(inView){const c=a.closest('[data-id]'),cls=a.classList&&a.classList[0]?'.'+CSS.escape(a.classList[0]):'';key=a.id?'#'+CSS.escape(a.id):!c?'':c===a?`${cls}[data-id="${CSS.escape(c.dataset.id)}"]`:`[data-id="${CSS.escape(c.dataset.id)}"] ${cls||'button'}`}
+  const r=draw.apply(this,arguments);
+  if(key&&!a.isConnected){try{const el=document.querySelector('#view '+key);el&&el.focus({preventScroll:true})}catch(e){}}
+  return r}}
 addEventListener('hashchange',openFromHash);setTimeout(openFromHash,600);
 if(CFG.key){LSset('unplug_key',CFG.key);loadDevices();loadSched().catch(()=>{})}else openConnect();
 setInterval(()=>{if(document.visibilityState==='visible'&&CFG.key&&!document.querySelector('.scrim [type=range]:active')&&!(typeof REORDER!=='undefined'&&REORDER))loadDevices()},30000);

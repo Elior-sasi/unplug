@@ -28,7 +28,7 @@ button{font:inherit;cursor:pointer}
 /* iOS zooms into any field under 16px when zoom is allowed */
 input,select,textarea{font-size:max(16px,1em)!important}
 </style>
-<link rel="stylesheet" href="../device.css?v=3">
+<link rel="stylesheet" href="../device.css?v=4">
 </head>
 <body>
 <span class="mock">הדמיה - נתונים לדוגמה</span>
@@ -66,6 +66,8 @@ input,select,textarea{font-size:max(16px,1em)!important}
   <button class="bar2"><span class="bi" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M5 3 2 6M19 3l3 3"/></svg></span><span><small>תזכורת שקילה</small><b>כל בוקר 07:00</b></span></button>
 </nav>
 <script>
+/* room for the bottom bar, however tall big text makes it */
+(function(){const f=()=>{const b=document.querySelector('.dv-bar'),pg=document.querySelector('.dv-page');if(b&&pg)pg.style.paddingBottom=Math.ceil(innerHeight-b.getBoundingClientRect().top+14)+'px'};f();addEventListener('resize',f);addEventListener('storage',()=>setTimeout(f,50));setTimeout(f,300)})();
 document.getElementById('back').onclick=()=>{if(window.parent!==window)parent.postMessage('unplug-close','*');else history.back()};
 /* HomeOn text size (settings) applies here too */(function(){const a=()=>{let s='100';try{const v=localStorage.getItem('unplug_ts');if(['100','115','130','150'].includes(v))s=v}catch(e){}document.documentElement.style.fontSize=s+'%'};a();addEventListener('storage',e=>{if(e.key==='unplug_ts')a()})})();
 </script>

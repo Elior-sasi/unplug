@@ -531,8 +531,18 @@ html.ts-big.in-unplug .prof b,html.ts-big.in-unplug .prof span{white-space:norma
 html.ts-big.in-unplug .profiles{align-items:stretch}
 /* iOS zooms into any field under 16px when zoom is allowed */
 input,select,textarea{font-size:max(16px,1em)!important}
+/* profile cards: the whole name stays readable - two lines when there is room, one line with "..." on small screens */
+html.in-unplug:not(.ts-big) .prof{gap:3px!important}
+html.in-unplug:not(.ts-big) .prof .chip svg{width:24px!important;height:24px!important}
+html.in-unplug:not(.ts-big) .prof b{font-size:.84rem!important;line-height:1.15;flex:none;max-width:100%;padding:0 3px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal!important}
+html.in-unplug:not(.ts-big) .prof>span:last-child{flex:none;line-height:1.25!important;font-size:.78rem!important}
+html.in-unplug.fc1:not(.ts-big) .prof b{display:block;white-space:nowrap!important;text-overflow:ellipsis;-webkit-line-clamp:none}
+/* smallest layout: the minutes line is hidden, so the name gets its two lines back */
+html.in-unplug.fc3:not(.ts-big) .prof b{font-size:.78rem!important;display:-webkit-box;-webkit-line-clamp:2;white-space:normal!important}
+html.in-unplug.fc3:not(.ts-big) .prof .chip svg{width:20px!important;height:20px!important}
+html.in-unplug.fc3:not(.ts-big) .prof{padding:6px 3px!important;gap:2px!important}
 </style>
-<link rel="stylesheet" href="../device.css?v=3">
+<link rel="stylesheet" href="../device.css?v=4">
 <script>/* HomeOn text size (settings) applies here too */(function(){const a=()=>{let s='100';try{const v=localStorage.getItem('unplug_ts');if(['100','115','130','150'].includes(v))s=v}catch(e){}document.documentElement.style.fontSize=s+'%';document.documentElement.classList.toggle('ts-big',s!=='100')};a();addEventListener('storage',e=>{if(e.key==='unplug_ts')a()})})();</script>
 </head>
 <body>
