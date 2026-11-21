@@ -378,6 +378,8 @@ function fit(){const dl=document.querySelector('.dial'),hero=document.querySelec
   /* the bottom bar grows with big text: the page always keeps exactly that much room under its last row */
   const eb=document.querySelector('.ebar');if(eb&&eb.offsetHeight)app.style.setProperty('padding-bottom',Math.ceil(innerHeight-eb.getBoundingClientRect().top+14)+'px','important');
   const R=document.documentElement,over=()=>app.scrollHeight>app.clientHeight+1;['fc1','fc2','fc3'].forEach(c=>R.classList.remove(c));
+  /* a phone on its side (or a short window): no squeezing - a readable dial and the page scrolls */
+  if(dl&&innerHeight<520){dl.style.width=Math.round(Math.min(260,innerWidth-70))+'px';app.style.overflowY='auto';return}
   if(dl&&hero&&!(more&&more.open)){const w=Math.round(Math.min(290,innerWidth-70,innerHeight*.36));dl.style.width=w+'px';
     for(const c of ['fc1','fc2','fc3']){if(!over())break;R.classList.add(c)}}
   app.style.overflowY=app.scrollHeight>app.clientHeight+1?'auto':'hidden'}
